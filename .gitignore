@@ -1,0 +1,6 @@
+**/__pycache__
+knowledge_base
+logs
+jupyter_work
+model_config.py
+server_config.py

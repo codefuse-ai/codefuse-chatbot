@@ -1,0 +1,43 @@
+langchain==0.0.266
+openai
+sentence_transformers
+fschat==0.2.24
+transformers>=4.31.0
+# torch~=2.0.0
+fastapi~=0.99.1
+nltk~=3.8.1
+uvicorn~=0.23.1
+starlette~=0.27.0
+pydantic~=1.10.11
+unstructured[all-docs]
+python-magic-bin; sys_platform == 'win32'
+SQLAlchemy==2.0.19
+faiss-cpu
+nltk
+loguru
+pypdf
+duckduckgo-search
+pysocks
+accelerate
+docker
+jupyter
+notebook
+websockets
+fake_useragent
+selenium
+auto-gptq==0.4.2
+
+
+# uncomment libs if you want to use corresponding vector store
+# pymilvus==2.1.3 # requires milvus==2.1.3
+# psycopg2
+# pgvector
+
+numpy~=1.24.4
+pandas~=2.0.3
+streamlit>=1.25.0
+streamlit-option-menu>=0.3.6
+streamlit-antd-components>=0.1.11
+streamlit-chatbox>=1.1.6
+streamlit-aggrid>=0.3.4.post3
+httpx~=0.24.1

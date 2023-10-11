@@ -97,7 +97,7 @@ conda activate devopsgpt
 
 - 安装相关依赖
 ```bash
-cd DevOps-ChatBot
+cd codefuse-chatbot
 # python=3.9，notebook用最新即可，python=3.8用notebook=6.5.6
 pip install -r requirements.txt
 ```

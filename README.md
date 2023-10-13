@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="README.md"><img src="https://img.shields.io/badge/文档-中文版-yellow.svg" alt="ZH doc"></a>
-    <a href="README_EN.md"><img src="https://img.shields.io/badge/document-英文版-yellow.svg" alt="EN doc"></a>
+    <a href="README_en.md"><img src="https://img.shields.io/badge/document-英文版-yellow.svg" alt="EN doc"></a>
     <img src="https://img.shields.io/github/license/codefuse-ai/codefuse-chatbot" alt="License">
     <a href="https://github.com/codefuse-ai/codefuse-chatbot/issues">
       <img alt="Open Issues" src="https://img.shields.io/github/issues-raw/codefuse-ai/codefuse-chatbot" />

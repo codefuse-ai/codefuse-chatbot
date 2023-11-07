@@ -18,15 +18,19 @@ from configs.server_config import OPEN_CROSS_DOMAIN
 
 from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat
 from dev_opsgpt.service.kb_api import *
+from dev_opsgpt.service.cb_api import *
 from dev_opsgpt.utils.server_utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
 
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
-from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat
+from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat, ToolChat, DataChat, CodeChat
 
 llmChat = LLMChat()
 searchChat = SearchChat()
 knowledgeChat = KnowledgeChat()
+toolChat = ToolChat()
+dataChat = DataChat()
+codeChat = CodeChat()
 
 
 async def document():
@@ -71,6 +75,18 @@ def create_app():
     app.post("/chat/search_engine_chat",
              tags=["Chat"],
              summary="与搜索引擎对话")(searchChat.chat)
+    app.post("/chat/tool_chat",
+             tags=["Chat"],
+             summary="与搜索引擎对话")(toolChat.chat)
+    
+    app.post("/chat/data_chat",
+             tags=["Chat"],
+             summary="与搜索引擎对话")(dataChat.chat)
+
+    app.post("/chat/code_chat",
+             tags=["Chat"],
+             summary="与代码库对话")(codeChat.chat)
+
 
     # Tag: Knowledge Base Management
     app.get("/knowledge_base/list_knowledge_bases",
@@ -128,6 +144,27 @@ def create_app():
              tags=["Knowledge Base Management"],
              summary="根据content中文档重建向量库，流式输出处理进度。"
              )(recreate_vector_store)
+
+    app.post("/code_base/create_code_base",
+             tags=["Code Base Management"],
+             summary="新建 code_base"
+             )(create_cb)
+
+    app.post("/code_base/delete_code_base",
+             tags=["Code Base Management"],
+             summary="删除 code_base"
+             )(delete_cb)
+
+    app.post("/code_base/code_base_chat",
+             tags=["Code Base Management"],
+             summary="删除 code_base"
+             )(delete_cb)
+
+    app.get("/code_base/list_code_bases",
+            tags=["Code Base Management"],
+            summary="列举 code_base",
+            response_model=ListResponse
+            )(list_cbs)
 
     # # LLM模型相关接口
     # app.post("/llm_model/list_models",

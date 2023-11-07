@@ -46,3 +46,24 @@ class KnowledgeFileSchema(Base):
         text_splitter_name='{self.text_splitter_name}', 
         file_version='{self.file_version}', 
         create_time='{self.create_time}')>"""
+
+
+class CodeBaseSchema(Base):
+    '''
+    代码数据库模型
+    '''
+    __tablename__ = 'code_base'
+    id = Column(Integer, primary_key=True, autoincrement=True, comment='代码库 ID')
+    code_name = Column(String, comment='代码库名称')
+    code_path = Column(String, comment='代码本地路径')
+    code_graph_node_num = Column(String, comment='代码图谱节点数')
+    code_file_num = Column(String, comment='代码解析文件数')
+    create_time = Column(DateTime, default=func.now(), comment='创建时间')
+
+    def __repr__(self):
+        return f"""<CodeBase(id='{self.id}', 
+        code_name='{self.code_name}', 
+        code_path='{self.code_path}', 
+        code_graph_node_num='{self.code_graph_node_num}',
+        code_file_num='{self.code_file_num}'
+        create_time='{self.create_time}')>"""

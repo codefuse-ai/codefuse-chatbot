@@ -4,9 +4,12 @@
 # 3. 运行API服务器：python server/api.py。如果使用api = ApiRequest(no_remote_api=True)，该步可以跳过。
 # 4. 运行WEB UI：streamlit run webui.py --server.port 7860
 
-import os, sys
+import os
+import sys
 import streamlit as st
 from streamlit_option_menu import option_menu
+
+import multiprocessing
 
 src_dir = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -15,10 +18,11 @@ sys.path.append(src_dir)
 
 from dev_opsgpt.webui import *
 from configs import VERSION, LLM_MODEL
+from configs.server_config import NO_REMOTE_API
 
 
 
-api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=True)
+api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=NO_REMOTE_API)
 
 
 if __name__ == "__main__":
@@ -47,6 +51,10 @@ if __name__ == "__main__":
         "知识库管理": {
             "icon": "hdd-stack",
             "func": knowledge_page,
+        },
+        "代码知识库管理": {
+            "icon": "hdd-stack",
+            "func": code_page,
         },
         # "Prompt管理": {
         #     "icon": "hdd-stack",

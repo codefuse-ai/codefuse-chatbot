@@ -2,6 +2,11 @@ import textwrap, time, copy, random, hashlib, json, os
 from datetime import datetime, timedelta
 from functools import wraps
 from loguru import logger
+from typing import *
+from pathlib import Path
+from io import BytesIO
+from fastapi import Body, File, Form, Body, Query, UploadFile
+from tempfile import SpooledTemporaryFile
 
 
 
@@ -65,3 +70,23 @@ def save_to_json_file(data, filename):
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
+
+
+def file_normalize(file: Union[str, Path, bytes], filename=None):
+    logger.debug(f"{file}")
+    if isinstance(file, bytes): # raw bytes
+        file = BytesIO(file)
+    elif hasattr(file, "read"): # a file io like object
+        filename = filename or file.name
+    else: # a local path
+        file = Path(file).absolute().open("rb")
+        logger.debug(file)
+        filename = filename or file.name
+    return file, filename
+
+
+def get_uploadfile(file: Union[str, Path, bytes], filename=None) -> UploadFile:
+    temp_file = SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+    temp_file.write(file.read())
+    temp_file.seek(0)
+    return UploadFile(file=temp_file, filename=filename)

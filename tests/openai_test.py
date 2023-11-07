@@ -9,7 +9,7 @@ from configs import llm_model_dict, LLM_MODEL
 import openai
 # os.environ["OPENAI_PROXY"] = "socks5h://127.0.0.1:7890"
 # os.environ["OPENAI_PROXY"] = "http://127.0.0.1:7890"
-os.environ["OPENAI_API_KEY"] = ""
+# os.environ["OPENAI_API_KEY"] = ""
 
 
 if __name__ == "__main__":

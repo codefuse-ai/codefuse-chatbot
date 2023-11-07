@@ -25,8 +25,7 @@ notebook
 websockets
 fake_useragent
 selenium
-auto-gptq==0.4.2
-
+jsonref
 
 # uncomment libs if you want to use corresponding vector store
 # pymilvus==2.1.3 # requires milvus==2.1.3
@@ -41,3 +40,5 @@ streamlit-antd-components>=0.1.11
 streamlit-chatbox>=1.1.6
 streamlit-aggrid>=0.3.4.post3
 httpx~=0.24.1
+
+javalang==0.13.0

@@ -137,7 +137,24 @@ def knowledge_page(api: ApiRequest):
                                  [i for ls in LOADER2EXT_DICT.values() for i in ls],
                                  accept_multiple_files=True,
                                  )
-        
+
+        if st.button(
+                "添加文件到知识库",
+                # help="请先上传文件，再点击添加",
+                # use_container_width=True,
+                disabled=len(files) == 0,
+        ):
+            data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True} for f in files]
+            data[-1]["not_refresh_vs_cache"]=False
+            for k in data:
+                pass
+                ret = api.upload_kb_doc(**k)
+                if msg := check_success_msg(ret):
+                    st.toast(msg, icon="✔")
+                elif msg := check_error_msg(ret):
+                    st.toast(msg, icon="✖")
+            st.session_state.files = []
+
         base_url = st.text_input(
             "待获取内容的URL地址",
             placeholder="请填写正确可打开的URL地址",
@@ -186,22 +203,6 @@ def knowledge_page(api: ApiRequest):
 
             if os.path.exists(html_path):
                 os.remove(html_path)
-
-        if st.button(
-                "添加文件到知识库",
-                # help="请先上传文件，再点击添加",
-                # use_container_width=True,
-                disabled=len(files) == 0,
-        ):
-            data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True} for f in files]
-            data[-1]["not_refresh_vs_cache"]=False
-            for k in data:
-                ret = api.upload_kb_doc(**k)
-                if msg := check_success_msg(ret):
-                    st.toast(msg, icon="✔")
-                elif msg := check_error_msg(ret):
-                    st.toast(msg, icon="✖")
-            st.session_state.files = []
 
         st.divider()
 

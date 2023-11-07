@@ -1,6 +1,10 @@
 **/__pycache__
 knowledge_base
 logs
+embedding_models
 jupyter_work
 model_config.py
 server_config.py
+code_base
+.DS_Store
+.idea

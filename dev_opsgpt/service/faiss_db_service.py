@@ -4,7 +4,7 @@ from typing import List
 from functools import lru_cache
 from loguru import logger
 
-from langchain.vectorstores import FAISS
+# from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
@@ -22,6 +22,7 @@ from dev_opsgpt.utils.path_utils import *
 from dev_opsgpt.orm.utils import DocumentFile
 from dev_opsgpt.utils.server_utils import torch_gc
 from dev_opsgpt.embeddings.utils import load_embeddings
+from dev_opsgpt.embeddings.faiss_m import FAISS
 
 
 # make HuggingFaceEmbeddings hashable
@@ -124,6 +125,7 @@ class FaissKBService(KBService):
         vector_store = load_vector_store(self.kb_name,
                                          embeddings=embeddings,
                                          tick=_VECTOR_STORE_TICKS.get(self.kb_name, 0))
+        vector_store.embedding_function = embeddings.embed_documents
         logger.info("docs.lens: {}".format(len(docs)))
         vector_store.add_documents(docs)
         torch_gc()

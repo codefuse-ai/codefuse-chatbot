@@ -18,5 +18,6 @@ def check_tables_exist(table_name) -> bool:
     return table_exist
 
 def table_init():
-    if (not check_tables_exist("knowledge_base")) or (not check_tables_exist ("knowledge_file")):
+    if (not check_tables_exist("knowledge_base")) or (not check_tables_exist ("knowledge_file")) or \
+            (not check_tables_exist ("code_base")):
         create_tables()

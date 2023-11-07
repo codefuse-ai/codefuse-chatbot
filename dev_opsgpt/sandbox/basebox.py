@@ -3,6 +3,7 @@ from typing import Optional
 from pathlib import Path
 import sys
 from abc import ABC, abstractclassmethod
+from loguru import logger
 
 from configs.server_config import SANDBOX_SERVER
 
@@ -21,21 +22,6 @@ class CodeBoxResponse(BaseModel):
 class CodeBoxStatus(BaseModel):
     status: str
 
-
-class CodeBoxFile(BaseModel):
-    """
-    Represents a file returned from a CodeBox instance.
-    """
-
-    name: str
-    content: Optional[bytes] = None
-
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return f"File({self.name})"
-    
 
 class BaseBox(ABC):
 

@@ -7,13 +7,13 @@ src_dir = os.path.join(
 )
 sys.path.append(src_dir)
 
-from configs.server_config import CONTRAINER_NAME, SANDBOX_SERVER, IMAGE_NAME
+from configs.server_config import SANDBOX_SERVER, SANDBOX_IMAGE_NAME, SANDBOX_CONTRAINER_NAME
 
 
 if SANDBOX_SERVER["do_remote"]:
     client = docker.from_env()
     for i  in client.containers.list(all=True):
-        if i.name == CONTRAINER_NAME:
+        if i.name == SANDBOX_CONTRAINER_NAME:
             container = i
             container.stop()
             container.remove()
@@ -21,10 +21,10 @@ if SANDBOX_SERVER["do_remote"]:
     # 启动容器
     logger.info("start ot init container & notebook")
     container = client.containers.run(
-        image=IMAGE_NAME,
+        image=SANDBOX_IMAGE_NAME,
         command="bash",
-        name=CONTRAINER_NAME,
-        ports={"5050/tcp": SANDBOX_SERVER["port"]},
+        name=SANDBOX_CONTRAINER_NAME,
+        ports={f"{SANDBOX_SERVER['docker_port']}/tcp": SANDBOX_SERVER["port"]},
         stdin_open=True,
         detach=True,
         tty=True,

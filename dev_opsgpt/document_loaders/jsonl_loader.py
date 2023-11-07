@@ -4,6 +4,7 @@ from typing import AnyStr, Callable, Dict, List, Optional, Union
 
 from langchain.docstore.document import Document
 from langchain.document_loaders.base import BaseLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter, TextSplitter
 
 from dev_opsgpt.utils.common_utils import read_jsonl_file
 
@@ -39,3 +40,23 @@ class JSONLLoader(BaseLoader):
             )
             text = sample.get(self.schema_key, "")
             docs.append(Document(page_content=text, metadata=metadata))
+
+    def load_and_split(
+        self, text_splitter: Optional[TextSplitter] = None
+    ) -> List[Document]:
+        """Load Documents and split into chunks. Chunks are returned as Documents.
+
+        Args:
+            text_splitter: TextSplitter instance to use for splitting documents.
+              Defaults to RecursiveCharacterTextSplitter.
+
+        Returns:
+            List of Documents.
+        """
+        if text_splitter is None:
+            _text_splitter: TextSplitter = RecursiveCharacterTextSplitter()
+        else:
+            _text_splitter = text_splitter
+
+        docs = self.load()
+        return _text_splitter.split_documents(docs)

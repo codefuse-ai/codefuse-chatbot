@@ -29,7 +29,7 @@ LOADER2EXT_DICT = {"UnstructuredFileLoader": ['.eml', '.html', '.md', '.msg', '.
                 "TextLoader": ['.txt'],
                 "PythonLoader": ['.py'],
                 "JSONLoader": ['.json'],
-                "JSONLLoader": ['.jsonl'],
+                "JSONLLoader": ['.jsonl']
                }
 
 EXT2LOADER_DICT = {ext: LOADERNAME2LOADER_DICT[k] for k, exts in LOADER2EXT_DICT.items() for ext in exts}
@@ -61,8 +61,10 @@ def list_kbs_from_folder():
 
 def list_docs_from_folder(kb_name: str):
     doc_path = get_doc_path(kb_name)
-    return [file for file in os.listdir(doc_path)
-            if os.path.isfile(os.path.join(doc_path, file))]
+    if os.path.exists(doc_path):
+        return [file for file in os.listdir(doc_path)
+                if os.path.isfile(os.path.join(doc_path, file))]
+    return []
 
 def get_LoaderClass(file_extension):
     for LoaderClass, extensions in LOADER2EXT_DICT.items():

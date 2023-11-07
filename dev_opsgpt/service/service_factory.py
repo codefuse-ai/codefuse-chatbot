@@ -77,6 +77,33 @@ def get_kb_details() -> List[Dict]:
    
     return data
 
+def get_cb_details() -> List[Dict]:
+    '''
+    get codebase details
+    @return: list of data
+    '''
+    res = {}
+    cbs_in_db = list_cbs_from_db()
+    for cb in cbs_in_db:
+        cb_detail = get_cb_detail(cb)
+        res[cb] = cb_detail
+
+    data = []
+    for i, v in enumerate(res.values()):
+        v['No'] = i + 1
+        data.append(v)
+    return data
+
+def get_cb_details_by_cb_name(cb_name) -> dict:
+    '''
+    get codebase details by cb_name
+    @return: list of data
+    '''
+    cb_detail = get_cb_detail(cb_name)
+    return cb_detail
+
+
+
 
 def get_kb_doc_details(kb_name: str) -> List[Dict]:
     kb = KBServiceFactory.get_service_by_name(kb_name)

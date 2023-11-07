@@ -32,10 +32,12 @@ class LCTextSplitter:
         loader = self._load_document()
         text_splitter = self._load_text_splitter()
         if self.document_loader_name in ["JSONLoader", "JSONLLoader"]:
-            docs = loader.load()
+            # docs = loader.load()
+            docs = loader.load_and_split(text_splitter)
+            logger.debug(f"please check your file can be loaded, docs.lens {len(docs)}")
         else:
             docs = loader.load_and_split(text_splitter)
-        logger.info(docs[0])
+
         return docs
 
     def _load_document(self, ) -> BaseLoader:
@@ -55,8 +57,8 @@ class LCTextSplitter:
                     chunk_overlap=OVERLAP_SIZE,
                 )
                 self.text_splitter_name = "SpacyTextSplitter"
-            elif self.document_loader_name in ["JSONLoader", "JSONLLoader"]:
-                text_splitter = None
+            # elif self.document_loader_name in ["JSONLoader", "JSONLLoader"]:
+            #     text_splitter = None
             else:
                 text_splitter_module = importlib.import_module('langchain.text_splitter')
                 TextSplitter = getattr(text_splitter_module, self.text_splitter_name)

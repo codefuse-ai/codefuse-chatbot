@@ -1,40 +1,61 @@
 from .model_config import LLM_MODEL, LLM_DEVICE
+import os
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
-
+# 是否用容器来启动服务
+DOCKER_SERVICE = True
+# 是否采用容器沙箱
+SANDBOX_DO_REMOTE = True
+# 是否采用api服务来进行
+NO_REMOTE_API = True
 # 各服务器默认绑定host
 DEFAULT_BIND_HOST = "127.0.0.1"
+
+# 
+CONTRAINER_NAME = "devopsgpt_webui"
+IMAGE_NAME = "devopsgpt:py39"
 
 # webui.py server
 WEBUI_SERVER = {
     "host": DEFAULT_BIND_HOST,
     "port": 8501,
+    "docker_port": 8501
 }
 
 # api.py server
 API_SERVER = {
     "host": DEFAULT_BIND_HOST,
     "port": 7861,
+    "docker_port": 7861
+}
+
+# sdfile_api.py server
+SDFILE_API_SERVER = {
+    "host": DEFAULT_BIND_HOST,
+    "port": 7862,
+    "docker_port": 7862
 }
 
 # fastchat openai_api server
 FSCHAT_OPENAI_API = {
     "host": DEFAULT_BIND_HOST,
     "port": 8888,  # model_config.llm_model_dict中模型配置的api_base_url需要与这里一致。
+    "docker_port": 8888,  # model_config.llm_model_dict中模型配置的api_base_url需要与这里一致。
 }
 
 # sandbox api server
-CONTRAINER_NAME = "devopsgt_default"
-IMAGE_NAME = "devopsgpt:pypy38"
+SANDBOX_CONTRAINER_NAME = "devopsgpt_sandbox"
+SANDBOX_IMAGE_NAME = "devopsgpt:py39"
+SANDBOX_HOST = os.environ.get("SANDBOX_HOST") or DEFAULT_BIND_HOST # "172.25.0.3"
 SANDBOX_SERVER = {
-    "host": DEFAULT_BIND_HOST,
+    "host": f"http://{SANDBOX_HOST}",
     "port": 5050,
-    "url": "http://localhost:5050",
-    "do_remote": True,
+    "docker_port": 5050,
+    "url": f"http://{SANDBOX_HOST}:5050",
+    "do_remote": SANDBOX_DO_REMOTE,
 }
-
 
 # fastchat model_worker server
 # 这些模型必须是在model_config.llm_model_dict中正确配置的。

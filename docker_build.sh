@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build -t devopsgpt:pypy38 .
+docker build -t devopsgpt:py39 .

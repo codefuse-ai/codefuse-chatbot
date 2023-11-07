@@ -47,13 +47,13 @@
 - [x] Web Crawl 通用能力：技术文档: 知乎、csdn、阿里云开发者论坛、腾讯云开发者论坛等
 <br>
 - v0.1
-- [ ] Sandbox 环境: 上传、下载文件
+- [x] Sandbox 环境: 上传、下载文件
 - [ ] Vector Database & Retrieval
   - [ ] task retrieval
   - [ ] tool retrieval
 - [ ] Connector
   - [ ] 基于langchain的react模式
-- [ ] 基于sentencebert接入Text Embedding: 向量加载速度提升
+- [x] 基于sentencebert接入Text Embedding: 向量加载速度提升
 <br>
 
 - v0.2

@@ -1,6 +1,5 @@
 from fastapi import Request
 import os, asyncio
-from urllib.parse import urlencode
 from typing import List, Optional, Dict
 
 from langchain import LLMChain

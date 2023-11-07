@@ -10,11 +10,13 @@ import json
 import nltk
 import traceback
 from loguru import logger
+import zipfile
 
 from configs.model_config import (
     EMBEDDING_MODEL,
     DEFAULT_VS_TYPE,
     KB_ROOT_PATH,
+    CB_ROOT_PATH,
     LLM_MODEL,
     SCORE_THRESHOLD,
     VECTOR_SEARCH_TOP_K,
@@ -27,8 +29,10 @@ from configs.server_config import SANDBOX_SERVER
 
 from dev_opsgpt.utils.server_utils import run_async, iter_over_async
 from dev_opsgpt.service.kb_api import *
-from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat
+from dev_opsgpt.service.cb_api import *
+from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat, ToolChat, DataChat, CodeChat, AgentChat
 from dev_opsgpt.sandbox import PyCodeBox, CodeBoxResponse
+from dev_opsgpt.utils.common_utils import file_normalize, get_uploadfile
 
 from web_crawler.utils.WebCrawler import WebCrawler
 
@@ -58,15 +62,22 @@ class ApiRequest:
     def __init__(
         self,
         base_url: str = "http://127.0.0.1:7861",
+        sandbox_file_url: str = "http://127.0.0.1:7862",
         timeout: float = 60.0,
         no_remote_api: bool = False,   # call api view function directly
     ):
         self.base_url = base_url
+        self.sandbox_file_url = sandbox_file_url
         self.timeout = timeout
         self.no_remote_api = no_remote_api
         self.llmChat = LLMChat()
         self.searchChat = SearchChat()
         self.knowledgeChat = KnowledgeChat()
+        self.toolChat = ToolChat()
+        self.dataChat = DataChat()
+        self.codeChat = CodeChat()
+
+        self.agentChat = AgentChat()
         self.codebox = PyCodeBox(
             remote_url=SANDBOX_SERVER["url"],
             remote_ip=SANDBOX_SERVER["host"], # "http://localhost",
@@ -83,7 +94,8 @@ class ApiRequest:
         if (not url.startswith("http")
                     and self.base_url
                 ):
-            part1 = self.base_url.strip(" /")
+            part1 = self.sandbox_file_url.strip(" /") \
+                if "sdfiles" in url else self.base_url.strip(" /")
             part2 = url.strip(" /")
             return f"{part1}/{part2}"
         else:
@@ -331,7 +343,7 @@ class ApiRequest:
         self,
         query: str,
         search_engine_name: str,
-        top_k: int = SEARCH_ENGINE_TOP_K,
+        code_limit: int,
         stream: bool = True,
         no_remote_api: bool = None,
     ):
@@ -344,7 +356,7 @@ class ApiRequest:
         data = {
             "query": query,
             "engine_name": search_engine_name,
-            "top_k": top_k,
+            "code_limit": code_limit,
             "history": [],
             "stream": stream,
         }
@@ -360,7 +372,157 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response, as_json=True)
 
-    # 知识库相关操作
+    def tool_chat(
+        self,
+        query: str,
+        history: List[Dict] = [],
+        tool_sets: List[str] = [],
+        stream: bool = True,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "tool_sets": tool_sets,
+            "stream": stream,
+        }
+
+        if no_remote_api:
+            response = self.toolChat.chat(**data)
+            return self._fastapi_stream2generator(response, as_json=True)
+        else:
+            response = self.post("/chat/tool_chat", json=data, stream=True)
+            return self._httpx_stream2generator(response)
+
+    def data_chat(
+        self,
+        query: str,
+        history: List[Dict] = [],
+        stream: bool = True,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "stream": stream,
+        }
+
+        if no_remote_api:
+            response = self.dataChat.chat(**data)
+            return self._fastapi_stream2generator(response, as_json=True)
+        else:
+            response = self.post("/chat/data_chat", json=data, stream=True)
+            return self._httpx_stream2generator(response)
+
+    def code_base_chat(
+        self,
+        query: str,
+        code_base_name: str,
+        code_limit: int = 1,
+        history: List[Dict] = [],
+        stream: bool = True,
+        no_remote_api: bool = None,
+    ):
+        '''
+        对应api.py/chat/knowledge_base_chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "history": history,
+            "engine_name": code_base_name,
+            "code_limit": code_limit,
+            "stream": stream,
+            "local_doc_url": no_remote_api,
+        }
+        logger.info('data={}'.format(data))
+
+        if no_remote_api:
+            logger.info('history_node_list before={}'.format(self.codeChat.history_node_list))
+            response = self.codeChat.chat(**data)
+            logger.info('history_node_list after={}'.format(self.codeChat.history_node_list))
+            return self._fastapi_stream2generator(response, as_json=True)
+        else:
+            response = self.post(
+                "/chat/code_chat",
+                json=data,
+                stream=True,
+            )
+            return self._httpx_stream2generator(response, as_json=True)
+
+    def agent_chat(
+        self,
+        query: str,
+        phase_name: str,
+        doc_engine_name: str,
+        code_engine_name: str,
+        search_engine_name: str,
+        top_k: int = 3,
+        score_threshold: float = 1.0,
+        history: List[Dict] = [],
+        stream: bool = True,
+        local_doc_url: bool = False,
+        do_search: bool = False,
+        do_doc_retrieval: bool = False,
+        do_code_retrieval: bool = False,
+        do_tool_retrieval: bool = False,
+        choose_tools: List[str] = [],
+        custom_phase_configs =  {},
+        custom_chain_configs = {},
+        custom_role_configs = {},
+        no_remote_api: bool = None,
+        history_node_list: List[str] = [],
+        isDetailed: bool = False
+    ):
+        '''
+        对应api.py/chat/chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "phase_name": phase_name,
+            "chain_name": "",
+            "history": history,
+            "doc_engine_name": doc_engine_name,
+            "code_engine_name": code_engine_name,
+            "search_engine_name": search_engine_name,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+            "stream": stream,
+            "local_doc_url": local_doc_url,
+            "do_search": do_search,
+            "do_doc_retrieval": do_doc_retrieval,
+            "do_code_retrieval": do_code_retrieval,
+            "do_tool_retrieval": do_tool_retrieval,
+            "custom_phase_configs": custom_phase_configs,
+            "custom_chain_configs": custom_phase_configs,
+            "custom_role_configs": custom_role_configs,
+            "choose_tools": choose_tools,
+            "history_node_list": history_node_list,
+            "isDetailed": isDetailed
+        }
+        if no_remote_api:
+            response = self.agentChat.chat(**data)
+            return self._fastapi_stream2generator(response, as_json=True)
+        else:
+            response = self.post("/chat/data_chat", json=data, stream=True)
+            return self._httpx_stream2generator(response)
 
     def _check_httpx_json_response(
             self,
@@ -377,6 +539,21 @@ class ApiRequest:
             logger.error(e)
             return {"code": 500, "msg": errorMsg or str(e)}
 
+    def _check_httpx_file_response(
+            self,
+            response: httpx.Response,
+            errorMsg: str = f"无法连接API服务器，请确认已执行python server\\api.py",
+        ) -> Dict:
+        '''
+        check whether httpx returns correct data with normal Response.
+        error in api with streaming support was checked in _httpx_stream2enerator
+        '''
+        try:
+            return response.content
+        except Exception as e:
+            logger.error(e)
+            return {"code": 500, "msg": errorMsg or str(e)}
+        
     def list_knowledge_bases(
         self,
         no_remote_api: bool = None,
@@ -662,6 +839,122 @@ class ApiRequest:
         else:
             raise Exception("not impletenion")
     
+    def web_sd_upload(self, file: str = None, filename: str = None):
+        '''对应file_service/sd_upload_file'''
+        file, filename = file_normalize(file, filename)
+        response = self.post(
+            "/sdfiles/upload",
+            files={"file": (filename, file)},
+        )
+        return self._check_httpx_json_response(response)
+
+    def web_sd_download(self, filename: str, save_filename: str = None):
+        '''对应file_service/sd_download_file'''
+        save_filename = save_filename or filename
+        # response = self.get(
+        #     f"/sdfiles/download",
+        #     params={"filename": filename, "save_filename": save_filename}
+        # )
+        key_value_str = f"filename={filename}&save_filename={save_filename}"
+        return self._parse_url(f"/sdfiles/download?{key_value_str}"), save_filename
+
+    def web_sd_delete(self, filename: str):
+        '''对应file_service/sd_delete_file'''
+        response = self.get(
+            f"/sdfiles/delete",
+            params={"filename": filename}
+        )
+        return self._check_httpx_json_response(response)
+    
+    def web_sd_list_files(self, ):
+        '''对应对应file_service/sd_list_files接口'''
+        response = self.get("/sdfiles/list",)
+        return self._check_httpx_json_response(response)
+
+    # code base 相关操作
+    def create_code_base(self, cb_name, zip_file, no_remote_api: bool = None,):
+        '''
+        创建 code_base
+        @param cb_name:
+        @param zip_path:
+        @return:
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        # mkdir
+        cb_root_path = CB_ROOT_PATH
+        mkdir_dir = [
+            cb_root_path,
+            cb_root_path + os.sep + cb_name,
+            raw_code_path := cb_root_path + os.sep + cb_name + os.sep + 'raw_code'
+        ]
+        for dir in mkdir_dir:
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+
+        # unzip
+        with zipfile.ZipFile(zip_file, 'r') as z:
+            z.extractall(raw_code_path)
+
+        data = {
+            "cb_name": cb_name,
+            "code_path": raw_code_path
+        }
+        logger.info('create cb data={}'.format(data))
+
+        if no_remote_api:
+            response = run_async(create_cb(**data))
+            return response.dict()
+        else:
+            response = self.post(
+                "/code_base/create_code_base",
+                json=data,
+            )
+            logger.info('response={}'.format(response.json()))
+            return self._check_httpx_json_response(response)
+
+    def delete_code_base(self, cb_name: str, no_remote_api: bool = None,):
+        '''
+        删除 code_base
+        @param cb_name:
+        @return:
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "cb_name": cb_name
+        }
+
+        if no_remote_api:
+            response = run_async(delete_cb(**data))
+            return response.dict()
+        else:
+            response = self.post(
+                "/code_base/delete_code_base",
+                json=cb_name
+            )
+            logger.info(response.json())
+            return self._check_httpx_json_response(response)
+
+    def list_cb(self, no_remote_api: bool = None):
+        '''
+        列举 code_base
+        @return:
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        if no_remote_api:
+            response = run_async(list_cbs())
+            return response.data
+        else:
+            response = self.get("/code_base/list_code_bases")
+            data = self._check_httpx_json_response(response)
+            return data.get("data", [])
+
+
 
 def check_error_msg(data: Union[str, dict, list], key: str = "errorMsg") -> str:
     '''

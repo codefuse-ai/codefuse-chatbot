@@ -1,7 +1,6 @@
 import time, os, docker, requests, json, uuid, subprocess, time, asyncio, aiohttp, re, traceback
 import psutil
 from typing import List, Optional, Union
-from pathlib import Path
 from loguru import logger
 
 from websockets.sync.client import connect as ws_connect_sync
@@ -11,7 +10,8 @@ from websockets.client import WebSocketClientProtocol, ClientConnection
 from websockets.exceptions import ConnectionClosedError
 
 from configs.server_config import SANDBOX_SERVER
-from .basebox import BaseBox, CodeBoxResponse, CodeBoxStatus, CodeBoxFile
+from configs.model_config import JUPYTER_WORK_PATH
+from .basebox import BaseBox, CodeBoxResponse, CodeBoxStatus
 
 
 class PyCodeBox(BaseBox):
@@ -25,11 +25,17 @@ class PyCodeBox(BaseBox):
             remote_port: str = SANDBOX_SERVER["port"],
             token: str = "mytoken",
             do_code_exe: bool = False,
-            do_remote: bool = False
+            do_remote: bool = False,
+            do_check_net: bool = True,
     ):
         super().__init__(remote_url, remote_ip, remote_port, token, do_code_exe, do_remote)
         self.enter_status = True
+        self.do_check_net = do_check_net
         asyncio.run(self.astart())
+
+        # logger.info(f"""remote_url: {self.remote_url},
+        #             remote_ip: {self.remote_ip},
+        #             remote_port: {self.remote_port}""")
 
     def decode_code_from_text(self, text: str) -> str:
         pattern = r'```.*?```'
@@ -73,7 +79,8 @@ class PyCodeBox(BaseBox):
         if not self.ws:
             raise RuntimeError("Jupyter not running. Make sure to start it first")
         
-        logger.debug(f"code_text: {json.dumps(code_text, ensure_ascii=False)}")
+        # logger.debug(f"code_text: {len(code_text)}, {code_text}")
+
         self.ws.send(
             json.dumps(
                 {
@@ -103,7 +110,7 @@ class PyCodeBox(BaseBox):
                     raise RuntimeError("Mixing asyncio and sync code is not supported")
                 received_msg = json.loads(self.ws.recv())
             except ConnectionClosedError:
-                logger.debug("box start, ConnectionClosedError!!!")
+                # logger.debug("box start, ConnectionClosedError!!!")
                 self.start()
                 return self.run(code_text, file_path, retry - 1)
 
@@ -156,7 +163,7 @@ class PyCodeBox(BaseBox):
                 return CodeBoxResponse(
                         code_exe_type="text",
                         code_text=code_text,
-                        code_exe_response=result or "Code run successfully (no output)",
+                        code_exe_response=result or "Code run successfully (no output)，可能没有打印需要确认的变量",
                         code_exe_status=200,
                         do_code_exe=self.do_code_exe
                     )
@@ -219,7 +226,6 @@ class PyCodeBox(BaseBox):
     async def _acheck_connect(self, ) -> bool:
         if self.kernel_url == "":
             return False
-
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(f"{self.kernel_url}?token={self.token}", timeout=270) as resp:
@@ -231,7 +237,7 @@ class PyCodeBox(BaseBox):
 
     def  _check_port(self, ) -> bool:
         try:
-             response = requests.get(f"http://localhost:{self.remote_port}", timeout=270)
+             response = requests.get(f"{self.remote_ip}:{self.remote_port}", timeout=270)
              logger.warning(f"Port is conflict, please check your codebox's port {self.remote_port}")
              return response.status_code == 200
         except requests.exceptions.ConnectionError:
@@ -240,7 +246,7 @@ class PyCodeBox(BaseBox):
     async def _acheck_port(self, ) -> bool:
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://localhost:{self.remote_port}", timeout=270) as resp:
+                async with session.get(f"{self.remote_ip}:{self.remote_port}", timeout=270) as resp:
                     logger.warning(f"Port is conflict, please check your codebox's port {self.remote_port}")
                     return resp.status == 200
         except aiohttp.ClientConnectorError:
@@ -249,6 +255,8 @@ class PyCodeBox(BaseBox):
             pass
 
     def _check_connect_success(self, retry_nums: int = 5) -> bool:
+        if not self.do_check_net: return True
+        
         while retry_nums > 0:
             try:
                 connect_status = self._check_connect()
@@ -262,6 +270,7 @@ class PyCodeBox(BaseBox):
         raise BaseException(f"can't connect to {self.remote_url}")
     
     async def _acheck_connect_success(self, retry_nums: int = 5) -> bool:
+        if not self.do_check_net: return True
         while retry_nums > 0:
             try:
                 connect_status = await self._acheck_connect()
@@ -283,7 +292,7 @@ class PyCodeBox(BaseBox):
             self._check_connect_success()
 
             self._get_kernelid()
-            logger.debug(self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}")
+            # logger.debug(self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}")
             self.wc_url = self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}"
             headers = {"Authorization": f'Token {self.token}', 'token': self.token}
             self.ws = create_connection(self.wc_url, headers=headers)
@@ -291,27 +300,30 @@ class PyCodeBox(BaseBox):
             # TODO 自动检测本地接口
             port_status = self._check_port()
             connect_status = self._check_connect()
-            logger.debug(f"port_status: {port_status}, connect_status: {connect_status}")
+            logger.info(f"port_status: {port_status}, connect_status: {connect_status}")
             if port_status and not connect_status:
                 raise BaseException(f"Port is conflict, please check your codebox's port {self.remote_port}")
             
             if not connect_status:
-                self.jupyter = subprocess.Popen(
+                self.jupyter = subprocess.run(
                     [
                         "jupyer", "notebnook",
                         f"--NotebookApp.token={self.token}",
                         f"--port={self.remote_port}",
                         "--no-browser",
                         "--ServerApp.disable_check_xsrf=True",
+                        "--notebook-dir={JUPYTER_WORK_PATH}"
                     ],
                     stderr=subprocess.PIPE,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                 )
+
             self.kernel_url = self.remote_url + "/api/kernels"
+            self.do_check_net = True
             self._check_connect_success()
             self._get_kernelid()
-            logger.debug(self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}")
+            # logger.debug(self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}")
             self.wc_url = self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}"
             headers = {"Authorization": f'Token {self.token}', 'token': self.token}
             self.ws = create_connection(self.wc_url, headers=headers)
@@ -333,10 +345,10 @@ class PyCodeBox(BaseBox):
             port_status = await self._acheck_port()
             self.kernel_url = self.remote_url + "/api/kernels"
             connect_status = await self._acheck_connect()
-            logger.debug(f"port_status: {port_status}, connect_status: {connect_status}")
+            logger.info(f"port_status: {port_status}, connect_status: {connect_status}")
             if port_status and not connect_status:
                 raise BaseException(f"Port is conflict, please check your codebox's port {self.remote_port}")
-            
+
             if not connect_status:
                 self.jupyter = subprocess.Popen(
                     [
@@ -344,13 +356,15 @@ class PyCodeBox(BaseBox):
                         f"--NotebookApp.token={self.token}",
                         f"--port={self.remote_port}",
                         "--no-browser",
-                        "--ServerApp.disable_check_xsrf=True",
+                        "--ServerApp.disable_check_xsrf=True"
                     ],
                     stderr=subprocess.PIPE,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                 )
+
             self.kernel_url = self.remote_url + "/api/kernels"
+            self.do_check_net = True
             await self._acheck_connect_success()
             await self._aget_kernelid()
             self.wc_url = self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}"
@@ -405,7 +419,8 @@ class PyCodeBox(BaseBox):
             except Exception as e:
                 logger.error(traceback.format_exc())
             self.ws = None
-        return CodeBoxStatus(status="stopped")
+
+        # return CodeBoxStatus(status="stopped")
     
     def __del__(self):
         self.stop()

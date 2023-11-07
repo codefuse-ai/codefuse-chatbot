@@ -16,7 +16,6 @@ from configs.model_config import (
 )
 
 
-
 async def list_kbs():
     # Get List of Knowledge Base
     return ListResponse(data=list_kbs_from_db())

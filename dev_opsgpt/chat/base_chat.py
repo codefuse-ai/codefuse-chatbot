@@ -3,41 +3,16 @@ from fastapi.responses import StreamingResponse
 import asyncio, json
 from typing import List, AsyncIterable
 
-from langchain.chat_models import ChatOpenAI
 from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.prompts.chat import ChatPromptTemplate
 
-
+from dev_opsgpt.llm_models import getChatModel
 from dev_opsgpt.chat.utils import History, wrap_done
 from configs.model_config import (llm_model_dict, LLM_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)
 from dev_opsgpt.utils import BaseResponse
 from loguru import logger
 
-
-
-
-
-
-def getChatModel(callBack: AsyncIteratorCallbackHandler = None):
-    if callBack is None:
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL
-        )
-    else:
-        model = ChatOpenAI(
-            streaming=True,
-            verbose=True,
-            callBack=[callBack],
-            openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-            openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-            model_name=LLM_MODEL
-        )
-    return model
 
 
 class Chat:
@@ -67,6 +42,7 @@ class Chat:
             stream: bool = Body(False, description="流式输出"),
             local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
             request: Request = None,
+            **kargs
             ):
         self.engine_name = engine_name if isinstance(engine_name, str) else engine_name.default
         self.top_k = top_k if isinstance(top_k, int) else top_k.default
@@ -74,18 +50,23 @@ class Chat:
         self.stream = stream if isinstance(stream, bool) else stream.default
         self.local_doc_url = local_doc_url if isinstance(local_doc_url, bool) else local_doc_url.default
         self.request = request
-        return self._chat(query, history)
+        return self._chat(query, history, **kargs)
     
-    def _chat(self, query: str, history: List[History]):
+    def _chat(self, query: str, history: List[History], **kargs):
         history = [History(**h) if isinstance(h, dict) else h for h in history]
+
         ## check service dependcy is ok
         service_status = self.check_service_status()
+
         if service_status.code!=200: return service_status
 
         def chat_iterator(query: str, history: List[History]):
             model = getChatModel()
 
-            result ,content = self.create_task(query, history, model)
+            result, content = self.create_task(query, history, model, **kargs)
+            logger.info('result={}'.format(result))
+            logger.info('content={}'.format(content))
+
             if self.stream:
                 for token in content["text"]:
                     result["answer"] = token
@@ -144,7 +125,7 @@ class Chat:
         return StreamingResponse(chat_iterator(query, history),
                                      media_type="text/event-stream")
         
-    def create_task(self, query: str, history: List[History], model):
+    def create_task(self, query: str, history: List[History], model, **kargs):
         '''构建 llm 生成任务'''
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_tuple() for i in history] + [("human", "{input}")]

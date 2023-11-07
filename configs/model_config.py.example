@@ -33,6 +33,10 @@ embedding_model_dict = {
     "bge-large-zh": "BAAI/bge-large-zh"
 }
 
+
+LOCAL_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "embedding_models")
+embedding_model_dict = {k: f"/home/user/chatbot/embedding_models/{v}" if is_running_in_docker() else f"{LOCAL_MODEL_DIR}/{v}" for k, v in embedding_model_dict.items()}
+
 # 选用的 Embedding 名称
 EMBEDDING_MODEL = "text2vec-base"
 
@@ -97,6 +101,7 @@ llm_model_dict = {
 
 # LLM 名称
 LLM_MODEL = "gpt-3.5-turbo"
+USE_FASTCHAT = "gpt" not in LLM_MODEL # 判断是否进行fastchat
 
 # LLM 运行设备
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -111,6 +116,9 @@ SOURCE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 # 知识库默认存储路径
 KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "knowledge_base")
+
+# 代码库默认存储路径
+CB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "code_base")
 
 # nltk 模型存储路径
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nltk_data")
@@ -153,7 +161,7 @@ DEFAULT_VS_TYPE = "faiss"
 CACHED_VS_NUM = 1
 
 # 知识库中单段文本长度
-CHUNK_SIZE = 250
+CHUNK_SIZE = 500
 
 # 知识库中相邻文本重合长度
 OVERLAP_SIZE = 50
@@ -169,10 +177,20 @@ SCORE_THRESHOLD = 1 if system_name in ["Linux", "Windows"] else 1100
 # 搜索引擎匹配结题数量
 SEARCH_ENGINE_TOP_K = 5
 
+# 代码引擎匹配结题数量
+CODE_SEARCH_TOP_K = 1
+
 # 基于本地知识问答的提示词模版
 PROMPT_TEMPLATE = """【指令】根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。 
 
 【已知信息】{context} 
+
+【问题】{question}"""
+
+# 基于本地代码知识问答的提示词模版
+CODE_PROMPT_TEMPLATE = """【指令】根据已知信息来回答问题。
+
+【已知信息】{context}
 
 【问题】{question}"""
 

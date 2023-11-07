@@ -6,7 +6,6 @@ import os
 src_dir = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-print(src_dir)
 sys.path.append(src_dir)
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -20,7 +19,7 @@ model_worker_port = 20002
 openai_api_port = 8888
 base_url = "http://127.0.0.1:{}"
 
-os.environ['PATH'] = os.environ.get("PATH", "") + os.pathsep + r'/d/env_utils/miniconda3/envs/devopsgpt/Lib/site-packages/torch/lib'
+os.environ['PATH'] = os.environ.get("PATH", "") + os.pathsep
 
 def set_httpx_timeout(timeout=60.0):
     import httpx

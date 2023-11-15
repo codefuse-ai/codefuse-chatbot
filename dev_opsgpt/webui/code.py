@@ -135,6 +135,6 @@ def code_page(api: ApiRequest):
         ):
             ret = api.delete_code_base(cb,
                     no_remote_api=True)
-            st.toast(ret.get("msg", " "))
-            time.sleep(1)
+            st.toast(ret.get("msg", "删除成功"))
+            time.sleep(0.5)
             st.experimental_rerun()

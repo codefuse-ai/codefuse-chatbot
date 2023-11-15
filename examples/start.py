@@ -111,8 +111,10 @@ def start_sandbox_service():
         if check_docker(client, SANDBOX_CONTRAINER_NAME, do_stop=True, ):
             container = start_docker(client, script_shs, ports, SANDBOX_IMAGE_NAME, SANDBOX_CONTRAINER_NAME, mounts=mounts, network=network_name)
         # 判断notebook是否启动
+        time.sleep(5)
         retry_nums = 3
         while retry_nums>0:
+            logger.info(f"http://localhost:{SANDBOX_SERVER['port']}")
             response = requests.get(f"http://localhost:{SANDBOX_SERVER['port']}", timeout=270)
             if response.status_code == 200:
                 logger.info("container & notebook init success")
@@ -180,7 +182,6 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
         webui_sh = "streamlit run webui.py" if USE_TTY else "streamlit run webui.py"
         #
         if not NO_REMOTE_API and check_process("service/api.py"):
-            logger.info('check 1')
             subprocess.Popen(api_sh, shell=True)
         # 
         if USE_FASTCHAT and check_process("service/llm_api.py"):

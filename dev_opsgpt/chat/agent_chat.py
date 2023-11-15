@@ -74,6 +74,13 @@ class AgentChat:
         # update configs
         phase_configs, chain_configs, agent_configs = self.update_configs(
             custom_phase_configs, custom_chain_configs, custom_role_configs)
+
+        logger.info('phase_configs={}'.format(phase_configs))
+        logger.info('chain_configs={}'.format(chain_configs))
+        logger.info('agent_configs={}'.format(agent_configs))
+        logger.info('phase_name')
+        logger.info('chain_name')
+
         # choose tools
         tools = toLangchainTools([TOOL_DICT[i] for i in choose_tools if i in TOOL_DICT])
         input_message = Message(

@@ -71,9 +71,12 @@ class CodeChat(Chat):
             node_name, node_type, node_score = node_info[0], node_info[1], node_info[2]
             source_nodes.append(f'{inum + 1}. 节点名为 {node_name}, 节点类型为 `{node_type}`, 节点得分为 `{node_score}`')
 
+        logger.info('history={}'.format(history))
+        logger.info('message={}'.format([i.to_msg_tuple() for i in history] + [("human", CODE_PROMPT_TEMPLATE)]))
         chat_prompt = ChatPromptTemplate.from_messages(
             [i.to_msg_tuple() for i in history] + [("human", CODE_PROMPT_TEMPLATE)]
         )
+        logger.info('chat_prompt={}'.format(chat_prompt))
         chain = LLMChain(prompt=chat_prompt, llm=model)
         result = {"answer": "", "codes": source_nodes}
         return chain, context, result
@@ -89,7 +92,7 @@ class CodeChat(Chat):
             code_limit: int = Body(1, examples=['1']),
             stream: bool = Body(False, description="流式输出"),
             local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
-            request: Request = Body(None),
+            request: Request = None,
             **kargs
             ):
         self.engine_name = engine_name if isinstance(engine_name, str) else engine_name.default

@@ -200,7 +200,7 @@ $JSON_BLOB
 ```
 """
 
-CODE_QA_PROMPT = """【指令】根据已知信息来回答问"""
+CODE_QA_PROMPT = """【指令】根据已知信息来回答问题"""
 
 
 AGETN_CONFIGS = {

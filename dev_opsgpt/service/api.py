@@ -87,7 +87,6 @@ def create_app():
              tags=["Chat"],
              summary="与代码库对话")(codeChat.chat)
 
-
     # Tag: Knowledge Base Management
     app.get("/knowledge_base/list_knowledge_bases",
             tags=["Knowledge Base Management"],

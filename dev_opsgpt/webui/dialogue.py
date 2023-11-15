@@ -249,12 +249,12 @@ def dialogue_page(api: ApiRequest):
                     break
                 text += t["answer"]
 
-                text = replace_lt_gt(text)
+                # text = replace_lt_gt(text)
 
                 chat_box.update_msg(text)
-            logger.debug(f"text: {text}")
+            # logger.debug(f"text: {text}")
 
-            text = replace_lt_gt(text)
+            # text = replace_lt_gt(text)
 
             chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
             # 判断是否存在代码, 并提高编辑功能，执行功能
@@ -394,10 +394,10 @@ def dialogue_page(api: ApiRequest):
                     st.error(error_msg)
                 text += d["answer"]
                 if idx_count % 10 == 0:
-                    text = replace_lt_gt(text)
+                    # text = replace_lt_gt(text)
                     chat_box.update_msg(text, element_index=0)
             # postprocess
-            text = replace_lt_gt(text)
+            # text = replace_lt_gt(text)
             chat_box.update_msg(text, element_index=0, streaming=False)  # 更新最终的字符串，去除光标
             logger.debug('text={}'.format(text))
             chat_box.update_msg("\n".join(d["codes"]), element_index=1, streaming=False, state="complete")

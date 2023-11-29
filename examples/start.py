@@ -8,7 +8,7 @@ src_dir = os.path.join(
 )
 sys.path.append(src_dir)
 
-from configs.model_config import USE_FASTCHAT
+from configs.model_config import USE_FASTCHAT, JUPYTER_WORK_PATH
 from configs.server_config import (
     NO_REMOTE_API, SANDBOX_SERVER, SANDBOX_IMAGE_NAME, SANDBOX_CONTRAINER_NAME, 
     WEBUI_SERVER, API_SERVER, SDFILE_API_SERVER, CONTRAINER_NAME, IMAGE_NAME, DOCKER_SERVICE,
@@ -39,6 +39,7 @@ def check_process(content: str, lang: str = None, do_stop=False):
 
 def check_docker(client, container_name, do_stop=False):
     '''container-not-exist is true, container-exist is false'''
+    if client is None: return True
     for i  in client.containers.list(all=True):
         if i.name == container_name:
             if do_stop:
@@ -81,17 +82,14 @@ def start_docker(client, script_shs, ports, image_name, container_name, mounts=N
 #########################################
 ############# 开始启动服务 ###############
 #########################################
-
-client = docker.from_env()
-client.containers.run
 network_name ='my_network'
 
-def start_sandbox_service():
-    networks = client.networks.list()
-    if any([network_name==i.attrs["Name"] for i in networks]):
-        network = client.networks.get(network_name)
-    else:
-        network = client.networks.create('my_network', driver='bridge')
+def start_sandbox_service(network_name ='my_network'):
+    # networks = client.networks.list()
+    # if any([network_name==i.attrs["Name"] for i in networks]):
+    #     network = client.networks.get(network_name)
+    # else:
+    #     network = client.networks.create('my_network', driver='bridge')
 
     mount = Mount(
             type='bind',
@@ -102,6 +100,7 @@ def start_sandbox_service():
     mounts = [mount]
     # 沙盒的启动与服务的启动是独立的
     if SANDBOX_SERVER["do_remote"]:
+        client = docker.from_env()
         # 启动容器
         logger.info("start container sandbox service")
         script_shs = ["bash jupyter_start.sh"]
@@ -126,12 +125,17 @@ def start_sandbox_service():
             time.sleep(5)
 
     else:
+        try:
+            client = docker.from_env()
+        except:
+            client = None
         check_docker(client, SANDBOX_CONTRAINER_NAME, do_stop=True, )
         logger.info("start local sandbox service")
 
 def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
     # 启动service的容器
     if DOCKER_SERVICE:
+        client = docker.from_env()
         logger.info("start container service")
         check_process("service/api.py", do_stop=True)
         check_process("service/sdfile_api.py", do_stop=True)
@@ -149,16 +153,20 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             target='/home/user/knowledge_base/',
             read_only=False  # 如果需要只读访问，将此选项设置为True
         )
-
+        mount_code_database = Mount(
+            type='bind',
+            source=os.path.join(src_dir, "code_base"),
+            target='/home/user/code_base/',
+            read_only=False  # 如果需要只读访问，将此选项设置为True
+        )
         ports={
                 f"{API_SERVER['docker_port']}/tcp": f"{API_SERVER['port']}/tcp", 
                 f"{WEBUI_SERVER['docker_port']}/tcp": f"{WEBUI_SERVER['port']}/tcp",
                 f"{SDFILE_API_SERVER['docker_port']}/tcp": f"{SDFILE_API_SERVER['port']}/tcp",
                 }
-        mounts = [mount, mount_database]
+        mounts = [mount, mount_database, mount_code_database]
         script_shs = [
             "mkdir -p /home/user/logs",
-            "pip install zdatafront-sdk-python -i https://artifacts.antgroup-inc.cn/simple",
             "pip install jsonref",
             "pip install javalang",
             "nohup python chatbot/dev_opsgpt/service/sdfile_api.py > /home/user/logs/sdfile_api.log 2>&1 &",
@@ -178,8 +186,13 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
 
         api_sh = "nohup python ../dev_opsgpt/service/api.py > ../logs/api.log 2>&1 &"
         sdfile_sh = "nohup python ../dev_opsgpt/service/sdfile_api.py > ../logs/sdfile_api.log 2>&1 &"
+        notebook_sh = f"nohup jupyter-notebook --NotebookApp.token=mytoken --port={SANDBOX_SERVER['port']} --allow-root --ip=0.0.0.0 --notebook-dir={JUPYTER_WORK_PATH} --no-browser --ServerApp.disable_check_xsrf=True > ../logs/sandbox.log 2>&1  &"
         llm_sh = "nohup python ../dev_opsgpt/service/llm_api.py > ../logs/llm_api.log 2>&1 &"
         webui_sh = "streamlit run webui.py" if USE_TTY else "streamlit run webui.py"
+
+        if check_process("jupyter-notebook --NotebookApp"):
+            logger.debug(f"{notebook_sh}")
+            subprocess.Popen(notebook_sh, shell=True)
         #
         if not NO_REMOTE_API and check_process("service/api.py"):
             subprocess.Popen(api_sh, shell=True)
@@ -196,14 +209,15 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
 
 if __name__ == "__main__":
     start_sandbox_service()
-    client = docker.from_env()
-    containers = client.containers.list(all=True)
+    if SANDBOX_SERVER["do_remote"]:
+        client = docker.from_env()
+        containers = client.containers.list(all=True)
 
-    sandbox_host = DEFAULT_BIND_HOST
-    for container in containers:
-        container_a_info = client.containers.get(container.id)
-        if container_a_info.name == SANDBOX_CONTRAINER_NAME:
-            container1_networks = container.attrs['NetworkSettings']['Networks']
-            sandbox_host = container1_networks.get(network_name)["IPAddress"]
-            break
-    start_api_service(sandbox_host)
+        sandbox_host = DEFAULT_BIND_HOST
+        for container in containers:
+            container_a_info = client.containers.get(container.id)
+            if container_a_info.name == SANDBOX_CONTRAINER_NAME:
+                container1_networks = container.attrs['NetworkSettings']['Networks']
+                sandbox_host = container1_networks.get(network_name)["IPAddress"]
+                break
+    start_api_service()

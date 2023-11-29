@@ -13,7 +13,10 @@ from configs.server_config import (
 
 from start import check_docker, check_process
 
-client = docker.from_env()
+try:
+    client = docker.from_env()
+except:
+    client = None
 
 # 
 check_docker(client, SANDBOX_CONTRAINER_NAME, do_stop=True, )

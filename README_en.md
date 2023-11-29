@@ -144,18 +144,21 @@ os.environ["OPENAI_API_KEY"] = "sk-xxx"
 # You can replace the api_base_url yourself
 os.environ["API_BASE_URL"] = "https://api.openai.com/v1"
 
-# vi model_config#95 You need to choose the language model
+# vi model_config#105 You need to choose the language model
 LLM_MODEL = "gpt-3.5-turbo"
 
-# vi model_config#33 You need to choose the vector model
+# vi model_config#43 You need to choose the vector model
 EMBEDDING_MODEL = "text2vec-base"
 
-# vi model_config#19 Modify to your local path, if you can directly connect to huggingface, no modification is needed
-"text2vec-base": "/home/user/xx/text2vec-base-chinese",
+# vi model_config#25 Modify to your local path, if you can directly connect to huggingface, no modification is needed
+"text2vec-base": "shibing624/text2vec-base-chinese",
 
-# Whether to start the local notebook for code interpretation, start the docker notebook by default
-# vi server_config#35, True to start the docker notebook, false to start the local notebook
-"do_remote": False,  /  "do_remote": True,
+# vi server_config#8~14, it is recommended to start the service using containers.
+DOCKER_SERVICE = True
+# Whether to use container sandboxing is up to your specific requirements and preferences
+SANDBOX_DO_REMOTE = True
+# Whether to use api-service to use chatbot
+NO_REMOTE_API = True
 ```
 
 5. Start the Service
@@ -171,8 +174,8 @@ python dev_opsgpt/service/llm_api.py
 ```
 
 ```bash
+# After configuring server_config.py, you can start with just one click.
 cd examples
-# python ../dev_opsgpt/service/llm_api.py If you need to use the local large language model, you can execute this command
 bash start_webui.sh
 ```
 

@@ -139,6 +139,7 @@ git lfs clone https://huggingface.co/THUDM/chatglm2-6b
 
 # install Embedding-model
 git lfs clone https://huggingface.co/shibing624/text2vec-base-chinese
+cp ~/shibing624/text2vec-base-chinese ~/codefuse-chatbot/embedding_models/
 ```
 
 
@@ -155,18 +156,21 @@ os.environ["OPENAI_API_KEY"] = "sk-xxx"
 # 可自行替换自己需要的api_base_url
 os.environ["API_BASE_URL"] = "https://api.openai.com/v1"
 
-# vi model_config#95 你需要选择的语言模型
+# vi model_config#105 你需要选择的语言模型
 LLM_MODEL = "gpt-3.5-turbo"
 
-# vi model_config#33 你需要选择的向量模型
+# vi model_config#43 你需要选择的向量模型
 EMBEDDING_MODEL = "text2vec-base"
 
-# vi model_config#19 修改成你的本地路径，如果能直接连接huggingface则无需修改
-"text2vec-base": "/home/user/xx/text2vec-base-chinese",
+# vi model_config#25 修改成你的本地路径，如果能直接连接huggingface则无需修改
+"text2vec-base": "shibing624/text2vec-base-chinese",
 
-# 是否启动本地的notebook用于代码解释，默认启动docker的notebook
-# vi server_config#35，True启动docker的notebook，false启动local的notebook
-"do_remote": False,  /  "do_remote": True,
+# vi server_config#8~14, 推荐采用容器启动服务
+DOCKER_SERVICE = True
+# 是否采用容器沙箱
+SANDBOX_DO_REMOTE = True
+# 是否采用api服务来进行
+NO_REMOTE_API = True
 ```
 
 5、启动服务
@@ -182,9 +186,9 @@ python dev_opsgpt/service/llm_api.py
 ```
 
 ```bash
+# 配置好server_config.py后，可一键启动
 cd examples
-# python ../dev_opsgpt/service/llm_api.py 若需使用本地大语言模型，可执行该命令
-bash start_webui.sh
+python start.py
 ```
 
 ## 🤗 致谢

@@ -23,7 +23,9 @@ from configs.model_config import (
     CB_ROOT_PATH
 )
 
-from dev_opsgpt.codebase_handler.codebase_handler import CodeBaseHandler
+# from dev_opsgpt.codebase_handler.codebase_handler import CodeBaseHandler
+
+from dev_opsgpt.codechat.codebase_handler.codebase_handler import CodeBaseHandler
 
 from loguru import logger
 
@@ -33,10 +35,12 @@ async def list_cbs():
     return ListResponse(data=list_cbs_from_db())
 
 
-async def create_cb(cb_name: str = Body(..., examples=["samples"]),
-                    code_path: str = Body(..., examples=["samples"])
+async def create_cb(zip_file,
+                    cb_name: str = Body(..., examples=["samples"]),
+                    code_path: str = Body(..., examples=["samples"]),
+                    do_interpret: bool = Body(..., examples=["samples"])
                     ) -> BaseResponse:
-    logger.info('cb_name={}, zip_path={}'.format(cb_name, code_path))
+    logger.info('cb_name={}, zip_path={}, do_interpret={}'.format(cb_name, code_path, do_interpret))
 
     # Create selected knowledge base
     if not validate_kb_name(cb_name):
@@ -50,17 +54,16 @@ async def create_cb(cb_name: str = Body(..., examples=["samples"]),
 
     try:
         logger.info('start build code base')
-        cbh = CodeBaseHandler(cb_name, code_path, cb_root_path=CB_ROOT_PATH)
-        cbh.import_code(do_save=True)
-        code_graph_node_num = len(cbh.nh)
-        code_file_num = len(cbh.lcdh)
+        cbh = CodeBaseHandler(cb_name, code_path)
+        vertices_num, edge_num, file_num = cbh.import_code(zip_file=zip_file, do_interpret=do_interpret)
         logger.info('build code base done')
 
         # create cb to table
-        add_cb_to_db(cb_name, cbh.code_path, code_graph_node_num, code_file_num)
+        add_cb_to_db(cb_name, cbh.code_path, vertices_num, file_num, do_interpret)
         logger.info('add cb to mysql table success')
     except Exception as e:
         print(e)
+        logger.exception(e)
         return BaseResponse(code=500, msg=f"创建代码知识库出错： {e}")
 
     return BaseResponse(code=200, msg=f"已新增代码知识库 {cb_name}")
@@ -81,6 +84,11 @@ async def delete_cb(cb_name: str = Body(..., examples=["samples"])) -> BaseRespo
 
             # delete local file
             shutil.rmtree(CB_ROOT_PATH + os.sep + cb_name)
+
+            # delete from codebase
+            cbh = CodeBaseHandler(cb_name)
+            cbh.delete_codebase(codebase_name=cb_name)
+
         except Exception as e:
             print(e)
             return BaseResponse(code=500, msg=f"删除代码知识库出错： {e}")
@@ -91,24 +99,25 @@ async def delete_cb(cb_name: str = Body(..., examples=["samples"])) -> BaseRespo
 def search_code(cb_name: str = Body(..., examples=["sofaboot"]),
                 query: str = Body(..., examples=['你好']),
                 code_limit: int = Body(..., examples=['1']),
+                search_type: str = Body(..., examples=['你好']),
                 history_node_list: list = Body(...)) -> dict:
 
     logger.info('cb_name={}'.format(cb_name))
     logger.info('query={}'.format(query))
     logger.info('code_limit={}'.format(code_limit))
+    logger.info('search_type={}'.format(search_type))
     logger.info('history_node_list={}'.format(history_node_list))
 
     try:
         # load codebase
-        cbh = CodeBaseHandler(code_name=cb_name, cb_root_path=CB_ROOT_PATH)
-        cbh.import_code(do_load=True)
+        cbh = CodeBaseHandler(codebase_name=cb_name)
 
         # search code
-        related_code, related_node = cbh.search_code(query, code_limit=code_limit, history_node_list=history_node_list)
+        context, related_vertices = cbh.search_code(query, search_type=search_type, limit=code_limit)
 
         res = {
-            'related_code': related_code,
-            'related_node': related_node
+            'context': context,
+            'related_vertices': related_vertices
         }
         return res
     except Exception as e:

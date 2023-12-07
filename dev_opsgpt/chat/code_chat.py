@@ -53,23 +53,23 @@ class CodeChat(Chat):
 
     def _process(self, query: str, history: List[History], model):
         '''process'''
+
         codes_res = search_code(query=query, cb_name=self.engine_name, code_limit=self.code_limit,
+                                search_type=self.cb_search_type,
                                 history_node_list=self.history_node_list)
 
-        codes = codes_res['related_code']
-        nodes = codes_res['related_node']
+        context = codes_res['context']
+        related_vertices = codes_res['related_vertices']
 
         # update node names
-        node_names = [node[0] for node in nodes]
-        self.history_node_list.extend(node_names)
-        self.history_node_list = list(set(self.history_node_list))
+        # node_names = [node[0] for node in nodes]
+        # self.history_node_list.extend(node_names)
+        # self.history_node_list = list(set(self.history_node_list))
 
-        context = "\n".join(codes)
         source_nodes = []
 
-        for inum, node_info in enumerate(nodes[0:5]):
-            node_name, node_type, node_score = node_info[0], node_info[1], node_info[2]
-            source_nodes.append(f'{inum + 1}. 节点名为 {node_name}, 节点类型为 `{node_type}`, 节点得分为 `{node_score}`')
+        for inum, node_name in enumerate(related_vertices[0:5]):
+            source_nodes.append(f'{inum + 1}. 节点名: `{node_name}`')
 
         logger.info('history={}'.format(history))
         logger.info('message={}'.format([i.to_msg_tuple() for i in history] + [("human", CODE_PROMPT_TEMPLATE)]))
@@ -90,6 +90,7 @@ class CodeChat(Chat):
                 ),
             engine_name: str = Body(..., description="知识库名称", examples=["samples"]),
             code_limit: int = Body(1, examples=['1']),
+            cb_search_type: str = Body('', examples=['1']),
             stream: bool = Body(False, description="流式输出"),
             local_doc_url: bool = Body(False, description="知识文件返回本地路径(true)或URL(false)"),
             request: Request = None,
@@ -100,6 +101,7 @@ class CodeChat(Chat):
         self.stream = stream if isinstance(stream, bool) else stream.default
         self.local_doc_url = local_doc_url if isinstance(local_doc_url, bool) else local_doc_url.default
         self.request = request
+        self.cb_search_type = cb_search_type
         return self._chat(query, history, **kargs)
 
     def _chat(self, query: str, history: List[History], **kargs):

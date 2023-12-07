@@ -9,23 +9,34 @@ from dev_opsgpt.utils import *
 from dev_opsgpt.tools import TOOL_SETS
 from dev_opsgpt.chat.search_chat import SEARCH_ENGINES
 from dev_opsgpt.connector import PHASE_LIST, PHASE_CONFIGS
+from dev_opsgpt.service.service_factory import get_cb_details_by_cb_name
 
 chat_box = ChatBox(
     assistant_avatar="../sources/imgs/devops-chatbot2.png"
 )
 
 GLOBAL_EXE_CODE_TEXT = ""
+GLOBAL_MESSAGE = {"figures": {}, "final_contents": {}}
 
-
-def get_messages_history(history_len: int) -> List[Dict]:
+def get_messages_history(history_len: int, isDetailed=False) -> List[Dict]:
     def filter(msg):
         '''
         针对当前简单文本对话，只返回每条消息的第一个element的内容
         '''
         content = [x._content for x in msg["elements"] if x._output_method in ["markdown", "text"]]
+        content = content[0] if content else ""
+        if isDetailed:
+            for k, v in GLOBAL_MESSAGE["final_contents"].items():
+                if k == content:
+                    content = v[-1]
+                    break
+
+        for k, v in GLOBAL_MESSAGE["figures"].items():
+            content = content.replace(v, k)
+
         return {
             "role": msg["role"],
-            "content": content[0] if content else "",
+            "content": content,
         }
 
     history = chat_box.filter_history(100000, filter)  # workaround before upgrading streamlit-chatbox.
@@ -37,6 +48,18 @@ def get_messages_history(history_len: int) -> List[Dict]:
             if user_count >= history_len:
                 break
     return history[-i:]
+
+
+def upload2sandbox(upload_file, api: ApiRequest):
+    if upload_file is None:
+        res = {"msg": False}
+    else:
+        res = api.web_sd_upload(upload_file)
+    # logger.debug(res)
+    # if res["msg"]:
+    #     st.success("上文件传成功")
+    # else:
+    #     st.toast("文件上传失败")
 
 
 def dialogue_page(api: ApiRequest):
@@ -60,8 +83,6 @@ def dialogue_page(api: ApiRequest):
                                       "知识库问答",
                                       "代码知识库问答",
                                       "搜索引擎问答",
-                                      "工具问答",
-                                      "数据分析",
                                       "Agent问答"
                                       ],
                                      on_change=on_mode_change,
@@ -76,8 +97,16 @@ def dialogue_page(api: ApiRequest):
 
         def on_cb_change():
             st.toast(f"已加载代码知识库： {st.session_state.selected_cb}")
+            cb_details = get_cb_details_by_cb_name(st.session_state.selected_cb)
+            st.session_state['do_interpret'] = cb_details['do_interpret']
+
+        # 
+        if "interpreter_file_key" not in st.session_state:
+            st.session_state["interpreter_file_key"] = 0
 
         not_agent_qa = True
+        interpreter_file = ""
+        is_detailed = False
         if dialogue_mode == "知识库问答":
             with st.expander("知识库配置", True):
                 kb_list = api.list_knowledge_bases(no_remote_api=True)
@@ -101,56 +130,33 @@ def dialogue_page(api: ApiRequest):
                     on_change=on_cb_change,
                     key="selected_cb",
                 )
+
+                # change do_interpret
                 st.toast(f"已加载代码知识库： {st.session_state.selected_cb}")
+                cb_details = get_cb_details_by_cb_name(st.session_state.selected_cb)
+                st.session_state['do_interpret'] = cb_details['do_interpret']
+
                 cb_code_limit = st.number_input("匹配代码条数：", 1, 20, 1)
+
+                search_type_list = ['基于 cypher', '基于标签', '基于描述'] if st.session_state['do_interpret'] == 'YES' \
+                    else ['基于 cypher', '基于标签']
+
+                cb_search_type = st.selectbox(
+                    '请选择查询模式：',
+                    search_type_list,
+                    key='cb_search_type'
+                )
         elif dialogue_mode == "搜索引擎问答":
             with st.expander("搜索引擎配置", True):
                 search_engine = st.selectbox("请选择搜索引擎", SEARCH_ENGINES.keys(), 0)
                 se_top_k = st.number_input("匹配搜索结果条数：", 1, 20, 3)
-        elif dialogue_mode == "工具问答":
-            with st.expander("工具军火库", True):
-                tool_selects = st.multiselect(
-                    '请选择待使用的工具', TOOL_SETS, ["WeatherInfo"])
-                
-        elif dialogue_mode == "数据分析":
-            with st.expander("沙盒文件管理", False):
-                def _upload(upload_file):
-                    res = api.web_sd_upload(upload_file)
-                    logger.debug(res)
-                    if res["msg"]:
-                        st.success("上文件传成功")
-                    else:
-                        st.toast("文件上传失败")
-
-                interpreter_file = st.file_uploader(
-                    "上传沙盒文件",
-                    [i for ls in LOADER2EXT_DICT.values() for i in ls],
-                    accept_multiple_files=False,
-                    key="interpreter_file",
-                )
-
-                if interpreter_file:
-                    _upload(interpreter_file)
-                    interpreter_file = None
-                # 
-                files = api.web_sd_list_files()
-                files = files["data"]
-                download_file = st.selectbox("选择要处理文件", files,
-                                        key="download_file",)
-
-                cols = st.columns(2)
-                file_url, file_name = api.web_sd_download(download_file)
-                cols[0].download_button("点击下载", file_url, file_name)
-                if cols[1].button("点击删除", ):
-                    api.web_sd_delete(download_file)
-
         elif dialogue_mode == "Agent问答":
             not_agent_qa = False
             with st.expander("Phase管理", True):
                 choose_phase = st.selectbox(
                     '请选择待使用的执行链路', PHASE_LIST, 0)
 
-            is_detailed = st.toggle("返回明细的Agent交互", False)
+            is_detailed = st.toggle("是否使用明细信息进行agent交互", False)
             tool_using_on = st.toggle("开启工具使用", PHASE_CONFIGS[choose_phase]["do_using_tool"])
             tool_selects = []
             if tool_using_on:
@@ -181,6 +187,7 @@ def dialogue_page(api: ApiRequest):
 
             code_retrieval_on = st.toggle("开启代码检索增强", PHASE_CONFIGS[choose_phase]["do_code_retrieval"])
             selected_cb, top_k = None, 1
+            cb_search_type = "tag"
             if code_retrieval_on:
                 with st.expander('代码知识库配置', True):
                     cb_list = api.list_cb(no_remote_api=True)
@@ -194,36 +201,41 @@ def dialogue_page(api: ApiRequest):
                     st.toast(f"已加载代码知识库： {st.session_state.selected_cb}")
                     top_k = st.number_input("匹配代码条数：", 1, 20, 1)
 
-            with st.expander("沙盒文件管理", False):
-                def _upload(upload_file):
-                    res = api.web_sd_upload(upload_file)
-                    logger.debug(res)
-                    if res["msg"]:
-                        st.success("上文件传成功")
-                    else:
-                        st.toast("文件上传失败")
+                    cb_details = get_cb_details_by_cb_name(st.session_state.selected_cb)
+                    st.session_state['do_interpret'] = cb_details['do_interpret']
+                    search_type_list = ['基于 cypher', '基于标签', '基于描述'] if st.session_state['do_interpret'] == 'YES' \
+                        else ['基于 cypher', '基于标签']
+                    cb_search_type = st.selectbox(
+                        '请选择查询模式：',
+                        search_type_list,
+                        key='cb_search_type'
+                    )
 
-                interpreter_file = st.file_uploader(
-                    "上传沙盒文件",
-                    [i for ls in LOADER2EXT_DICT.values() for i in ls],
-                    accept_multiple_files=False,
-                    key="interpreter_file",
-                )
+        with st.expander("沙盒文件管理", False):
 
-                if interpreter_file:
-                    _upload(interpreter_file)
-                    interpreter_file = None
-                # 
-                files = api.web_sd_list_files()
-                files = files["data"]
-                download_file = st.selectbox("选择要处理文件", files,
-                                        key="download_file",)
+            interpreter_file = st.file_uploader(
+                "上传沙盒文件",
+                [i for ls in LOADER2EXT_DICT.values() for i in ls] + ["jpg", "png"],
+                accept_multiple_files=False,
+                key=st.session_state.interpreter_file_key,
+            )
 
-                cols = st.columns(2)
-                file_url, file_name = api.web_sd_download(download_file)
-                cols[0].download_button("点击下载", file_url, file_name)
-                if cols[1].button("点击删除", ):
-                    api.web_sd_delete(download_file)
+            files = api.web_sd_list_files()
+            files = files["data"]
+            download_file = st.selectbox("选择要处理文件", files,
+                                    key="download_file",)
+
+            cols = st.columns(3)
+            file_url, file_name = api.web_sd_download(download_file)
+            if cols[0].button("点击上传"):
+                upload2sandbox(interpreter_file, api)
+                st.session_state["interpreter_file_key"] += 1
+                interpreter_file = ""
+                st.experimental_rerun()
+                
+            cols[1].download_button("点击下载", file_url, file_name)
+            if cols[2].button("点击删除", ):
+                api.web_sd_delete(download_file)
 
         code_interpreter_on = st.toggle("开启代码解释器") and not_agent_qa
         code_exec_on = st.toggle("自动执行代码") and not_agent_qa
@@ -237,7 +249,10 @@ def dialogue_page(api: ApiRequest):
     codebox_res = None
 
     if prompt := st.chat_input(chat_input_placeholder, key="prompt"):
-        history = get_messages_history(history_len)
+        upload2sandbox(interpreter_file, api)
+        logger.debug(f"prompt: {prompt}")
+
+        history = get_messages_history(history_len, is_detailed)
         chat_box.user_say(prompt)
         if dialogue_mode == "LLM 对话":
             chat_box.ai_say("正在思考...")
@@ -281,6 +296,7 @@ def dialogue_page(api: ApiRequest):
                 "doc_engine_name": selected_kb,
                 "search_engine_name": search_engine,
                 "code_engine_name": selected_cb,
+                "cb_search_type": cb_search_type,
                 "top_k": top_k,
                 "score_threshold": score_threshold,
                 "do_search": search_on,
@@ -293,21 +309,26 @@ def dialogue_page(api: ApiRequest):
                 "choose_tools": tool_selects,
                 "history_node_list": history_node_list,
                 "isDetailed": is_detailed,
+                "upload_file": interpreter_file,
             }
             text = ""
             d = {"docs": []}
-            for idx_count, d in enumerate(api.agent_chat(**input_kargs)):
+            for idx_count, d in enumerate(api.agent_achat(**input_kargs)):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                text += d["answer"]
-                if idx_count%20 == 0:
-                    chat_box.update_msg(text, element_index=0)
+                # logger.debug(f"d: {d['answer']}")
+                text = d["answer"]
+                for text_length in range(0, len(text)+1, 10):
+                    chat_box.update_msg(text[:text_length+10], element_index=0, streaming=True)
+
+            GLOBAL_MESSAGE.setdefault("final_contents", {}).setdefault(d.get("answer", ""), []).append(d.get("final_content", ""))
 
             for k, v in d["figures"].items():
-                logger.debug(f"figure: {k}")
                 if k in text:
                     img_html = "\n<img src='data:image/png;base64,{}' class='img-fluid'>\n".format(v)
                     text = text.replace(k, img_html).replace(".png", "")
+                    GLOBAL_MESSAGE.setdefault("figures", {}).setdefault(k, v)
+
             chat_box.update_msg(text, element_index=0, streaming=False, state="complete")  # 更新最终的字符串，去除光标
             if search_on:
                 chat_box.update_msg("搜索匹配结果:\n\n" + "\n\n".join(d["search_docs"]), element_index=search_on, streaming=False, state="complete")
@@ -317,41 +338,6 @@ def dialogue_page(api: ApiRequest):
             history_node_list.extend([node[0] for node in d.get("related_nodes", [])])
             history_node_list = list(set(history_node_list))
             st.session_state['history_node_list'] = history_node_list
-
-        elif dialogue_mode == "工具问答":
-            chat_box.ai_say("正在思考...")
-            text = ""
-            r = api.tool_chat(prompt, history, tool_sets=tool_selects)
-            for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
-                    st.error(error_msg)
-                    break
-                text += t["answer"]
-                chat_box.update_msg(text)
-            logger.debug(f"text: {text}")
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
-            # 判断是否存在代码, 并提高编辑功能，执行功能
-            code_text = api.codebox.decode_code_from_text(text)
-            GLOBAL_EXE_CODE_TEXT = code_text
-            if code_text and code_exec_on:
-                codebox_res = api.codebox_chat("```"+code_text+"```", do_code_exe=True)
-        elif dialogue_mode == "数据分析":
-            chat_box.ai_say("正在思考...")
-            text = ""
-            r = api.data_chat(prompt, history)
-            for t in r:
-                if error_msg := check_error_msg(t): # check whether error occured
-                    st.error(error_msg)
-                    break
-                text += t["answer"]
-                chat_box.update_msg(text)
-            logger.debug(f"text: {text}")
-            chat_box.update_msg(text, streaming=False)  # 更新最终的字符串，去除光标
-            # 判断是否存在代码, 并提高编辑功能，执行功能
-            code_text = api.codebox.decode_code_from_text(text)
-            GLOBAL_EXE_CODE_TEXT = code_text
-            if code_text and code_exec_on:
-                codebox_res = api.codebox_chat("```"+code_text+"```", do_code_exe=True)
         elif dialogue_mode == "知识库问答":
             history = get_messages_history(history_len)
             chat_box.ai_say([
@@ -382,13 +368,14 @@ def dialogue_page(api: ApiRequest):
 
             chat_box.ai_say([
                 f"正在查询代码知识库 `{selected_cb}` ...",
-                Markdown("...", in_expander=True, title="代码库匹配结果"),
+                Markdown("...", in_expander=True, title="代码库匹配节点"),
             ])
             text = ""
             d = {"codes": []}
 
             for idx_count, d in enumerate(api.code_base_chat(query=prompt, code_base_name=selected_cb,
                                                              code_limit=cb_code_limit, history=history,
+                                                             cb_search_type=cb_search_type,
                                                              no_remote_api=True)):
                 if error_msg := check_error_msg(d):
                     st.error(error_msg)
@@ -396,14 +383,15 @@ def dialogue_page(api: ApiRequest):
                 if idx_count % 10 == 0:
                     # text = replace_lt_gt(text)
                     chat_box.update_msg(text, element_index=0)
+
             # postprocess
-            # text = replace_lt_gt(text)
+            text = replace_lt_gt(text)
             chat_box.update_msg(text, element_index=0, streaming=False)  # 更新最终的字符串，去除光标
             logger.debug('text={}'.format(text))
             chat_box.update_msg("\n".join(d["codes"]), element_index=1, streaming=False, state="complete")
 
             # session state update
-            st.session_state['history_node_list'] = api.codeChat.history_node_list
+            # st.session_state['history_node_list'] = api.codeChat.history_node_list
 
         elif dialogue_mode == "搜索引擎问答":
             chat_box.ai_say([
@@ -426,6 +414,10 @@ def dialogue_page(api: ApiRequest):
             GLOBAL_EXE_CODE_TEXT = code_text
             if code_text and code_exec_on:
                 codebox_res = api.codebox_chat("```"+code_text+"```", do_code_exe=True)
+
+        # 将上传文件清空
+        st.session_state["interpreter_file_key"] += 1
+        st.experimental_rerun()
 
     if code_interpreter_on:
         with st.expander("代码编辑执行器", False):

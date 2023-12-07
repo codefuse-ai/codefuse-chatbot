@@ -1,14 +1,15 @@
 import time
 import docker
+from loguru import logger
 
 st = time.time()
 client = docker.from_env()
 print(time.time()-st)
 
 
-st = time.time()
-client.containers.run("ubuntu:latest", "echo hello world")
-print(time.time()-st)
+# st = time.time()
+# client.containers.run("ubuntu:latest", "echo hello world")
+# print(time.time()-st)
 
 
 import socket
@@ -42,3 +43,8 @@ def get_ipv4_address():
 #     print(container_a_info.name, container_a_ip, [[k, v["IPAddress"]] for k,v in container1_networks.items() ])
 
 
+containers = client.containers.list(all=True)
+for container in containers:
+    if container.name == 'devopsgpt_webui':
+        res = container.exec_run('''sh chatbot/dev_opsgpt/utils/nebula_cp.sh''')
+        logger.info(f'cp res={res}')

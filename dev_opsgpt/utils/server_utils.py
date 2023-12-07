@@ -1,6 +1,6 @@
 import pydantic
 from pydantic import BaseModel
-from typing import List
+from typing import List, Union
 import torch
 from fastapi import FastAPI
 from pathlib import Path
@@ -18,6 +18,18 @@ class BaseResponse(BaseModel):
             "example": {
                 "code": 200,
                 "msg": "success",
+            }
+        }
+
+class DataResponse(BaseResponse):
+    data: Union[str, bytes] = pydantic.Field(..., description="data")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "code": 200,
+                "msg": "success",
+                "data": "data"
             }
         }
 

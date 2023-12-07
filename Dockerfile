@@ -12,6 +12,8 @@ RUN apt-get install -y iputils-ping telnetd net-tools vim tcpdump
 # RUN service inetutils-inetd start
 # service inetutils-inetd status
 
+RUN wget https://oss-cdn.nebula-graph.com.cn/package/3.6.0/nebula-graph-3.6.0.ubuntu1804.amd64.deb
+RUN dpkg -i nebula-graph-3.6.0.ubuntu1804.amd64.deb
 
 RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 RUN pip install -r /home/user/docker_requirements.txt

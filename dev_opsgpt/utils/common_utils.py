@@ -73,14 +73,14 @@ def save_to_json_file(data, filename):
 
 
 def file_normalize(file: Union[str, Path, bytes], filename=None):
-    logger.debug(f"{file}")
+    # logger.debug(f"{file}")
     if isinstance(file, bytes): # raw bytes
         file = BytesIO(file)
     elif hasattr(file, "read"): # a file io like object
         filename = filename or file.name
     else: # a local path
         file = Path(file).absolute().open("rb")
-        logger.debug(file)
+        # logger.debug(file)
         filename = filename or file.name
     return file, filename
 

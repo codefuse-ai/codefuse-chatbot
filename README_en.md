@@ -9,16 +9,18 @@
     </a>
     <br><br>
 </p>
-This project is an open-source AI intelligent assistant, specifically designed for the entire lifecycle of software development, covering design, coding, testing, deployment, and operations. Through knowledge retrieval, tool utilization, and sandbox execution, Codefuse-ChatBot can answer various professional questions during your development process and perform question-answering operations on standalone, disparate platforms.
+This project is an open-source AI intelligent assistant, specifically designed for the entire lifecycle of software development, covering design, coding, testing, deployment, and operations. Through knowledge retrieval, tool utilization, and sandbox execution, Codefuse-ChatBot can not only answer professional questions you encounter during the development process but also coordinate multiple independent, dispersed platforms through a conversational interface.
 
 
 ## 🔔 Updates
-- [2023.09.15] Sandbox features for local/isolated environments are now available, implementing specified URL knowledge retrieval based on web crawling.
+- [2023.12.01] Release of Multi-Agent and codebase retrieval functionalities.
+- [2023.11.15] Addition of Q&A enhancement mode based on the local codebase.
+- [2023.09.15] Launch of sandbox functionality for local/isolated environments, enabling knowledge retrieval from specified URLs using web crawlers.
 
 ## 📜 Contents
 - [🤝 Introduction](#-introduction)
 - [🧭 Technical Route](#-technical-route)
-- [🌐 模型接入](#-模型接入)
+- [🌐 Model Integration](#-model-integration)
 - [🚀 Quick Start](#-quick-start)
 - [🤗 Acknowledgements](#-acknowledgements)
 
@@ -26,11 +28,11 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 💡 The aim of this project is to construct an AI intelligent assistant for the entire lifecycle of software development, covering design, coding, testing, deployment, and operations, through Retrieval Augmented Generation (RAG), Tool Learning, and sandbox environments. It transitions gradually from the traditional development and operations mode of querying information from various sources and operating on standalone, disparate platforms to an intelligent development and operations mode based on large-model Q&A, changing people's development and operations habits.
 
-- 📚 Knowledge Base Management: Professional high-quality Codefuse knowledge base + enterprise-level knowledge base self-construction + dialogue-based fast retrieval of open-source/private technical documents.
-- 🐳 Isolated Sandbox Environment: Enables quick compilation, execution, and testing of code.
-- 🔄 React Paradigm: Supports code self-iteration and automatic execution.
-- 🛠️ Prompt Management: Manages prompts for various development and operations tasks.
-- 🚀 Conversation Driven: Automates requirement design, system analysis design, code generation, development testing, deployment, and operations.
+- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process.
+- **💻 Comprehensive Code Repository Analysis:** Achieved in-depth understanding at the repository level and coding and generation at the project file level, enhancing development efficiency.
+- **📄 Enhanced Document Analysis:** Integrated document knowledge bases with knowledge graphs, providing deeper support for document analysis through enhanced retrieval and reasoning.
+- **🔧 Industry-Specific Knowledge:** Tailored a specialized knowledge base for the DevOps domain, supporting the self-service one-click construction of industry-specific knowledge bases for convenience and practicality.
+- **🤖 Compatible Models for Specific Verticals:** Designed small models specifically for the DevOps field, ensuring compatibility with related DevOps platforms and promoting the integration of the technological ecosystem.
 
 🌍 Relying on open-source LLM and Embedding models, this project can achieve offline private deployments based on open-source models. Additionally, this project also supports the use of the OpenAI API.
 
@@ -47,24 +49,25 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 ## 🧭 Technical Route
 <div align=center>
-  <img src="sources/docs_imgs/devops-chatbot-module.png" alt="Image" width="600" height="503">
+  <img src="sources/docs_imgs/devops-chatbot-module-v2.png" alt="Image" width="600" height="503">
 </div>
 
-- 🕷️ **Web Crawl**: Implements periodic web document crawling to ensure data timeliness and relies on continuous supplementation from the open-source community.
-- 🗂️ **DocLoader & TextSplitter**: Cleans, deduplicates, and categorizes data crawled from various sources and supports the import of private documents.
-- 🗄️ **Vector Database**: Integrates Text Embedding models to embed documents and store them in Milvus.
-- 🔌 **Connector**: Acts as the scheduling center, responsible for coordinating interactions between LLM and Vector Database, implemented based on Langchain technology.
-- 📝 **Prompt Control**: Designs from development and operations perspectives, categorizes different problems, and adds backgrounds to prompts to ensure the controllability and completeness of answers.
-- 💬 **LLM**: Uses GPT-3.5-turbo by default and provides proprietary model options for private deployments and other privacy-related scenarios.
-- 🔤 **Text Embedding**: Uses OpenAI's Text Embedding model by default, supports private deployments and other privacy-related scenarios, and provides proprietary model options.
-- 🚧 **SandBox**: For generated outputs, like code, to help users judge their authenticity, an interactive verification environment is provided (based on FaaS), allowing user adjustments.
+- 🧠 **Multi-Agent Schedule Core:** Easily configurable to create interactive intelligent agents.
+- 🕷️ **Multi Source Web Crawl:** Offers the capability to crawl specified URLs for collecting the required information.
+- 🗂️ **Data Processor:** Effortlessly handles document loading, data cleansing, and text segmentation, integrating data from different sources.
+- 🔤 **Text Embedding & Index:**：Users can easily upload files for document retrieval, optimizing the document analysis process.
+- 🗄️ **Vector Database & Graph Database:** Provides flexible and powerful data management solutions.
+- 📝 **Prompt Control & Management:**：Precisely defines the contextual environment for intelligent agents.
+- 🚧 **SandBox:**：Safely executes code compilation and actions.
+- 💬 **LLM:**：Supports various open-source models and LLM interfaces.
+- 🛠️ **API Management:：** Enables rapid integration of open-source components and operational platforms.
 
 For implementation details, see: [Technical Route Details](sources/readme_docs/roadmap.md)
 
 
-## 模型接入
+## 🌐 Model Integration
 
-有需要接入的model，可以提issue
+If you need to integrate a specific model, please inform us of your requirements by submitting an issue.
 
 |      model_name    | model_size | gpu_memory | quantize | HFhub | ModelScope |
 | ------------------ | ---------- | ---------- | -------- | ----- | ---------- |

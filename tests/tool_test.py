@@ -83,6 +83,13 @@ agent = initialize_agent(
     return_intermediate_steps=True
 )
 
+
+# from dev_opsgpt.utils.common_utils import read_json_file
+# stock_name = read_json_file("../sources/stock.json")
+from dev_opsgpt.tools.ocr_tool import BaiduOcrTool
+
+print(BaiduOcrTool.run("D:/chromeDownloads/devopschat-bot/ocr_figure.png"))
+
 # agent.return_intermediate_steps = True
 # content = agent.run("查询北京的行政编码，同时返回北京的天气情况")
 # print(content)

@@ -84,6 +84,10 @@ def code_page(api: ApiRequest):
                                      accept_multiple_files=False,
                                      )
 
+            do_interpret = st.checkbox('**代码解读**', value=True, help='代码解读会针对每个代码文件通过 LLM 获取解释并且向量化存储。当代码文件较多时，\
+            导入速度会变慢，且如果使用收费 API 的话可能会造成较大花费。如果要使用基于描述的代码问答模式，此项必须勾选', key='do_interpret')
+
+            logger.info(f'do_interpret={do_interpret}')
             submit_create_kb = st.form_submit_button(
                 "新建",
                 use_container_width=True,
@@ -104,6 +108,7 @@ def code_page(api: ApiRequest):
                 ret = api.create_code_base(
                     cb_name,
                     file,
+                    do_interpret,
                     no_remote_api=True
                 )
                 st.toast(ret.get("msg", " "))
@@ -124,6 +129,7 @@ def code_page(api: ApiRequest):
                                                     cb_details.get('code_file_num', 'unknown')))
 
             st.write('代码知识库 `{}` 知识图谱节点数=`{}`'.format(cb_details['code_name'], cb_details['code_graph_node_num']))
+            st.write('代码知识库 `{}` 是否进行代码解读=`{}`'.format(cb_details['code_name'], cb_details['do_interpret']))
 
         st.divider()
 

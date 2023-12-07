@@ -10,7 +10,7 @@ import json
 import nltk
 import traceback
 from loguru import logger
-import zipfile
+
 
 from configs.model_config import (
     EMBEDDING_MODEL,
@@ -30,9 +30,11 @@ from configs.server_config import SANDBOX_SERVER
 from dev_opsgpt.utils.server_utils import run_async, iter_over_async
 from dev_opsgpt.service.kb_api import *
 from dev_opsgpt.service.cb_api import *
-from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat, ToolChat, DataChat, CodeChat, AgentChat
+from dev_opsgpt.chat import LLMChat, SearchChat, KnowledgeChat, CodeChat, AgentChat
 from dev_opsgpt.sandbox import PyCodeBox, CodeBoxResponse
 from dev_opsgpt.utils.common_utils import file_normalize, get_uploadfile
+
+from dev_opsgpt.codechat.code_crawler.zip_crawler import ZipCrawler
 
 from web_crawler.utils.WebCrawler import WebCrawler
 
@@ -73,11 +75,9 @@ class ApiRequest:
         self.llmChat = LLMChat()
         self.searchChat = SearchChat()
         self.knowledgeChat = KnowledgeChat()
-        self.toolChat = ToolChat()
-        self.dataChat = DataChat()
         self.codeChat = CodeChat()
-
         self.agentChat = AgentChat()
+
         self.codebox = PyCodeBox(
             remote_url=SANDBOX_SERVER["url"],
             remote_ip=SANDBOX_SERVER["host"], # "http://localhost",
@@ -247,6 +247,18 @@ class ApiRequest:
         except Exception as e:
             logger.error(traceback.format_exc())
 
+    def _stream2generator(self, response: str, as_json: bool =False):
+        '''
+        将api.py中视图函数返回的StreamingResponse转化为同步生成器
+        '''
+        try:
+            if as_json and response:
+                return json.loads(response)
+            elif response.strip():
+                return response
+        except Exception as e:
+            logger.error(traceback.format_exc())
+
     def _httpx_stream2generator(
         self,
         response: contextlib._GeneratorContextManager,
@@ -372,66 +384,13 @@ class ApiRequest:
             )
             return self._httpx_stream2generator(response, as_json=True)
 
-    def tool_chat(
-        self,
-        query: str,
-        history: List[Dict] = [],
-        tool_sets: List[str] = [],
-        stream: bool = True,
-        no_remote_api: bool = None,
-    ):
-        '''
-        对应api.py/chat/chat接口
-        '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        data = {
-            "query": query,
-            "history": history,
-            "tool_sets": tool_sets,
-            "stream": stream,
-        }
-
-        if no_remote_api:
-            response = self.toolChat.chat(**data)
-            return self._fastapi_stream2generator(response, as_json=True)
-        else:
-            response = self.post("/chat/tool_chat", json=data, stream=True)
-            return self._httpx_stream2generator(response)
-
-    def data_chat(
-        self,
-        query: str,
-        history: List[Dict] = [],
-        stream: bool = True,
-        no_remote_api: bool = None,
-    ):
-        '''
-        对应api.py/chat/chat接口
-        '''
-        if no_remote_api is None:
-            no_remote_api = self.no_remote_api
-
-        data = {
-            "query": query,
-            "history": history,
-            "stream": stream,
-        }
-
-        if no_remote_api:
-            response = self.dataChat.chat(**data)
-            return self._fastapi_stream2generator(response, as_json=True)
-        else:
-            response = self.post("/chat/data_chat", json=data, stream=True)
-            return self._httpx_stream2generator(response)
-
     def code_base_chat(
         self,
         query: str,
         code_base_name: str,
         code_limit: int = 1,
         history: List[Dict] = [],
+        cb_search_type: str = 'tag',
         stream: bool = True,
         no_remote_api: bool = None,
     ):
@@ -441,20 +400,31 @@ class ApiRequest:
         if no_remote_api is None:
             no_remote_api = self.no_remote_api
 
+        cb_search_type = {
+            '基于 cypher': 'cypher',
+            '基于标签': 'tag',
+            '基于描述': 'description',
+            'tag': 'tag',
+            'description': 'description',
+            'cypher': 'cypher'
+        }.get(cb_search_type, 'tag')
+
+
         data = {
             "query": query,
             "history": history,
             "engine_name": code_base_name,
             "code_limit": code_limit,
+            "cb_search_type": cb_search_type,
             "stream": stream,
             "local_doc_url": no_remote_api,
         }
         logger.info('data={}'.format(data))
 
         if no_remote_api:
-            logger.info('history_node_list before={}'.format(self.codeChat.history_node_list))
+            # logger.info('history_node_list before={}'.format(self.codeChat.history_node_list))
             response = self.codeChat.chat(**data)
-            logger.info('history_node_list after={}'.format(self.codeChat.history_node_list))
+            # logger.info('history_node_list after={}'.format(self.codeChat.history_node_list))
             return self._fastapi_stream2generator(response, as_json=True)
         else:
             response = self.post(
@@ -486,7 +456,8 @@ class ApiRequest:
         custom_role_configs = {},
         no_remote_api: bool = None,
         history_node_list: List[str] = [],
-        isDetailed: bool = False
+        isDetailed: bool = False,
+        upload_file: Union[str, Path, bytes] = "",
     ):
         '''
         对应api.py/chat/chat接口
@@ -515,7 +486,8 @@ class ApiRequest:
             "custom_role_configs": custom_role_configs,
             "choose_tools": choose_tools,
             "history_node_list": history_node_list,
-            "isDetailed": isDetailed
+            "isDetailed": isDetailed,
+            "upload_file": upload_file
         }
         if no_remote_api:
             response = self.agentChat.chat(**data)
@@ -524,6 +496,71 @@ class ApiRequest:
             response = self.post("/chat/data_chat", json=data, stream=True)
             return self._httpx_stream2generator(response)
 
+    def agent_achat(
+        self,
+        query: str,
+        phase_name: str,
+        doc_engine_name: str,
+        code_engine_name: str,
+        cb_search_type: str,
+        search_engine_name: str,
+        top_k: int = 3,
+        score_threshold: float = 1.0,
+        history: List[Dict] = [],
+        stream: bool = True,
+        local_doc_url: bool = False,
+        do_search: bool = False,
+        do_doc_retrieval: bool = False,
+        do_code_retrieval: bool = False,
+        do_tool_retrieval: bool = False,
+        choose_tools: List[str] = [],
+        custom_phase_configs =  {},
+        custom_chain_configs = {},
+        custom_role_configs = {},
+        no_remote_api: bool = None,
+        history_node_list: List[str] = [],
+        isDetailed: bool = False,
+        upload_file: Union[str, Path, bytes] = "",
+    ):
+        '''
+        对应api.py/chat/chat接口
+        '''
+        if no_remote_api is None:
+            no_remote_api = self.no_remote_api
+
+        data = {
+            "query": query,
+            "phase_name": phase_name,
+            "chain_name": "",
+            "history": history,
+            "doc_engine_name": doc_engine_name,
+            "code_engine_name": code_engine_name,
+            "cb_search_type": cb_search_type,
+            "search_engine_name": search_engine_name,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+            "stream": stream,
+            "local_doc_url": local_doc_url,
+            "do_search": do_search,
+            "do_doc_retrieval": do_doc_retrieval,
+            "do_code_retrieval": do_code_retrieval,
+            "do_tool_retrieval": do_tool_retrieval,
+            "custom_phase_configs": custom_phase_configs,
+            "custom_chain_configs": custom_chain_configs,
+            "custom_role_configs": custom_role_configs,
+            "choose_tools": choose_tools,
+            "history_node_list": history_node_list,
+            "isDetailed": isDetailed,
+            "upload_file": upload_file
+        }
+
+        if no_remote_api:
+            for response in self.agentChat.achat(**data):
+                yield self._stream2generator(response, as_json=True)
+        else:
+            response = self.post("/chat/data_chat", json=data, stream=True)
+            yield self._httpx_stream2generator(response)
+        
     def _check_httpx_json_response(
             self,
             response: httpx.Response,
@@ -851,12 +888,15 @@ class ApiRequest:
     def web_sd_download(self, filename: str, save_filename: str = None):
         '''对应file_service/sd_download_file'''
         save_filename = save_filename or filename
-        # response = self.get(
-        #     f"/sdfiles/download",
-        #     params={"filename": filename, "save_filename": save_filename}
-        # )
-        key_value_str = f"filename={filename}&save_filename={save_filename}"
-        return self._parse_url(f"/sdfiles/download?{key_value_str}"), save_filename
+        response = self.get(
+            f"/sdfiles/download",
+            params={"filename": filename, "save_filename": save_filename}
+        )
+        # logger.debug(f"response: {response.json()}")
+        if filename:
+            file_content, _ = file_normalize(response.json()["data"])
+            return file_content, save_filename
+        return "", save_filename
 
     def web_sd_delete(self, filename: str):
         '''对应file_service/sd_delete_file'''
@@ -872,7 +912,7 @@ class ApiRequest:
         return self._check_httpx_json_response(response)
 
     # code base 相关操作
-    def create_code_base(self, cb_name, zip_file, no_remote_api: bool = None,):
+    def create_code_base(self, cb_name, zip_file, do_interpret: bool, no_remote_api: bool = None,):
         '''
         创建 code_base
         @param cb_name:
@@ -893,13 +933,11 @@ class ApiRequest:
             if not os.path.exists(dir):
                 os.makedirs(dir)
 
-        # unzip
-        with zipfile.ZipFile(zip_file, 'r') as z:
-            z.extractall(raw_code_path)
-
         data = {
+            "zip_file": zip_file,
             "cb_name": cb_name,
-            "code_path": raw_code_path
+            "code_path": raw_code_path,
+            "do_interpret": do_interpret
         }
         logger.info('create cb data={}'.format(data))
 

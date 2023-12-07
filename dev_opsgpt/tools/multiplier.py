@@ -33,6 +33,3 @@ class Multiplier(BaseToolModel):
     @staticmethod
     def run(a, b):
         return a * b
-    
-def multi_run(a, b):
-    return a * b

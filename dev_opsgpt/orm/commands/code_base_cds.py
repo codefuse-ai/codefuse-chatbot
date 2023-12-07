@@ -11,12 +11,14 @@ from dev_opsgpt.orm.schemas.base_schema import CodeBaseSchema
 
 
 @with_session
-def add_cb_to_db(session, code_name, code_path, code_graph_node_num, code_file_num):
+def add_cb_to_db(session, code_name, code_path, code_graph_node_num, code_file_num, do_interpret):
+    do_interpret = 'YES' if do_interpret else 'NO'
+
     # 增：创建知识库实例
     cb = session.query(CodeBaseSchema).filter_by(code_name=code_name).first()
     if not cb:
         cb = CodeBaseSchema(code_name=code_name, code_path=code_path, code_graph_node_num=code_graph_node_num,
-                            code_file_num=code_file_num)
+                            code_file_num=code_file_num, do_interpret=do_interpret)
         session.add(cb)
     else:
         cb.code_path = code_path
@@ -47,10 +49,10 @@ def cb_exists(session, code_name):
 def load_cb_from_db(session, code_name):
     cb = session.query(CodeBaseSchema).filter_by(code_name=code_name).first()
     if cb:
-        code_name, code_path, code_graph_node_num = cb.code_name, cb.code_path, cb.code_graph_node_num
+        code_name, code_path, code_graph_node_num, do_interpret = cb.code_name, cb.code_path, cb.code_graph_node_num, cb.do_interpret
     else:
-        code_name, code_path, code_graph_node_num = None, None, None
-    return code_name, code_path, code_graph_node_num
+        code_name, code_path, code_graph_node_num = None, None, None, None
+    return code_name, code_path, code_graph_node_num, do_interpret
 
 
 @with_session
@@ -71,7 +73,8 @@ def get_cb_detail(session, code_name: str) -> dict:
             "code_name": cb.code_name,
             "code_path": cb.code_path,
             "code_graph_node_num": cb.code_graph_node_num,
-            'code_file_num': cb.code_file_num
+            'code_file_num': cb.code_file_num,
+            'do_interpret': cb.do_interpret
         }
     else:
         return {

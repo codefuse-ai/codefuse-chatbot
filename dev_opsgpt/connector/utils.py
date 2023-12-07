@@ -1,4 +1,29 @@
+import re
 
+
+
+def parse_section(text, section_name):
+    # Define a pattern to extract the named section along with its content
+    section_pattern = rf'#### {section_name}\n(.*?)(?=####|$)'
+    
+    # Find the specific section content
+    section_content = re.search(section_pattern, text, re.DOTALL)
+    
+    if section_content:
+        # If the section is found, extract the content
+        content = section_content.group(1)
+        
+        # Define a pattern to find segments that follow the format **xx:**
+        segments_pattern = r'\*\*([^*]+):\*\*'
+        
+        # Use findall method to extract all matches in the section content
+        segments = re.findall(segments_pattern, content)
+        
+        return segments
+    else:
+        # If the section is not found, return an empty list
+        return []
+    
 
 def prompt_cost(model_type: str, num_prompt_tokens: float, num_completion_tokens: float):
     input_cost_map = {

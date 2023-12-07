@@ -92,11 +92,11 @@ class PyCodeBox(BaseBox):
                     "metadata": {},
                     "content": {
                         "code": code_text,
-                        "silent": True,
-                        "store_history": True,
+                        "silent": False, # True，则内核会执行代码，但不会发送执行结果（如输出）
+                        "store_history": True, # True，则执行的代码会被记录在交互式环境的历史记录中
                         "user_expressions": {},
-                        "allow_stdin": False,
-                        "stop_on_error": True,
+                        "allow_stdin": False, # True，允许代码执行时接受用户输入
+                        "stop_on_error": True, # True，当执行中遇到错误时，后续代码将不会继续执行。
                     },
                     "channel": "shell",
                     "buffers": [],
@@ -163,7 +163,7 @@ class PyCodeBox(BaseBox):
                 return CodeBoxResponse(
                         code_exe_type="text",
                         code_text=code_text,
-                        code_exe_response=result or "Code run successfully (no output)，可能没有打印需要确认的变量",
+                        code_exe_response=result or "Code run successfully (no output)",
                         code_exe_status=200,
                         do_code_exe=self.do_code_exe
                     )

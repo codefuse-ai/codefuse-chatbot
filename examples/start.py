@@ -12,7 +12,7 @@ from configs.model_config import USE_FASTCHAT, JUPYTER_WORK_PATH
 from configs.server_config import (
     NO_REMOTE_API, SANDBOX_SERVER, SANDBOX_IMAGE_NAME, SANDBOX_CONTRAINER_NAME, 
     WEBUI_SERVER, API_SERVER, SDFILE_API_SERVER, CONTRAINER_NAME, IMAGE_NAME, DOCKER_SERVICE,
-    DEFAULT_BIND_HOST,
+    DEFAULT_BIND_HOST, NEBULA_GRAPH_SERVER
 )
 
 
@@ -44,6 +44,18 @@ def check_docker(client, container_name, do_stop=False):
         if i.name == container_name:
             if do_stop:
                 container = i
+
+                if container_name == CONTRAINER_NAME and i.status == 'running':
+                    # wrap up db
+                    logger.info(f'inside {container_name}')
+                    # cp nebula data
+                    res = container.exec_run('''sh chatbot/dev_opsgpt/utils/nebula_cp.sh''')
+                    logger.info(f'cp res={res}')
+
+                    # stop nebula service
+                    res = container.exec_run('''/usr/local/nebula/scripts/nebula.service stop all''')
+                    logger.info(f'stop res={res}')
+
                 container.stop()
                 container.remove()
                 return True
@@ -56,6 +68,7 @@ def start_docker(client, script_shs, ports, image_name, container_name, mounts=N
         command="bash",
         mounts=mounts,
         name=container_name,
+        mem_limit="8g",
         # device_requests=[DeviceRequest(count=-1, capabilities=[['gpu']])],
         # network_mode="host",
         ports=ports,
@@ -163,12 +176,23 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
                 f"{API_SERVER['docker_port']}/tcp": f"{API_SERVER['port']}/tcp", 
                 f"{WEBUI_SERVER['docker_port']}/tcp": f"{WEBUI_SERVER['port']}/tcp",
                 f"{SDFILE_API_SERVER['docker_port']}/tcp": f"{SDFILE_API_SERVER['port']}/tcp",
+                f"{NEBULA_GRAPH_SERVER['docker_port']}/tcp": f"{NEBULA_GRAPH_SERVER['port']}/tcp"
                 }
         mounts = [mount, mount_database, mount_code_database]
         script_shs = [
             "mkdir -p /home/user/logs",
-            "pip install jsonref",
-            "pip install javalang",
+            '''
+            if [ -d "/home/user/chatbot/data/nebula_data/data/meta" ]; then
+                cp -r /home/user/chatbot/data/nebula_data/data /usr/local/nebula/
+            fi
+            ''',
+            "/usr/local/nebula/scripts/nebula.service start all",
+            "/usr/local/nebula/scripts/nebula.service status all",
+            "sleep 2",
+            '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19559/flags"''',
+            '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19669/flags"''',
+            '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19779/flags"''',
+
             "nohup python chatbot/dev_opsgpt/service/sdfile_api.py > /home/user/logs/sdfile_api.log 2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
                 nohup python chatbot/dev_opsgpt/service/api.py > /home/user/logs/api.log 2>&1 &",
@@ -209,15 +233,16 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
 
 if __name__ == "__main__":
     start_sandbox_service()
+    sandbox_host = DEFAULT_BIND_HOST
     if SANDBOX_SERVER["do_remote"]:
         client = docker.from_env()
         containers = client.containers.list(all=True)
 
-        sandbox_host = DEFAULT_BIND_HOST
         for container in containers:
             container_a_info = client.containers.get(container.id)
             if container_a_info.name == SANDBOX_CONTRAINER_NAME:
                 container1_networks = container.attrs['NetworkSettings']['Networks']
                 sandbox_host = container1_networks.get(network_name)["IPAddress"]
                 break
-    start_api_service()
+    start_api_service(sandbox_host)
+

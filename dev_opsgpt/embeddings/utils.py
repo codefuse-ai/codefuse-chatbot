@@ -10,3 +10,5 @@ def load_embeddings(model: str, device: str):
     embeddings = HuggingFaceEmbeddings(model_name=embedding_model_dict[model],
                                        model_kwargs={'device': device})
     return embeddings
+
+

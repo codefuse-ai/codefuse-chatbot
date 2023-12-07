@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi import File, UploadFile
 
-from dev_opsgpt.utils.server_utils import BaseResponse, ListResponse
+from dev_opsgpt.utils.server_utils import BaseResponse, ListResponse, DataResponse
 from configs.server_config import OPEN_CROSS_DOMAIN, SDFILE_API_SERVER
 from configs.model_config import (
     JUPYTER_WORK_PATH
@@ -35,7 +35,8 @@ async def sd_upload_file(file: UploadFile = File(...), work_dir: str = JUPYTER_W
 async def sd_download_file(filename: str, save_filename: str = "filename_to_download.ext", work_dir: str = JUPYTER_WORK_PATH):
     # 从服务器下载文件
     logger.debug(f"{os.path.join(work_dir, filename)}")
-    return {"data": FileResponse(os.path.join(work_dir, filename), filename=save_filename)}
+    return {"data": os.path.join(work_dir, filename), "filename": save_filename}
+    # return {"data": FileResponse(os.path.join(work_dir, filename), filename=save_filename)}
 
 
 async def sd_list_files(work_dir: str = JUPYTER_WORK_PATH):
@@ -78,7 +79,7 @@ def create_app():
     
     app.get("/sdfiles/download",
             tags=["files upload and download"],
-            response_model=BaseResponse,
+            response_model=DataResponse,
             summary="从沙盒下载文件"
             )(sd_download_file)
 

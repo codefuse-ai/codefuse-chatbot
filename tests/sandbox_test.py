@@ -26,18 +26,18 @@ from pathlib import Path
 
 import requests
 
-# 设置Jupyter Notebook服务器的URL
-url = 'http://172.25.0.3:5050'  # 或者是你自己的Jupyter服务器的URL
+# # 设置Jupyter Notebook服务器的URL
+# url = 'http://172.25.0.3:5050'  # 或者是你自己的Jupyter服务器的URL
 
-# 发送GET请求来获取Jupyter Notebook的登录页面
-response = requests.get(url)
+# # 发送GET请求来获取Jupyter Notebook的登录页面
+# response = requests.get(url)
 
-# 检查响应状态码
-if response.status_code == 200:
-    # 打印响应内容
-    print('connect success')
-else:
-    print('connect fail')
+# # 检查响应状态码
+# if response.status_code == 200:
+#     # 打印响应内容
+#     print('connect success')
+# else:
+#     print('connect fail')
 
 # import subprocess 
 # jupyter = subprocess.Popen(
@@ -57,12 +57,12 @@ else:
 # import time, psutil
 # from loguru import logger
 # import asyncio
-# pycodebox = PyCodeBox(remote_url="http://localhost:5050", 
-#                remote_ip="http://localhost", 
-#             remote_port="5050", 
-#             token="mytoken",
-#             do_code_exe=True, 
-#             do_remote=False)
+pycodebox = PyCodeBox(remote_url="http://localhost:5050", 
+               remote_ip="http://localhost", 
+            remote_port="5050", 
+            token="mytoken",
+            do_code_exe=True, 
+            do_remote=False)
 
 # pycodebox.list_files()
 # file = "./torch_test.py"
@@ -75,8 +75,8 @@ else:
 # asyncio.run(pycodebox.alist_files())
 
 
-# reuslt = pycodebox.chat("```print('hello world!')```", do_code_exe=True)
-# print(reuslt)
+reuslt = pycodebox.chat("```'hello world!'```", do_code_exe=True)
+print(reuslt)
 
 # reuslt = pycodebox.chat("print('hello world!')", do_code_exe=False)
 # print(reuslt)

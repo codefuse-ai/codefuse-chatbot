@@ -55,9 +55,10 @@ PHASE_CONFIGS = {
         "do_using_tool": True
     },
     "codeReactPhase": {
-        "phase_name": "codeReacttPhase",
+        "phase_name": "codeReactPhase",
         "phase_type": "BasePhase",
-        "chains": ["codeReactChain"],
+        # "chains": ["codePlannerChain", "codeReactChain"],
+        "chains": ["planChain", "codeReactChain"],
         "do_summary": False,
         "do_search": False,
         "do_doc_retrieval": False,
@@ -65,15 +66,37 @@ PHASE_CONFIGS = {
         "do_tool_retrieval": False,
         "do_using_tool": False
     },
-    "dataReactPhase": {
-        "phase_name": "dataReactPhase",
+    "codeToolReactPhase": {
+        "phase_name": "codeToolReactPhase",
         "phase_type": "BasePhase",
-        "chains": ["dataAnalystChain"],
-        "do_summary": True,
+        "chains": ["codeToolPlanChain", "codeToolReactChain"],
+        "do_summary": False,
+        "do_search": False,
+        "do_doc_retrieval": False,
+        "do_code_retrieval": False,
+        "do_tool_retrieval": False,
+        "do_using_tool": True
+    },
+    "baseTaskPhase": {
+        "phase_name": "baseTaskPhase",
+        "phase_type": "BasePhase",
+        "chains": ["planChain", "executorChain"],
+        "do_summary": False,
         "do_search": False,
         "do_doc_retrieval": False,
         "do_code_retrieval": False,
         "do_tool_retrieval": False,
         "do_using_tool": False
-    }
+    },
+    "metagpt_code_devlop": {
+        "phase_name": "metagpt_code_devlop",
+        "phase_type": "BasePhase",
+        "chains": ["metagptChain",],
+        "do_summary": False,
+        "do_search": False,
+        "do_doc_retrieval": False,
+        "do_code_retrieval": False,
+        "do_tool_retrieval": False,
+        "do_using_tool": False
+    },
 }

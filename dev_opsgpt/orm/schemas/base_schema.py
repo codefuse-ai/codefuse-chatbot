@@ -58,6 +58,7 @@ class CodeBaseSchema(Base):
     code_path = Column(String, comment='代码本地路径')
     code_graph_node_num = Column(String, comment='代码图谱节点数')
     code_file_num = Column(String, comment='代码解析文件数')
+    do_interpret = Column(String, comment='是否代码解读，Y or N')
     create_time = Column(DateTime, default=func.now(), comment='创建时间')
 
     def __repr__(self):
@@ -65,5 +66,6 @@ class CodeBaseSchema(Base):
         code_name='{self.code_name}', 
         code_path='{self.code_path}', 
         code_graph_node_num='{self.code_graph_node_num}',
-        code_file_num='{self.code_file_num}'
+        code_file_num='{self.code_file_num}',
+        do_interpret='{self.do_interpret}',
         create_time='{self.create_time}')>"""

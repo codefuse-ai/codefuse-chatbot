@@ -1,6 +1,10 @@
 import os
+import sys
 import logging
 import torch
+import openai
+import base64
+from .utils import is_running_in_docker
 # 日志格式
 LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s"
 logger = logging.getLogger()

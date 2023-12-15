@@ -76,7 +76,7 @@ SANDBOX_SERVER = {
 # 这些模型必须是在model_config.llm_model_dict中正确配置的。
 # 在启动startup.py时，可用通过`--model-worker --model-name xxxx`指定模型，不指定则为LLM_MODEL
 FSCHAT_MODEL_WORKERS = {
-    LLM_MODEL: {
+    "default": {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
         "device": LLM_DEVICE,
@@ -100,8 +100,13 @@ FSCHAT_MODEL_WORKERS = {
         # "stream_interval": 2,
         # "no_register": False,
     },
+    "chatglm2-6b": {
+        "port": 20003
+    },
+    "baichuan2-7b-base": {
+        "port": 20004
+    }
 }
-
 # fastchat multi model worker server
 FSCHAT_MULTI_MODEL_WORKERS = {
     # todo

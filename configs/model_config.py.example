@@ -51,6 +51,17 @@ EMBEDDING_MODEL = "text2vec-base"
 # Embedding 模型运行设备
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
+ONLINE_LLM_MODEL = {
+    # 线上模型。请在server_config中为每个在线API设置不同的端口
+
+    "openai-api": {
+        "model_name": "gpt-3.5-turbo",
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": "",
+        "openai_proxy": "",
+    },
+}
+
 
 llm_model_dict = {
     "chatglm-6b": {
@@ -123,6 +134,7 @@ llm_model_dict = llm_model_dict_c
 
 # LLM 名称
 LLM_MODEL = "gpt-3.5-turbo"
+LLM_MODELs = ["chatglm2-6b"]
 USE_FASTCHAT = "gpt" not in LLM_MODEL # 判断是否进行fastchat
 
 # LLM 运行设备

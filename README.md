@@ -194,3 +194,8 @@ python start.py
 ## 🤗 致谢
 
 本项目基于[langchain-chatchat](https://github.com/chatchat-space/Langchain-Chatchat)和[codebox-api](https://github.com/shroominic/codebox-api)，在此深深感谢他们的开源贡献！
+
+## 联系我们
+<div align=center>
+  <img src="sources/docs_imgs/wechat.png" alt="图片">
+</div>

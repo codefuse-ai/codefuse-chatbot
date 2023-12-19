@@ -14,7 +14,7 @@
 
 
 ## 🔔 更新
-- [2023.12.14] 量子位公众号专题报道：https://mp.weixin.qq.com/s/MuPfayYTk9ZW6lcqgMpqKA
+- [2023.12.14] 量子位公众号专题报道：[文章链接](https://mp.weixin.qq.com/s/MuPfayYTk9ZW6lcqgMpqKA)
 - [2023.12.01] Multi-Agent和代码库检索功能开放
 - [2023.11.15] 增加基于本地代码库的问答增强模式
 - [2023.09.15] 本地/隔离环境的沙盒功能开放，基于爬虫实现指定url知识检索

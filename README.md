@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="README.md"><img src="https://img.shields.io/badge/文档-中文版-yellow.svg" alt="ZH doc"></a>
-    <a href="README_en.md"><img src="https://img.shields.io/badge/document-英文版-yellow.svg" alt="EN doc"></a>
+    <a href="README_en.md"><img src="https://img.shields.io/badge/document-English-yellow.svg" alt="EN doc"></a>
     <img src="https://img.shields.io/github/license/codefuse-ai/codefuse-chatbot" alt="License">
     <a href="https://github.com/codefuse-ai/codefuse-chatbot/issues">
       <img alt="Open Issues" src="https://img.shields.io/github/issues-raw/codefuse-ai/codefuse-chatbot" />
@@ -14,6 +14,7 @@
 
 
 ## 🔔 更新
+- [2023.12.14] 量子位公众号专题报道：https://mp.weixin.qq.com/s/MuPfayYTk9ZW6lcqgMpqKA
 - [2023.12.01] Multi-Agent和代码库检索功能开放
 - [2023.11.15] 增加基于本地代码库的问答增强模式
 - [2023.09.15] 本地/隔离环境的沙盒功能开放，基于爬虫实现指定url知识检索

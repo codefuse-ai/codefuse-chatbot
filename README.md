@@ -198,5 +198,5 @@ python start.py
 
 ## 联系我们
 <div align=center>
-  <img src="sources/docs_imgs/wechat.png" alt="图片">
+  <img src="sources/docs_imgs/wechat.png" alt="图片", width="400">
 </div>

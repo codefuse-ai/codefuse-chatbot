@@ -1,4 +1,4 @@
-# <p align="center">Codefuse-ChatBot: Development by Private Knowledge Augmentation</p>
+# <p align="center">CodeFuse-ChatBot: Development by Private Knowledge Augmentation</p>
 
 <p align="center">
     <a href="README.md"><img src="https://img.shields.io/badge/文档-中文版-yellow.svg" alt="ZH doc"></a>

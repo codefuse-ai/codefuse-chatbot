@@ -26,6 +26,9 @@
 - [🌐 模型接入](#-模型接入)
 - [🚀 快速使用](#-快速使用)
 - [🤗 致谢](#-致谢)
+- [🗂 其他](#-其他)
+  - [📱 联系我们](#-联系我们)
+  - [✨ 点赞历史](#-点赞历史)
 
 ## 🤝 介绍
 
@@ -196,7 +199,12 @@ python start.py
 
 本项目基于[langchain-chatchat](https://github.com/chatchat-space/Langchain-Chatchat)和[codebox-api](https://github.com/shroominic/codebox-api)，在此深深感谢他们的开源贡献！
 
-## 联系我们
+## 🗂 其他
+
+### 📱 联系我们
 <div align=center>
-  <img src="sources/docs_imgs/wechat.png" alt="图片", width="400">
+  <img src="sources/docs_imgs/wechat.png" alt="图片", width="360">
 </div>
+
+### ✨ 点赞历史
+[![Star History Chart](https://api.star-history.com/svg?repos=codefuse-ai/codefuse-chatbot&type=Date)](https://star-history.com/#codefuse-ai/codefuse-chatbot&Date)

@@ -27,3 +27,22 @@ def getChatModel(callBack: AsyncIteratorCallbackHandler = None, temperature=0.3,
             stop=stop
         )
     return model
+
+import json, requests
+
+
+def getExtraModel():
+    return TestModel()
+
+class TestModel:
+    
+    def predict(self, request_body):
+        headers = {"Content-Type":"application/json;charset=UTF-8",
+        "codegpt_user":"",
+        "codegpt_token":""
+                }
+        xxx = requests.post(
+        'https://codegencore.alipay.com/api/chat/CODE_LLAMA_INT4/completion', 
+        data=json.dumps(request_body,ensure_ascii=False).encode('utf-8'), 
+        headers=headers)
+        return xxx.json()["data"]

@@ -5,12 +5,12 @@ import importlib
 import copy
 from loguru import logger
 
-from dev_opsgpt.connector.agents import BaseAgent
+from dev_opsgpt.connector.agents import BaseAgent, SelectorAgent
 from dev_opsgpt.connector.chains import BaseChain
 from dev_opsgpt.tools.base_tool import BaseTools, Tool
 
 from dev_opsgpt.connector.schema import (
-    Memory, Task, Env, Role, Message, Doc, Docs, AgentConfig, ChainConfig, PhaseConfig, CodeDoc,
+    Memory, Task, Env, Role, Message, Doc, AgentConfig, ChainConfig, PhaseConfig, CodeDoc,
     load_chain_configs, load_phase_configs, load_role_configs
 )
 from dev_opsgpt.connector.configs import AGETN_CONFIGS, CHAIN_CONFIGS, PHASE_CONFIGS
@@ -156,12 +156,31 @@ class BasePhase:
                     focus_agents=agent_config.focus_agents,
                     focus_message_keys=agent_config.focus_message_keys,
                 ) 
+
+                if agent_config.role.agent_type == "SelectorAgent":
+                    for group_agent_name in agent_config.group_agents:
+                        group_agent_config = role_configs[group_agent_name]
+                        baseAgent: BaseAgent = getattr(self.agent_module, group_agent_config.role.agent_type)
+                        group_base_agent = baseAgent(
+                            group_agent_config.role, 
+                            task = task,
+                            memory = memory,
+                            chat_turn=group_agent_config.chat_turn,
+                            do_search = group_agent_config.do_search,
+                            do_doc_retrieval = group_agent_config.do_doc_retrieval,
+                            do_tool_retrieval = group_agent_config.do_tool_retrieval,
+                            stop= group_agent_config.stop,
+                            focus_agents=group_agent_config.focus_agents,
+                            focus_message_keys=group_agent_config.focus_message_keys,
+                        ) 
+                        base_agent.group_agents.append(group_base_agent)
+
                 agents.append(base_agent)
             
             chain_instance = BaseChain(
                 chain_config, agents, chain_config.chat_turn, 
                 do_checker=chain_configs[chain_name].do_checker, 
-                do_code_exec=False,)
+                )
             chains.append(chain_instance)
 
         return chains

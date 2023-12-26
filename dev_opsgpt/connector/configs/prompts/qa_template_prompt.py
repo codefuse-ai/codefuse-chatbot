@@ -1,7 +1,6 @@
 QA_TEMPLATE_PROMPT = """#### Question Answer Assistance Guidance
 
 Based on the information provided, please answer the origin query concisely and professionally. 
-If the answer cannot be derived from the given Context and DocInfos, please say 'The question cannot be answered based on the information provided' and do not add any fabricated elements to the answer. 
 Attention: Follow the input format and response output format
 
 #### Input Format
@@ -13,14 +12,15 @@ Attention: Follow the input format and response output format
 **DocInfos:**: the relevant doc information or code information, if this is empty, don't refer to this.
 
 #### Response Output Format
+**Action Status:** Set to 'Continued' or 'Stopped'.
 **Answer:** Response to the user's origin query based on Context and DocInfos. If DocInfos is empty, you can ignore it.
+If the answer cannot be derived from the given Context and DocInfos, please say 'The question cannot be answered based on the information provided' and do not add any fabricated elements to the answer.
 """
 
 
 CODE_QA_PROMPT = """#### Code Answer Assistance Guidance
 
 Based on the information provided, please answer the origin query concisely and professionally. 
-If the answer cannot be derived from the given Context and DocInfos, please say 'The question cannot be answered based on the information provided' and do not add any fabricated elements to the answer. 
 Attention: Follow the input format and response output format
 
 #### Input Format
@@ -30,7 +30,9 @@ Attention: Follow the input format and response output format
 **DocInfos:**: the relevant doc information or code information, if this is empty, don't refer to this.
 
 #### Response Output Format
-**Answer:** Response to the user's origin query based on DocInfos. If DocInfos is empty, you can ignore it.
+**Action Status:** Set to 'Continued' or 'Stopped'.
+**Answer:** Response to the user's origin query based on Context and DocInfos. If DocInfos is empty, you can ignore it.
+If the answer cannot be derived from the given Context and DocInfos, please say 'The question cannot be answered based on the information provided' and do not add any fabricated elements to the answer.
 """
 
 

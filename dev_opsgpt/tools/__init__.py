@@ -11,12 +11,13 @@ from .docs_retrieval import DocRetrieval
 from .cb_query_tool import CodeRetrieval 
 from .ocr_tool import BaiduOcrTool
 from .stock_tool  import StockInfo, StockName
+from .codechat_tools import CodeRetrievalSingle, RelatedVerticesRetrival, Vertex2Code
 
 
 IMPORT_TOOL = [
     WeatherInfo, DistrictInfo, Multiplier, WorldTimeGetTimezoneByArea,
     KSigmaDetector, MetricsQuery, DDGSTool, DocRetrieval, CodeRetrieval,
-    BaiduOcrTool, StockInfo, StockName
+    BaiduOcrTool, StockInfo, StockName, CodeRetrievalSingle, RelatedVerticesRetrival, Vertex2Code
 ]
 
 TOOL_SETS = [tool.__name__ for tool in IMPORT_TOOL]

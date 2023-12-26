@@ -15,6 +15,8 @@ from .qa_template_prompt import QA_PROMPT, CODE_QA_PROMPT, QA_TEMPLATE_PROMPT
 from .executor_template_prompt import EXECUTOR_TEMPLATE_PROMPT
 from .refine_template_prompt import REFINE_TEMPLATE_PROMPT
 
+from .agent_selector_template_prompt import SELECTOR_AGENT_TEMPLATE_PROMPT
+
 from .react_template_prompt import REACT_TEMPLATE_PROMPT
 from .react_code_prompt import REACT_CODE_PROMPT
 from .react_tool_prompt import REACT_TOOL_PROMPT
@@ -32,6 +34,7 @@ __all__ = [
     "QA_PROMPT", "CODE_QA_PROMPT", "QA_TEMPLATE_PROMPT",
     "EXECUTOR_TEMPLATE_PROMPT",
     "REFINE_TEMPLATE_PROMPT",
+    "SELECTOR_AGENT_TEMPLATE_PROMPT",
     "PLANNER_TEMPLATE_PROMPT", "GENERAL_PLANNER_PROMPT", "DATA_PLANNER_PROMPT", "TOOL_PLANNER_PROMPT",
     "REACT_TEMPLATE_PROMPT", 
     "REACT_CODE_PROMPT", "REACT_TOOL_PROMPT", "REACT_TOOL_AND_CODE_PROMPT", "REACT_TOOL_AND_CODE_PLANNER_PROMPT"

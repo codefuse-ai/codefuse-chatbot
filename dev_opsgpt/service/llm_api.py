@@ -1,4 +1,11 @@
-# Attention: code copied from https://github.com/chatchat-space/Langchain-Chatchat/blob/master/server/llm_api.py
+############################# Attention ########################
+
+# Code copied from
+# https://github.com/chatchat-space/Langchain-Chatchat/blob/master/server/llm_api.py
+
+#################################################################
+
+
 
 from multiprocessing import Process, Queue
 import multiprocessing as mp
@@ -16,10 +23,12 @@ src_dir = os.path.join(
 sys.path.append(src_dir)
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger
+from configs.model_config import llm_model_dict, LLM_MODEL, LLM_DEVICE, LOG_PATH, logger, LLM_MODELs
 from configs.server_config import (
     FSCHAT_CONTROLLER, FSCHAT_MODEL_WORKERS, FSCHAT_OPENAI_API
 )
+from dev_opsgpt.service.utils import get_model_worker_config
+
 from dev_opsgpt.utils.server_utils import (
     MakeFastAPIOffline, 
 )
@@ -41,38 +50,6 @@ def set_httpx_timeout(timeout=60.0):
     httpx._config.DEFAULT_TIMEOUT_CONFIG.connect = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.read = timeout
     httpx._config.DEFAULT_TIMEOUT_CONFIG.write = timeout
-
-
-def get_model_worker_config(model_name: str = None) -> dict:
-    '''
-    加载model worker的配置项。
-    优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
-    '''
-    from configs.model_config import ONLINE_LLM_MODEL
-    from configs.server_config import FSCHAT_MODEL_WORKERS
-    # from server import model_workers
-
-    config = FSCHAT_MODEL_WORKERS.get("default", {}).copy()
-    # config.update(ONLINE_LLM_MODEL.get(model_name, {}).copy())
-    config.update(FSCHAT_MODEL_WORKERS.get(model_name, {}).copy())
-
-    # if model_name in ONLINE_LLM_MODEL:
-    #     config["online_api"] = True
-    #     if provider := config.get("provider"):
-    #         try:
-    #             config["worker_class"] = getattr(model_workers, provider)
-    #         except Exception as e:
-    #             msg = f"在线模型 ‘{model_name}’ 的provider没有正确配置"
-    #             logger.error(f'{e.__class__.__name__}: {msg}',
-    #                          exc_info=e if log_verbose else None)
-    # 本地模型
-    if model_name in llm_model_dict:
-        path = llm_model_dict[model_name]["local_model_path"]
-        config["model_path"] = path
-        if path and os.path.isdir(path):
-            config["model_path_exists"] = True
-        config["device"] = LLM_DEVICE
-    return config
 
 
 def get_all_model_worker_configs() -> dict:
@@ -281,6 +258,9 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
 
     for k, v in kwargs.items():
         setattr(args, k, v)
+
+    logger.error(f"可用模型有哪些: {args.model_names}")
+
     if worker_class := kwargs.get("langchain_model"): #Langchian支持的模型不用做操作
         from fastchat.serve.base_model_worker import app
         worker = ""
@@ -296,7 +276,8 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
     # 本地模型
     else:
         from configs.model_config import VLLM_MODEL_DICT
-        if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
+        # if kwargs["model_names"][0] in VLLM_MODEL_DICT and args.infer_turbo == "vllm":
+        if kwargs["model_names"][0] in VLLM_MODEL_DICT:
             import fastchat.serve.vllm_worker
             from fastchat.serve.vllm_worker import VLLMWorker, app, worker_id
             from vllm import AsyncLLMEngine
@@ -321,7 +302,7 @@ def create_model_worker_app(log_level: str = "INFO", **kwargs) -> FastAPI:
             args.conv_template = None
             args.limit_worker_concurrency = 5
             args.no_register = False
-            args.num_gpus = 4 # vllm worker的切分是tensor并行，这里填写显卡的数量
+            args.num_gpus = 1 # vllm worker的切分是tensor并行，这里填写显卡的数量
             args.engine_use_ray = False
             args.disable_log_requests = False
 
@@ -575,7 +556,7 @@ def run_model_worker(
     kwargs["worker_address"] = fschat_model_worker_address(model_name)
     model_path = kwargs.get("model_path", "")
     kwargs["model_path"] = model_path
-    # kwargs["gptq_wbits"] = 4
+    # kwargs["gptq_wbits"] = 4 # int4 模型试用这个参数
 
     app = create_model_worker_app(log_level=log_level, **kwargs)
     _set_app_event(app, started_event)
@@ -660,7 +641,7 @@ def parse_args() -> argparse.ArgumentParser:
         "--model-name",
         type=str,
         nargs="+",
-        default=[LLM_MODEL],
+        default=LLM_MODELs,
         help="specify model name for model worker. "
              "add addition names with space seperated to start multiple model workers.",
         dest="model_name",
@@ -722,7 +703,7 @@ def dump_server_info(after_start=False, args=None):
     print(f"langchain版本：{langchain.__version__}. fastchat版本：{fastchat.__version__}")
     print("\n")
 
-    models = [LLM_MODEL]
+    models = LLM_MODELs
     if args and args.model_name:
         models = args.model_name
 
@@ -813,8 +794,10 @@ async def start_main_server():
             )
             processes["model_worker"][model_name] = process
 
+
     for model_name in args.model_name:
         config = get_model_worker_config(model_name)
+        logger.error(f"config: {config}, {model_name}, {FSCHAT_MODEL_WORKERS.keys()}")
         if (config.get("online_api")
             and config.get("worker_class")
             and model_name in FSCHAT_MODEL_WORKERS):

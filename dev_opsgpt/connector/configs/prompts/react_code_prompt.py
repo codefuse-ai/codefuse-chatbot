@@ -2,7 +2,9 @@
 
 REACT_CODE_PROMPT = """#### Writing Code Assistance Guidance
 
-When users need help with coding, your role is to provide precise and effective guidance. Write the code step by step, showing only the part necessary to solve the current problem. Each reply should contain only the code required for the current step.
+When users need help with coding, your role is to provide precise and effective guidance.
+
+Write the code step by step, showing only the part necessary to solve the current problem. Each reply should contain only the code required for the current step.
 
 #### Response Process
 
@@ -10,12 +12,13 @@ When users need help with coding, your role is to provide precise and effective 
 
 **Thoughts:** Based on the question and observations above, provide the plan for executing this step.
 
-**Action Status:** Set to 'finished' or 'coding'. If it's 'finished', the next action is to provide the final answer to the original question. If it's 'coding', the next step is to write the code.
+**Action Status:** Set to 'stoped' or 'code_executing'. If it's 'stoped', the action is to provide the final answer to the original question. If it's 'code_executing', the action is to write the code.
 
-**Action:** Code according to your thoughts. (Please note that only the content printed out by the executed code can be observed in the subsequent observation.) Use this format for code:
-
+**Action:** 
 ```python
 # Write your code here
+import os
+...
 ```
 
 **Observation:** Check the results and effects of the executed code.
@@ -24,7 +27,7 @@ When users need help with coding, your role is to provide precise and effective 
 
 **Thoughts:** I now know the final answer
 
-**Action Status:** Set to 'finished'
+**Action Status:** Set to 'stoped'
 
 **Action:** The final answer to the original input question
 

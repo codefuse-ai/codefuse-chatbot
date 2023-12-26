@@ -8,21 +8,77 @@ from langchain.tools import BaseTool
 
 
 class ActionStatus(Enum):
-    FINISHED = "finished"
-    CODING = "coding"
-    TOOL_USING = "tool_using"
-    REASONING = "reasoning"
-    PLANNING = "planning"
-    EXECUTING_CODE = "executing_code"
-    EXECUTING_TOOL = "executing_tool"
     DEFAUILT = "default"
+
+    FINISHED = "finished"
+    STOPED = "stoped"
+    CONTINUED = "continued"
+
+    TOOL_USING = "tool_using"
+    CODING = "coding"
+    CODE_EXECUTING = "code_executing"
     CODING2FILE = "coding2file"
+
+    PLANNING = "planning"
+    UNCHANGED = "unchanged"
+    ADJUSTED = "adjusted"
+    CODE_RETRIEVAL = "code_retrieval"
 
     def __eq__(self, other):
         if isinstance(other, str):
-            return self.value == other
+            return self.value.lower() == other.lower()
         return super().__eq__(other)
     
+
+class Action(BaseModel):
+    action_name: str
+    description: str
+
+class FinishedAction(Action):
+    action_name: str = ActionStatus.FINISHED
+    description: str = "provide the final answer to the original query to break the chain answer"
+
+class StopedAction(Action):
+    action_name: str = ActionStatus.STOPED
+    description: str = "provide the final answer to the original query to break the agent answer"
+
+class ContinuedAction(Action):
+    action_name: str = ActionStatus.CONTINUED
+    description: str = "cant't provide the final answer to the original query"
+
+class ToolUsingAction(Action):
+    action_name: str = ActionStatus.TOOL_USING
+    description: str = "proceed with using the specified tool."
+
+class CodingdAction(Action):
+    action_name: str = ActionStatus.CODING
+    description: str = "provide the answer by writing code"
+
+class Coding2FileAction(Action):
+    action_name: str = ActionStatus.CODING2FILE
+    description: str = "provide the answer by writing code and filename"
+
+class CodeExecutingAction(Action):
+    action_name: str = ActionStatus.CODE_EXECUTING
+    description: str = "provide the answer by writing executable code"
+
+class PlanningAction(Action):
+    action_name: str = ActionStatus.PLANNING
+    description: str = "provide a sequence of tasks"
+
+class UnchangedAction(Action):
+    action_name: str = ActionStatus.UNCHANGED
+    description: str = "this PLAN has no problem, just set PLAN_STEP to CURRENT_STEP+1."
+
+class AdjustedAction(Action):
+    action_name: str = ActionStatus.ADJUSTED
+    description: str = "the PLAN is to provide an optimized version of the original plan."
+
+# extended action exmaple
+class CodeRetrievalAction(Action):
+    action_name: str = ActionStatus.CODE_RETRIEVAL
+    description: str = "execute the code retrieval to acquire more code information"
+
 
 class RoleTypeEnums(Enum):
     SYSTEM = "system"
@@ -37,7 +93,11 @@ class RoleTypeEnums(Enum):
         return super().__eq__(other)
 
 
-class InputKeyEnums(Enum):
+class PromptKey(BaseModel):
+    key_name: str
+    description: str
+
+class PromptKeyEnums(Enum):
     # Origin Query is ui's user question
     ORIGIN_QUERY = "origin_query"
     # agent's input from last agent
@@ -49,9 +109,9 @@ class InputKeyEnums(Enum):
     # chain memory
     CHAIN_MEMORY = "chain_memory"
     # agent's memory
-    SELF_ONE_MEMORY = "self_one_memory"
+    SELF_LOCAL_MEMORY = "self_local_memory"
     # chain memory
-    CHAIN_ONE_MEMORY = "chain_one_memory"
+    CHAIN_LOCAL_MEMORY = "chain_local_memory"
     # Doc Infomations contains (Doc\Code\Search)
     DOC_INFOS = "doc_infos"
 
@@ -107,14 +167,6 @@ class CodeDoc(BaseModel):
         return f"""出处 [{self.index + 1}] \n\n来源 ({self.related_nodes}) \n\n内容 {self.code}\n\n"""
 
 
-class Docs:
-
-    def __init__(self, docs: List[Doc]):
-        self.titles: List[str] = [doc.get_title() for doc in docs]
-        self.snippets: List[str] = [doc.get_snippet() for doc in docs]
-        self.links: List[str] = [doc.get_link() for doc in docs]
-        self.indexs: List[int] = [doc.get_index() for doc in docs]
-
 class Task(BaseModel):
     task_type: str
     task_name: str
@@ -163,6 +215,7 @@ class AgentConfig(BaseModel):
     do_tool_retrieval: bool = False
     focus_agents: List = []
     focus_message_keys: List = []
+    group_agents: List = []
 
 
 class PhaseConfig(BaseModel):

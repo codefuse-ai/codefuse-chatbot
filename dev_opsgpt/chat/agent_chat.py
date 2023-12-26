@@ -275,7 +275,7 @@ class AgentChat:
                 "code_docs":  [str(doc) for doc in message.code_docs],
                 "related_nodes": [doc.get_related_node() for idx, doc in enumerate(message.code_docs) if idx==0],
                 "figures": message.figures,
-                "step_content": step_content,
+                "step_content": step_content or final_content,
                 "final_content": final_content,
                 }
             

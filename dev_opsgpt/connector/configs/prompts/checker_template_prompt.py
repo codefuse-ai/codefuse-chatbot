@@ -12,12 +12,12 @@ Each decision should be justified based on the context provided, specifying if t
 **Context:** the current status and history of the tasks to determine if Origin Query has been achieved.
 
 #### Response Output Format
-**REASON:** Justify the decision of choosing 'finished' and 'continued' by evaluating the progress step by step.
-Consider all relevant information. If the tasks were aimed at an ongoing process, assess whether it has reached a satisfactory conclusion.
-
 **Action Status:** Set to 'finished' or 'continued'. 
 If it's 'finished', the context can answer the origin query.
 If it's 'continued', the context cant answer the origin query.
+
+**REASON:** Justify the decision of choosing 'finished' and 'continued' by evaluating the progress step by step.
+Consider all relevant information. If the tasks were aimed at an ongoing process, assess whether it has reached a satisfactory conclusion.
 """
 
 CHECKER_PROMPT = """尽可能地以有帮助和准确的方式回应人类，判断问题是否得到解答，同时展现解答的过程和内容。

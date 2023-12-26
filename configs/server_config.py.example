@@ -100,12 +100,26 @@ FSCHAT_MODEL_WORKERS = {
         # "stream_interval": 2,
         # "no_register": False,
     },
-    "chatglm2-6b": {
-        "port": 20003
-    },
-    "baichuan2-7b-base": {
-        "port": 20004
-    }
+    'codellama_34b': {'host': DEFAULT_BIND_HOST, 'port': 20002},
+    'Baichuan2-13B-Base': {'host': DEFAULT_BIND_HOST, 'port': 20003},
+    'Baichuan2-13B-Chat': {'host': DEFAULT_BIND_HOST, 'port': 20004},
+    'baichuan2-7b-base': {'host': DEFAULT_BIND_HOST, 'port': 20005},
+    'baichuan2-7b-chat': {'host': DEFAULT_BIND_HOST, 'port': 20006},
+    'internlm-7b-base': {'host': DEFAULT_BIND_HOST, 'port': 20007},
+    'internlm-chat-7b': {'host': DEFAULT_BIND_HOST, 'port': 20008},
+    'chatglm2-6b': {'host': DEFAULT_BIND_HOST, 'port': 20009},
+    'qwen-14b-base': {'host': DEFAULT_BIND_HOST, 'port': 20010},
+    'qwen-14b-chat': {'host': DEFAULT_BIND_HOST, 'port': 20011},
+    'qwen-1-8B-Chat': {'host': DEFAULT_BIND_HOST, 'port': 20012},
+    'Qwen-7B': {'host': DEFAULT_BIND_HOST, 'port': 20013},
+    'Qwen-7B-Chat': {'host': DEFAULT_BIND_HOST, 'port': 20014},
+    'qwen-7b-base-v1.1': {'host': DEFAULT_BIND_HOST, 'port': 20015},
+    'qwen-7b-chat-v1.1': {'host': DEFAULT_BIND_HOST, 'port': 20016},
+    'chatglm3-6b': {'host': DEFAULT_BIND_HOST, 'port': 20017},
+    'chatglm3-6b-32k': {'host': DEFAULT_BIND_HOST, 'port': 20018},
+    'chatglm3-6b-base': {'host': DEFAULT_BIND_HOST, 'port': 20019},
+    'Qwen-72B-Chat-Int4': {'host': DEFAULT_BIND_HOST, 'port': 20020},
+    'gpt-3.5-turbo': {'host': DEFAULT_BIND_HOST, 'port': 20021}
 }
 # fastchat multi model worker server
 FSCHAT_MULTI_MODEL_WORKERS = {

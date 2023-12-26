@@ -22,7 +22,7 @@ HISTORY_VERTEX_SCORE = 5
 VERTEX_MERGE_RATIO = 0.5
 
 # search_by_description
-MAX_DISTANCE = 0.5
+MAX_DISTANCE = 1000
 
 
 class CodeSearch:

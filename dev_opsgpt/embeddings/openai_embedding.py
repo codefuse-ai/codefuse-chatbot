@@ -11,8 +11,6 @@ import json
 import os
 from loguru import logger
 
-from configs.model_config import OPENAI_API_BASE
-
 
 class OpenAIEmbedding:
     def __init__(self):

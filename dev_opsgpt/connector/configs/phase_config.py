@@ -88,15 +88,26 @@ PHASE_CONFIGS = {
         "do_tool_retrieval": False,
         "do_using_tool": False
     },
-    "metagpt_code_devlop": {
-        "phase_name": "metagpt_code_devlop",
-        "phase_type": "BasePhase",
-        "chains": ["metagptChain",],
-        "do_summary": False,
-        "do_search": False,
-        "do_doc_retrieval": False,
-        "do_code_retrieval": False,
-        "do_tool_retrieval": False,
-        "do_using_tool": False
-    },
+    # "metagpt_code_devlop": {
+    #     "phase_name": "metagpt_code_devlop",
+    #     "phase_type": "BasePhase",
+    #     "chains": ["metagptChain",],
+    #     "do_summary": False,
+    #     "do_search": False,
+    #     "do_doc_retrieval": False,
+    #     "do_code_retrieval": False,
+    #     "do_tool_retrieval": False,
+    #     "do_using_tool": False
+    # },
+    # "baseGroupPhase": {
+    #     "phase_name": "baseGroupPhase",
+    #     "phase_type": "BasePhase",
+    #     "chains": ["baseGroupChain"],
+    #     "do_summary": False,
+    #     "do_search": False,
+    #     "do_doc_retrieval": False,
+    #     "do_code_retrieval": False,
+    #     "do_tool_retrieval": False,
+    #     "do_using_tool": False
+    # },
 }

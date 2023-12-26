@@ -17,7 +17,7 @@ from dev_opsgpt.connector.configs.prompts import BASE_PROMPT_INPUT, QUERY_CONTEX
 from dev_opsgpt.connector.message_process import MessageUtils
 from dev_opsgpt.connector.configs.agent_config import REACT_PROMPT_INPUT, QUERY_CONTEXT_PROMPT_INPUT, PLAN_PROMPT_INPUT
 
-from dev_opsgpt.llm_models import getChatModel
+from dev_opsgpt.llm_models import getChatModel, getExtraModel
 from dev_opsgpt.connector.utils import parse_section
 
 
@@ -44,7 +44,7 @@ class BaseAgent:
         
         self.task = task
         self.role = role
-        self.message_utils = MessageUtils()
+        self.message_utils = MessageUtils(role)
         self.llm = self.create_llm_engine(temperature, stop)
         self.memory = self.init_history(memory)
         self.chat_turn = chat_turn
@@ -68,6 +68,7 @@ class BaseAgent:
         '''agent reponse from multi-message'''
         # insert query into memory
         query_c = copy.deepcopy(query)
+        query_c = self.start_action_step(query_c)
         
         self_memory = self.memory if self.do_use_self_memory else None
         # create your llm prompt
@@ -80,23 +81,30 @@ class BaseAgent:
             role_name=self.role.role_name,
             role_type="ai", #self.role.role_type,
             role_content=content,
-            role_contents=[content],
             step_content=content,
             input_query=query_c.input_query,
             tools=query_c.tools,
-            parsed_output_list=[query.parsed_output]
+            parsed_output_list=[query.parsed_output],
+            customed_kargs=query_c.customed_kargs
             )
         # common parse llm' content to message
         output_message = self.message_utils.parser(output_message)
         if self.do_filter:
             output_message = self.message_utils.filter(output_message)
-
+        # action step
+        output_message, observation_message = self.message_utils.step_router(output_message, history, background, memory_pool=memory_pool)
+        output_message.parsed_output_list.append(output_message.parsed_output)
+        if observation_message:
+            output_message.parsed_output_list.append(observation_message.parsed_output)
         # update self_memory
         self.append_history(query_c)
         self.append_history(output_message)
         # logger.info(f"{self.role.role_name} currenct question: {output_message.input_query}\nllm_step_run: {output_message.role_content}")
         output_message.input_query = output_message.role_content
-        output_message.parsed_output_list.append(output_message.parsed_output)
+        # output_message.parsed_output_list.append(output_message.parsed_output) # 与上述重复？
+        # end
+        output_message = self.message_utils.inherit_extrainfo(query, output_message)
+        output_message = self.end_action_step(output_message)
         # update memory pool
         memory_pool.append(output_message)
         yield output_message
@@ -110,7 +118,7 @@ class BaseAgent:
         doc_infos = self.create_doc_prompt(query)
         code_infos = self.create_codedoc_prompt(query)
         # 
-        formatted_tools, tool_names = self.create_tools_prompt(query)
+        formatted_tools, tool_names, _ = self.create_tools_prompt(query)
         task_prompt = self.create_task_prompt(query)
         background_prompt = self.create_background_prompt(background, control_key="step_content")
         history_prompt = self.create_history_prompt(history)
@@ -185,7 +193,10 @@ class BaseAgent:
                     context = memory_pool_select_by_agent_key_context
                 prompt += "\n**Context:**\n" + context + "\n" + input_query
             elif input_key == "DocInfos":
-                prompt += "\n**DocInfos:**\n" + DocInfos
+                if DocInfos:
+                    prompt += "\n**DocInfos:**\n" + DocInfos
+                else:
+                    prompt += "\n**DocInfos:**\n" + "Empty"
             elif input_key == "Question":
                 prompt += "\n**Question:**\n" + input_query
 
@@ -231,12 +242,15 @@ class BaseAgent:
     def create_tools_prompt(self, message: Message) -> str:
         tools = message.tools
         tool_strings = []
+        tools_descs = []
         for tool in tools:
             args_schema = re.sub("}", "}}}}", re.sub("{", "{{{{", str(tool.args)))
             tool_strings.append(f"{tool.name}: {tool.description}, args: {args_schema}")
+            tools_descs.append(f"{tool.name}: {tool.description}")
         formatted_tools = "\n".join(tool_strings)
+        tools_desc_str = "\n".join(tools_descs)
         tool_names = ", ".join([tool.name for tool in tools])
-        return formatted_tools, tool_names
+        return formatted_tools, tool_names, tools_desc_str
     
     def create_task_prompt(self, message: Message) -> str:
         task = message.task or self.task
@@ -276,19 +290,22 @@ class BaseAgent:
     
     def create_llm_engine(self, temperature=0.2, stop=None):
         return getChatModel(temperature=temperature, stop=stop)
+    
+    def registry_actions(self, actions):
+        '''registry llm's actions'''
+        self.action_list = actions
 
-    # def filter(self, message: Message, stop=None) -> Message:
+    def start_action_step(self, message: Message) -> Message:
+        '''do action before agent predict '''
+        # action_json = self.start_action()
+        # message["customed_kargs"]["xx"] = action_json
+        return message
 
-        # tool_params = self.parser_spec_key(message.role_content, "tool_params")
-        # code_content = self.parser_spec_key(message.role_content, "code_content")
-        # plan = self.parser_spec_key(message.role_content, "plan")
-        # plans = self.parser_spec_key(message.role_content, "plans", do_search=False)
-        # content = self.parser_spec_key(message.role_content, "content", do_search=False)
-
-        # # logger.debug(f"tool_params: {tool_params}, code_content: {code_content}, plan: {plan}, plans: {plans}, content: {content}")
-        # role_content = tool_params or code_content or plan or plans or content
-        # message.role_content = role_content or message.role_content
-        # return message
+    def end_action_step(self, message: Message) -> Message:
+        '''do action after agent predict '''
+        # action_json = self.end_action()
+        # message["customed_kargs"]["xx"] = action_json
+        return message
     
     def token_usage(self, ):
         '''calculate the usage of token'''
@@ -324,339 +341,6 @@ class BaseAgent:
         message_c.parsed_output = {k: v for k,v in message_c.parsed_output.items() if k in self.focus_message_keys}
         message_c.parsed_output_list = [{k: v for k,v in parsed_output.items() if k in self.focus_message_keys} for parsed_output in message_c.parsed_output_list]
         return message_c
-
-    # def get_extra_infos(self, message: Message) -> Message:
-    #     ''''''
-    #     if self.do_search:
-    #         message = self.get_search_retrieval(message)
-        
-    #     if self.do_doc_retrieval:
-    #         message = self.get_doc_retrieval(message)
-
-    #     if self.do_tool_retrieval:
-    #         message = self.get_tool_retrieval(message)
-        
-    #     return message 
-    
-    # def get_search_retrieval(self, message: Message,) -> Message:
-    #     SEARCH_ENGINES = {"duckduckgo": DDGSTool}
-    #     search_docs = []
-    #     for idx, doc in enumerate(SEARCH_ENGINES["duckduckgo"].run(message.role_content, 3)):
-    #         doc.update({"index": idx})
-    #         search_docs.append(Doc(**doc))
-    #     message.search_docs = search_docs
-    #     return message
-    
-    # def get_doc_retrieval(self, message: Message) -> Message:
-    #     query = message.role_content
-    #     knowledge_basename = message.doc_engine_name
-    #     top_k = message.top_k
-    #     score_threshold = message.score_threshold
-    #     if knowledge_basename:
-    #         docs = DocRetrieval.run(query, knowledge_basename, top_k, score_threshold)
-    #         message.db_docs = [Doc(**doc) for doc in docs]
-    #     return message
-    
-    # def get_code_retrieval(self, message: Message) -> Message:
-    #     # DocRetrieval.run("langchain是什么", "DSADSAD")
-    #     query = message.input_query
-    #     code_engine_name = message.code_engine_name
-    #     history_node_list = message.history_node_list
-    #     code_docs = CodeRetrieval.run(code_engine_name, query, code_limit=message.top_k, history_node_list=history_node_list)
-    #     message.code_docs = [CodeDoc(**doc) for doc in code_docs]
-    #     return message
-    
-    # def get_tool_retrieval(self, message: Message) -> Message:
-    #     return message
-    
-    # def step_router(self, message: Message) -> tuple[Message, ...]:
-    #     ''''''
-    #     # message = self.parser(message)
-    #     # logger.debug(f"message.action_status: {message.action_status}")
-    #     observation_message = None
-    #     if message.action_status == ActionStatus.CODING:
-    #         message, observation_message = self.code_step(message)
-    #     elif message.action_status == ActionStatus.TOOL_USING:
-    #         message, observation_message = self.tool_step(message)
-
-    #     return message, observation_message
-
-    # def code_step(self, message: Message) -> Message:
-    #     '''execute code'''
-    #     # logger.debug(f"message.role_content: {message.role_content}, message.code_content: {message.code_content}")
-    #     code_answer = self.codebox.chat('```python\n{}```'.format(message.code_content))
-    #     code_prompt = f"执行上述代码后存在报错信息为 {code_answer.code_exe_response}，需要进行修复" \
-    #                 if code_answer.code_exe_type == "error" else f"执行上述代码后返回信息为 {code_answer.code_exe_response}"
-        
-    #     observation_message = Message(
-    #             role_name="observation",
-    #             role_type="func", #self.role.role_type,
-    #             role_content="",
-    #             step_content="",
-    #             input_query=message.code_content,
-    #             )
-    #     uid = str(uuid.uuid1())
-    #     if code_answer.code_exe_type == "image/png":
-    #         message.figures[uid] = code_answer.code_exe_response
-    #         message.code_answer = f"\n**Observation:**: 执行上述代码后生成一张图片, 图片名为{uid}\n"
-    #         message.observation = f"\n**Observation:**: 执行上述代码后生成一张图片, 图片名为{uid}\n"
-    #         message.step_content += f"\n**Observation:**: 执行上述代码后生成一张图片, 图片名为{uid}\n"
-    #         message.step_contents += [f"\n**Observation:**: 执行上述代码后生成一张图片, 图片名为{uid}\n"]
-    #         # message.role_content += f"\n**Observation:**:执行上述代码后生成一张图片, 图片名为{uid}\n"
-    #         observation_message.role_content = f"\n**Observation:**: 执行上述代码后生成一张图片, 图片名为{uid}\n"
-    #         observation_message.parsed_output = {"Observation": f"执行上述代码后生成一张图片, 图片名为{uid}"}
-    #     else:
-    #         message.code_answer = code_answer.code_exe_response
-    #         message.observation = code_answer.code_exe_response
-    #         message.step_content += f"\n**Observation:**: {code_prompt}\n"
-    #         message.step_contents += [f"\n**Observation:**: {code_prompt}\n"]
-    #         # message.role_content += f"\n**Observation:**: {code_prompt}\n"
-    #         observation_message.role_content = f"\n**Observation:**: {code_prompt}\n"
-    #         observation_message.parsed_output = {"Observation": code_prompt}
-    #     # logger.info(f"**Observation:** {message.action_status}, {message.observation}")
-    #     return message, observation_message
-
-    # def tool_step(self, message: Message) -> Message:
-    #     '''execute tool'''
-    #     # logger.debug(f"{message}")
-    #     observation_message = Message(
-    #             role_name="observation",
-    #             role_type="function", #self.role.role_type,
-    #             role_content="\n**Observation:** there is no tool can execute\n"    ,
-    #             step_content="",
-    #             input_query=str(message.tool_params),
-    #             tools=message.tools,
-    #             )
-    #     # logger.debug(f"message: {message.action_status}, {message.tool_name}, {message.tool_params}")
-    #     tool_names = [tool.name for tool in message.tools]
-    #     if message.tool_name not in tool_names:
-    #         message.tool_answer = "\n**Observation:** there is no tool can execute\n"    
-    #         message.observation = "\n**Observation:** there is no tool can execute\n"    
-    #         # message.role_content += f"\n**Observation:**: 不存在可以执行的tool\n"
-    #         message.step_content += f"\n**Observation:** there is no tool can execute\n"
-    #         message.step_contents += [f"\n**Observation:** there is no tool can execute\n"]
-    #         observation_message.role_content = f"\n**Observation:** there is no tool can execute\n"
-    #         observation_message.parsed_output = {"Observation": "there is no tool can execute\n"}
-    #     for tool in message.tools:
-    #         if tool.name == message.tool_name:
-    #             tool_res = tool.func(**message.tool_params.get("tool_params", {}))
-    #             logger.debug(f"tool_res {tool_res}")
-    #             message.tool_answer = tool_res    
-    #             message.observation = tool_res
-    #             # message.role_content += f"\n**Observation:**: {tool_res}\n"
-    #             message.step_content += f"\n**Observation:** {tool_res}\n"
-    #             message.step_contents += [f"\n**Observation:** {tool_res}\n"]
-    #             observation_message.role_content = f"\n**Observation:** {tool_res}\n"
-    #             observation_message.parsed_output = {"Observation": tool_res}
-    #             break
-
-    #     # logger.info(f"**Observation:** {message.action_status}, {message.observation}")
-    #     return message, observation_message
-    
-    # def parser(self, message: Message) -> Message:
-    #     ''''''
-    #     content = message.role_content
-    #     parser_keys = ["action", "code_content", "code_filename", "tool_params", "plans"]
-    #     try:
-    #         s_json = self._parse_json(content)
-    #         message.action_status = s_json.get("action")
-    #         message.code_content = s_json.get("code_content")
-    #         message.tool_params = s_json.get("tool_params")
-    #         message.tool_name = s_json.get("tool_name")
-    #         message.code_filename = s_json.get("code_filename")
-    #         message.plans = s_json.get("plans")
-    #         # for parser_key in parser_keys:
-    #         #     message.action_status = content.get(parser_key)
-    #     except Exception as e:
-    #         # logger.warning(f"{traceback.format_exc()}")
-    #         def parse_text_to_dict(text):
-    #             # Define a regular expression pattern to capture the key and value
-    #             main_pattern = r"\*\*(.+?):\*\*\s*(.*?)\s*(?=\*\*|$)"
-    #             list_pattern = r'```python\n(.*?)```'
-
-    #             # Use re.findall to find all main matches in the text
-    #             main_matches = re.findall(main_pattern, text, re.DOTALL)
-
-    #             # Convert main matches to a dictionary
-    #             parsed_dict = {key.strip(): value.strip() for key, value in main_matches}
-
-    #             for k, v in parsed_dict.items():
-    #                 for pattern in [list_pattern]:
-    #                     if "PLAN" != k: continue
-    #                     match_value = re.search(pattern, v, re.DOTALL)
-    #                     if match_value:
-    #                         # Add the code block to the dictionary
-    #                         parsed_dict[k] = eval(match_value.group(1).strip())
-    #                         break
-
-    #             return parsed_dict
-            
-    #         def extract_content_from_backticks(text):
-    #             code_blocks = []
-    #             lines = text.split('\n')
-    #             is_code_block = False
-    #             code_block = ''
-    #             language = ''
-    #             for line in lines:
-    #                 if line.startswith('```') and not is_code_block:
-    #                     is_code_block = True
-    #                     language = line[3:]
-    #                     code_block = ''
-    #                 elif line.startswith('```') and is_code_block:
-    #                     is_code_block = False
-    #                     code_blocks.append({language.strip(): code_block.strip()})
-    #                 elif is_code_block:
-    #                     code_block += line + '\n'
-    #             return code_blocks
-            
-    #         def parse_dict_to_dict(parsed_dict):
-    #             code_pattern = r'```python\n(.*?)```'
-    #             tool_pattern = r'```tool_params\n(.*?)```'
-                
-    #             pattern_dict = {"code": code_pattern, "tool_params": tool_pattern}
-    #             spec_parsed_dict = copy.deepcopy(parsed_dict)
-    #             for key, pattern in pattern_dict.items():
-    #                 for k, text in parsed_dict.items():
-    #                     # Search for the code block
-    #                     if not isinstance(text, str): continue
-    #                     _match = re.search(pattern, text, re.DOTALL)
-    #                     if _match:
-    #                         # Add the code block to the dictionary
-    #                         try:
-    #                             spec_parsed_dict[key] = json.loads(_match.group(1).strip())
-    #                         except:
-    #                             spec_parsed_dict[key] = _match.group(1).strip()
-    #                         break
-    #             return spec_parsed_dict
-            # def parse_dict_to_dict(parsed_dict):
-            #     code_pattern = r'```python\n(.*?)```'
-            #     tool_pattern = r'```json\n(.*?)```'
-                
-            #     pattern_dict = {"code": code_pattern, "json": tool_pattern}
-            #     spec_parsed_dict = copy.deepcopy(parsed_dict)
-            #     for key, pattern in pattern_dict.items():
-            #         for k, text in parsed_dict.items():
-            #             # Search for the code block
-            #             if not isinstance(text, str): continue
-            #             _match = re.search(pattern, text, re.DOTALL)
-            #             if _match:
-            #                 # Add the code block to the dictionary
-            #                 logger.debug(f"dsadsa {text}")
-            #                 try:
-            #                     spec_parsed_dict[key] = json.loads(_match.group(1).strip())
-            #                 except:
-            #                     spec_parsed_dict[key] = _match.group(1).strip()
-            #                 break
-            #     return spec_parsed_dict
-
-    #         parsed_dict = parse_text_to_dict(content)
-    #         spec_parsed_dict = parse_dict_to_dict(parsed_dict)
-    #         action_value = parsed_dict.get('Action Status')
-    #         if action_value:
-    #             action_value = action_value.lower()
-    #         logger.info(f'{self.role.role_name}: action_value: {action_value}')
-    #         # action_value = self._match(r"'action':\s*'([^']*)'", content) if "'action'" in content else self._match(r'"action":\s*"([^"]*)"', content)
-            
-            # code_content_value = spec_parsed_dict.get('code')
-            # # code_content_value = self._match(r"'code_content':\s*'([^']*)'", content) if "'code_content'" in content else self._match(r'"code_content":\s*"([^"]*)"', content)
-            # filename_value = self._match(r"'code_filename':\s*'([^']*)'", content) if "'code_filename'" in content else self._match(r'"code_filename":\s*"([^"]*)"', content)
-            # tool_params_value = spec_parsed_dict.get('tool_params')
-            # # tool_params_value = self._match(r"'tool_params':\s*(\{[^{}]*\})", content, do_json=True) if "'tool_params'" in content \
-            # #                         else self._match(r'"tool_params":\s*(\{[^{}]*\})', content, do_json=True)
-            # tool_name_value = self._match(r"'tool_name':\s*'([^']*)'", content) if "'tool_name'" in content else self._match(r'"tool_name":\s*"([^"]*)"', content)
-            # plans_value = self._match(r"'plans':\s*(\[.*?\])", content, do_search=False) if "'plans'" in content else self._match(r'"plans":\s*(\[.*?\])', content, do_search=False, )
-    #         # re解析
-    #         message.action_status = action_value or "default"
-    #         message.code_content = code_content_value
-    #         message.code_filename = filename_value
-    #         message.tool_params = tool_params_value
-    #         message.tool_name = tool_name_value
-    #         message.plans = plans_value
-    #         message.parsed_output = parsed_dict
-    #         message.spec_parsed_output = spec_parsed_dict
-            # code_content_value = spec_parsed_dict.get('code')
-            # # code_content_value = self._match(r"'code_content':\s*'([^']*)'", content) if "'code_content'" in content else self._match(r'"code_content":\s*"([^"]*)"', content)
-            # filename_value = self._match(r"'code_filename':\s*'([^']*)'", content) if "'code_filename'" in content else self._match(r'"code_filename":\s*"([^"]*)"', content)
-            # logger.debug(spec_parsed_dict)
-
-            # if action_value == 'tool_using':
-            #     tool_params_value = spec_parsed_dict.get('json')
-            # else:
-            #     tool_params_value = None
-            # # tool_params_value = self._match(r"'tool_params':\s*(\{[^{}]*\})", content, do_json=True) if "'tool_params'" in content \
-            # #                         else self._match(r'"tool_params":\s*(\{[^{}]*\})', content, do_json=True)
-            # tool_name_value = self._match(r"'tool_name':\s*'([^']*)'", content) if "'tool_name'" in content else self._match(r'"tool_name":\s*"([^"]*)"', content)
-            # plans_value = self._match(r"'plans':\s*(\[.*?\])", content, do_search=False) if "'plans'" in content else self._match(r'"plans":\s*(\[.*?\])', content, do_search=False, )
-            # # re解析
-            # message.action_status = action_value or "default"
-            # message.code_content = code_content_value
-            # message.code_filename = filename_value
-            # message.tool_params = tool_params_value
-            # message.tool_name = tool_name_value
-            # message.plans = plans_value
-            # message.parsed_output = parsed_dict
-            # message.spec_parsed_output = spec_parsed_dict
-
-    #     # logger.debug(f"确认当前的action: {message.action_status}")
-
-    #     return message
-    
-    # def parser_spec_key(self, content, key, do_search=True, do_json=False) -> str:
-    #     ''''''
-    #     key2pattern = {
-    #         "'action'": r"'action':\s*'([^']*)'", '"action"': r'"action":\s*"([^"]*)"',
-    #         "'code_content'": r"'code_content':\s*'([^']*)'", '"code_content"': r'"code_content":\s*"([^"]*)"',
-    #         "'code_filename'": r"'code_filename':\s*'([^']*)'", '"code_filename"': r'"code_filename":\s*"([^"]*)"',
-    #         "'tool_params'": r"'tool_params':\s*(\{[^{}]*\})", '"tool_params"': r'"tool_params":\s*(\{[^{}]*\})',
-    #         "'tool_name'": r"'tool_name':\s*'([^']*)'", '"tool_name"': r'"tool_name":\s*"([^"]*)"',
-    #         "'plans'": r"'plans':\s*(\[.*?\])", '"plans"': r'"plans":\s*(\[.*?\])',
-    #         "'content'": r"'content':\s*'([^']*)'", '"content"': r'"content":\s*"([^"]*)"',
-    #         }
-        
-    #     s_json = self._parse_json(content)
-    #     try:
-    #         if s_json and key in s_json:
-    #             return str(s_json[key])
-    #     except:
-    #         pass
-
-    #     keystr = f"'{key}'" if f"'{key}'" in content else f'"{key}"'
-    #     return self._match(key2pattern.get(keystr, fr"'{key}':\s*'([^']*)'"), content, do_search=do_search, do_json=do_json)
-    
-    # def _match(self, pattern, s, do_search=True, do_json=False):
-    #     try:
-    #         if do_search:
-    #             match = re.search(pattern, s)
-    #             if match:
-    #                 value = match.group(1).replace("\\n", "\n")
-    #                 if do_json:
-    #                     value = json.loads(value)
-    #             else:
-    #                 value = None
-    #         else:
-    #             match = re.findall(pattern, s, re.DOTALL)
-    #             if match:
-    #                 value = match[0]
-    #                 if do_json:
-    #                     value = json.loads(value)
-    #             else:
-    #                 value = None
-    #     except Exception as e:
-    #         logger.warning(f"{traceback.format_exc()}")
-
-    #     # logger.debug(f"pattern: {pattern}, s: {s}, match: {match}")
-    #     return value
-    
-    # def _parse_json(self, s):
-    #     try:
-    #         pattern = r"```([^`]+)```"
-    #         match = re.findall(pattern, s)
-    #         if match:
-    #             return eval(match[0])
-    #     except:
-    #         pass
-        # return None
-
     
     def get_memory(self, content_key="role_content"):
         return self.memory.to_tuple_messages(content_key="step_content")

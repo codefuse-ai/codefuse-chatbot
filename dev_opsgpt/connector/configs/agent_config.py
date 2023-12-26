@@ -7,6 +7,7 @@ from .prompts import (
     QA_PROMPT, CODE_QA_PROMPT, QA_TEMPLATE_PROMPT,
     EXECUTOR_TEMPLATE_PROMPT,
     REFINE_TEMPLATE_PROMPT,
+    SELECTOR_AGENT_TEMPLATE_PROMPT,
     PLANNER_TEMPLATE_PROMPT, GENERAL_PLANNER_PROMPT, DATA_PLANNER_PROMPT, TOOL_PLANNER_PROMPT,
     PRD_WRITER_METAGPT_PROMPT, DESIGN_WRITER_METAGPT_PROMPT, TASK_WRITER_METAGPT_PROMPT, CODE_WRITER_METAGPT_PROMPT,
     REACT_TEMPLATE_PROMPT,
@@ -20,10 +21,25 @@ class AgentType:
     EXECUTOR = "ExecutorAgent"
     ONE_STEP = "BaseAgent"
     DEFAULT = "BaseAgent"
+    SELECTOR = "SelectorAgent"
 
 
 
 AGETN_CONFIGS = {
+    "baseGroup": {
+        "role": {
+            "role_prompt": SELECTOR_AGENT_TEMPLATE_PROMPT,
+            "role_type": "assistant",
+            "role_name": "baseGroup",
+            "role_desc": "",
+            "agent_type": "SelectorAgent"
+        },
+        "group_agents": ["tool_react", "code_react"],
+        "chat_turn": 1,
+        "do_search": False,
+        "do_doc_retrieval": False,
+        "do_tool_retrieval": False
+    },
     "checker": {
         "role": {
             "role_prompt": CHECKER_TEMPLATE_PROMPT,

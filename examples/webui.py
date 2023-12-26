@@ -27,19 +27,19 @@ api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=NO_REMOTE_API)
 
 if __name__ == "__main__":
     st.set_page_config(
-        "DevOpsGPT-Chat WebUI",
+        "CodeFuse-ChatBot WebUI",
         os.path.join("../sources/imgs", "devops-chatbot.png"),
         initial_sidebar_state="expanded",
         menu_items={
-            'Get Help': 'https://github.com/lightislost/devopsgpt',
-            'Report a bug': "https://github.com/lightislost/devopsgpt/issues",
-            'About': f"""欢迎使用 DevOpsGPT-Chat WebUI {VERSION}！"""
+            'Get Help': 'https://github.com/codefuse-ai/codefuse-chatbot',
+            'Report a bug': "https://github.com/codefuse-ai/codefuse-chatbot/issues",
+            'About': f"""欢迎使用 CodeFuse-ChatBot WebUI {VERSION}！"""
         }
     )
 
     if not chat_box.chat_inited:
         st.toast(
-            f"欢迎使用 [`DevOpsGPT-Chat`](https://github.com/lightislost/devopsgpt) ! \n\n"
+            f"欢迎使用 [`CodeFuse-ChatBot`](https://github.com/codefuse-ai/codefuse-chatbot) ! \n\n"
             f"当前使用模型`{LLM_MODEL}`, 您可以开始提问了."
         )
 
@@ -71,7 +71,7 @@ if __name__ == "__main__":
             use_column_width=True
         )
         st.caption(
-            f"""<p align="right">当前版本：{VERSION}</p>""",
+            f"""<p align="right"> CodeFuse-ChatBot 当前版本：{VERSION}</p>""",
             unsafe_allow_html=True,
         )
         options = list(pages)

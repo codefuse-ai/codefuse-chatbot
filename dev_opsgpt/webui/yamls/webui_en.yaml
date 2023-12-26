@@ -1,0 +1,78 @@
+# This is an example of webui
+dialogue:
+  mode_instruction: 请选择对话模式
+  mode: 
+    - LLM Conversation
+    - Knowledge Base Q&A
+    - Code Knowledge Base Q&A
+    - Search Engine Q&A
+    - Agents Q&A
+  history_length: History of Dialogue Turns
+  text_mode_swtich: Switched to mode
+  text_knowledgeBase_swtich: Current Knowledge Base"
+  text_loaded_kbase: Loaded Knowledge Base
+  text_loaded_cbase: Loaded Code Knowledge Base
+  # Knowledge Base Q&A
+  kbase_expander_name: 知识库配置
+  kbase_selectbox_name:  请选择知识库：
+  kbase_ninput_topk_name: 匹配知识条数：
+  kbase_ninput_score_threshold_name: 知识匹配分数阈值：
+  # Code Knowledge Base Q&A
+  cbase_expander_name: 代码知识库配置
+  cbase_selectbox_name:  请选择代码知识库：
+  cbase_ninput_topk_name: 匹配代码条数：
+  cbase_selectbox_type_name: 请选择查询模式：
+  cbase_search_type_v1:
+    - 基于 cypher
+    - 基于标签
+    - 基于描述
+  cbase_search_type_v2:
+    - 基于 cypher
+    - 基于标签
+
+  # Search Engine Q&A
+  expander_search_name: 搜索引擎配置
+  selectbox_search_name:  请选择搜索引擎
+  ninput_search_topk_name: 匹配搜索结果条数：
+  # Agents Q&A
+  phase_expander_name: Phase管理
+  phase_selectbox_name:  请选择待使用的执行链路
+  phase_toggle_detailed_name: 是否使用明细信息进行agent交互
+  phase_toggle_doToolUsing: 开启工具使用
+  phase_multiselect_tools: 请选择待使用的工具
+  phase_toggle_doSearch: 开启搜索增强
+  phase_toggle_doDocRetrieval: 开启知识库检索增强
+  phase_toggle_doCodeRetrieval: 开启代码检索增强
+
+sandbox:
+  expander_name: 沙盒文件管理
+  file_upload_name: 上传沙盒文件
+  selectbox_name: 选择要处理文件
+  button_upload_name: 点击上传
+  button_download_name: 点击下载
+  button_delete_name: 点击删除
+  toggle_doCodeInterpreter: 开启代码解释器
+  toggle_doAutoCodeExec: 自动执行代码
+
+  expander_code_name: 代码编辑执行器
+  textArea_code_name: 代码片段
+  button_modify_code_name: 修改对话
+  text_modify_code: 修改对话成功
+  button_exec_code_name: 执行代码
+  text_execing_code: 正在执行代码
+  text_error_exec_code: code 不能为空
+
+
+chat:
+  chat_placeholder: 请输入对话内容，换行请使用Ctrl+Enter
+  chatbox_saying: 正在思考...
+  chatbox_doc_querying: 正在查询知识库
+  chatbox_code_querying: 正在查询代码知识库
+  chatbox_searching: 正在执行搜索
+  chatbox_search_result: 网络搜索结果
+  chatbox_doc_result: 知识库匹配结果
+  chatbox_code_result: 代码库匹配节点
+
+export:
+  button_clear_conversation_name: 清空对话
+  download_button_export_name: 导出记录

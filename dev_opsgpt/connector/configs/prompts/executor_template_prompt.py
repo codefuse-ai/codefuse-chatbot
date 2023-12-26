@@ -12,7 +12,7 @@ Each reply should contain only the code required for the current step.
 
 **Thoughts:** Based on the question and observations above, provide the plan for executing this step.
 
-**Action Status:** Set to 'finished' or 'coding'. If it's 'finished', the next action is to provide the final answer to the original question. If it's 'coding', the next step is to write the code.
+**Action Status:** Set to 'stoped' or 'code_executing'. If it's 'stoped', the next action is to provide the final answer to the original question. If it's 'code_executing', the next step is to write the code.
 
 **Action:** Code according to your thoughts. Use this format for code:
 
@@ -26,7 +26,7 @@ Each reply should contain only the code required for the current step.
 
 **Thoughts:** I now know the final answer
 
-**Action Status:** Set to 'finished'
+**Action Status:** Set to 'stoped'
 
 **Action:** The final answer to the original input question
 

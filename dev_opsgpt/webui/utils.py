@@ -355,7 +355,8 @@ class ApiRequest:
         self,
         query: str,
         search_engine_name: str,
-        code_limit: int,
+        top_k: int,
+        history: List[Dict] = [],
         stream: bool = True,
         no_remote_api: bool = None,
     ):
@@ -368,8 +369,8 @@ class ApiRequest:
         data = {
             "query": query,
             "engine_name": search_engine_name,
-            "code_limit": code_limit,
-            "history": [],
+            "top_k": top_k,
+            "history": history,
             "stream": stream,
         }
 

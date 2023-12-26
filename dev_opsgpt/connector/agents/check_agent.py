@@ -50,7 +50,7 @@ class CheckAgent(BaseAgent):
         doc_infos = self.create_doc_prompt(query)
         code_infos = self.create_codedoc_prompt(query)
         # 
-        formatted_tools, tool_names = self.create_tools_prompt(query)
+        formatted_tools, tool_names, _ = self.create_tools_prompt(query)
         task_prompt = self.create_task_prompt(query)
         background_prompt = self.create_background_prompt(background)
         history_prompt = self.create_history_prompt(history)

@@ -55,7 +55,8 @@ class ExecutorAgent(BaseAgent):
                 step_content="",
                 input_query=query.input_query,
                 tools=query.tools,
-                parsed_output_list=[query.parsed_output]
+                parsed_output_list=[query.parsed_output],
+                customed_kargs=query.customed_kargs
             )
         
         self_memory = self.memory if self.do_use_self_memory else None
@@ -64,6 +65,7 @@ class ExecutorAgent(BaseAgent):
         # 如果存在plan字段且plan字段为str的时候
         if "PLAN" not in query.parsed_output or isinstance(query.parsed_output.get("PLAN", []), str) or plan_step >= len(query.parsed_output.get("PLAN", [])):
             query_c = copy.deepcopy(query)
+            query_c = self.start_action_step(query_c)
             query_c.parsed_output = {"Question": query_c.input_query}
             task_executor_memory.append(query_c)
             for output_message, task_executor_memory in self._arun_step(output_message, query_c, self_memory, history, background, memory_pool, task_executor_memory):
@@ -87,6 +89,7 @@ class ExecutorAgent(BaseAgent):
                     yield output_message
             else:
                 query_c = copy.deepcopy(query)
+                query_c = self.start_action_step(query_c)
                 task_content = query_c.parsed_output["PLAN"][plan_step]
                 query_c.parsed_output = {"Question": task_content}
                 task_executor_memory.append(query_c)
@@ -99,6 +102,8 @@ class ExecutorAgent(BaseAgent):
         # logger.info(f"{self.role.role_name} currenct question: {output_message.input_query}\nllm_executor_run: {output_message.step_content}")
         # logger.info(f"{self.role.role_name} currenct parserd_output_list: {output_message.parserd_output_list}")
         output_message.input_query = output_message.role_content
+        # end_action_step
+        output_message = self.end_action_step(output_message)
         # update memory pool
         memory_pool.append(output_message)
         yield output_message
@@ -113,9 +118,7 @@ class ExecutorAgent(BaseAgent):
         logger.debug(f"{self.role.role_name} content: {content}")
 
         output_message.role_content = content
-        output_message.role_contents += [content]
         output_message.step_content += "\n"+output_message.role_content
-        output_message.step_contents + [output_message.role_content]
 
         output_message = self.message_utils.parser(output_message)
         # according the output to choose one action for code_content or tool_content
@@ -141,7 +144,7 @@ class ExecutorAgent(BaseAgent):
         doc_infos = self.create_doc_prompt(query)
         code_infos = self.create_codedoc_prompt(query)
         # 
-        formatted_tools, tool_names = self.create_tools_prompt(query)
+        formatted_tools, tool_names, _ = self.create_tools_prompt(query)
         task_prompt = self.create_task_prompt(query)
         background_prompt = self.create_background_prompt(background, control_key="step_content")
         history_prompt = self.create_history_prompt(history)

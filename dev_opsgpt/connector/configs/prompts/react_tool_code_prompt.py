@@ -12,14 +12,16 @@ Valid "tool_name" value:\n{tool_names}
 
 **Question:** Start by understanding the input question to be answered.
 
-**Thoughts:** Considering the user's question, previously executed steps, and the plan, decide whether the current step requires the use of a tool or coding. Solve the problem step by step, only displaying the thought process necessary for the current step of solving the problem. If a tool can be used, provide its name and parameters. If coding is required, outline the plan for executing this step.
+**Thoughts:** Considering the user's question, previously executed steps, and the plan, decide whether the current step requires the use of a tool or code_executing. Solve the problem step by step, only displaying the thought process necessary for the current step of solving the problem. If a tool can be used, provide its name and parameters. If code_executing is required, outline the plan for executing this step.
 
-**Action Status:** finished, tool_using, or coding. (Choose one from these three statuses. If the task is done, set it to 'finished'. If using a tool, set it to 'tool_using'. If writing code, set it to 'coding'.)
+**Action Status:** stoped, tool_using, or code_executing. (Choose one from these three statuses.)
+If the task is done, set it to 'stoped'. 
+If using a tool, set it to 'tool_using'. 
+If writing code, set it to 'code_executing'.
 
 **Action:** 
 
-If using a tool, output the following format to call the tool:
-
+If using a tool, use the tools by formatting the tool action in JSON from Question and Observation:. The format should be:
 ```json
 {{
   "tool_name": "$TOOL_NAME",
@@ -30,7 +32,7 @@ If using a tool, output the following format to call the tool:
 If the problem cannot be solved with a tool at the moment, then proceed to solve the issue using code. Output the following format to execute the code:
 
 ```python
-# Write your code here
+Write your code here
 ```
 
 **Observation:** Check the results and effects of the executed action.
@@ -39,7 +41,7 @@ If the problem cannot be solved with a tool at the moment, then proceed to solve
 
 **Thoughts:** Conclude the final response to the input question.
 
-**Action Status:** finished
+**Action Status:** stoped
 
 **Action:** The final answer or guidance to the original input question.
 """
@@ -47,7 +49,7 @@ If the problem cannot be solved with a tool at the moment, then proceed to solve
 # REACT_TOOL_AND_CODE_PROMPT = """你是一个使用工具与代码的助手。
 # 如果现有工具不足以完成整个任务，请不要添加不存在的工具，只使用现有工具完成可能的部分。
 # 如果当前步骤不能使用工具完成，将由代码来完成。
-# 有效的"action"值为："finished"（已经完成用户的任务） 、 "tool_using" (使用工具来回答问题) 或 'coding'(结合总结下述思维链过程编写下一步的可执行代码)。
+# 有效的"action"值为："stoped"（已经完成用户的任务） 、 "tool_using" (使用工具来回答问题) 或 'code_executing'(结合总结下述思维链过程编写下一步的可执行代码)。
 # 尽可能地以有帮助和准确的方式回应人类，你可以使用以下工具:
 # {formatted_tools}
 # 如果现在的步骤可以用工具解决问题，请仅在每个$JSON_BLOB中提供一个action，如下所示：

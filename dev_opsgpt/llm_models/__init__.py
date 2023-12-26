@@ -1,6 +1,6 @@
-from .openai_model import getChatModel
+from .openai_model import getChatModel, getExtraModel
 
 
 __all__ = [
-    "getChatModel"
+    "getChatModel", "getExtraModel"
 ]

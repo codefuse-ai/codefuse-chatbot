@@ -29,7 +29,7 @@ class NebulaHandler:
         self.password = password
         self.space_name = space_name
 
-    def execute_cypher(self, cypher: str, space_name: str = ''):
+    def execute_cypher(self, cypher: str, space_name: str = '', format_res: bool = False, use_space_name: bool = True):
         '''
 
         @param space_name: space_name, if provided, will execute use space_name first
@@ -37,11 +37,17 @@ class NebulaHandler:
         @return:
         '''
         with self.connection_pool.session_context(self.username, self.password) as session:
-            if space_name:
-                cypher = f'USE {space_name};{cypher}'
+            if use_space_name:
+                if space_name:
+                    cypher = f'USE {space_name};{cypher}'
+                elif self.space_name:
+                    cypher = f'USE {self.space_name};{cypher}'
+
             logger.debug(cypher)
             resp = session.execute(cypher)
 
+            if format_res:
+                resp = self.result_to_dict(resp)
         return resp
 
     def close_connection(self):
@@ -54,7 +60,8 @@ class NebulaHandler:
         @return:
         '''
         cypher = f'CREATE SPACE IF NOT EXISTS {space_name} (vid_type={vid_type}) comment="{comment}";'
-        resp = self.execute_cypher(cypher)
+        resp = self.execute_cypher(cypher, use_space_name=False)
+
         return resp
 
     def show_space(self):
@@ -95,7 +102,7 @@ class NebulaHandler:
 
     def insert_vertex(self, tag_name: str, value_dict: dict):
         '''
-        insert vertex
+         insert vertex
         @param tag_name:
         @param value_dict: {'properties_name': [], values: {'vid':[]}} order should be the same in properties_name and values
         @return:
@@ -243,7 +250,7 @@ class NebulaHandler:
         """
         build list for each column, and transform to dataframe
         """
-        logger.info(result.error_msg())
+        # logger.info(result.error_msg())
         assert result.is_succeeded()
         columns = result.keys()
         d = {}

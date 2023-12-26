@@ -16,7 +16,7 @@ faiss-cpu
 nltk
 loguru
 pypdf
-duckduckgo-search
+duckduckgo-search==3.9.11
 pysocks
 accelerate
 docker
@@ -39,7 +39,7 @@ streamlit-option-menu>=0.3.6
 streamlit-antd-components>=0.1.11
 streamlit-chatbox>=1.1.6
 streamlit-aggrid>=0.3.4.post3
-httpx~=0.24.1
+httpx
 
 javalang==0.13.0
 jsonref==1.1.0
@@ -51,4 +51,9 @@ nebula3-python==3.1.0
 protobuf==3.20.*
 transformers_stream_generator
 einops
+auto-gptq
+optimum
+modelscope
 
+# vllm model
+vllm==0.2.2; sys_platform == "linux"

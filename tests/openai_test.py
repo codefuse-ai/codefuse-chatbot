@@ -22,15 +22,30 @@ if __name__ == "__main__":
     # chat = ChatOpenAI(temperature=0.1, model_name="gpt-3.5-turbo")
     # print(chat.predict("hi!"))
 
-    print(LLM_MODEL, llm_model_dict[LLM_MODEL]["api_key"], llm_model_dict[LLM_MODEL]["api_base_url"])
-    model = ChatOpenAI(
-        streaming=True,
-        verbose=True,
-        openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
-        openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
-        model_name=LLM_MODEL
+    # print(LLM_MODEL, llm_model_dict[LLM_MODEL]["api_key"], llm_model_dict[LLM_MODEL]["api_base_url"])
+    # model = ChatOpenAI(
+    #     streaming=True,
+    #     verbose=True,
+    #     openai_api_key=llm_model_dict[LLM_MODEL]["api_key"],
+    #     openai_api_base=llm_model_dict[LLM_MODEL]["api_base_url"],
+    #     model_name=LLM_MODEL
+    # )
+    # chat_prompt = ChatPromptTemplate.from_messages([("human", "{input}")])
+    # chain = LLMChain(prompt=chat_prompt, llm=model)
+    # content = chain({"input": "hello"})
+    # print(content)
+
+    import openai
+    # openai.api_key = "EMPTY" # Not support yet
+    openai.api_base = "http://127.0.0.1:8888/v1"
+
+    model = "example"
+
+    # create a chat completion
+    completion = openai.ChatCompletion.create(
+    model=model,
+    messages=[{"role": "user", "content": "Hello! What is your name? "}],
+    max_tokens=100,
     )
-    chat_prompt = ChatPromptTemplate.from_messages([("human", "{input}")])
-    chain = LLMChain(prompt=chat_prompt, llm=model)
-    content = chain({"input": "hello"})
-    print(content)
+    # print the completion
+    print(completion.choices[0].message.content)

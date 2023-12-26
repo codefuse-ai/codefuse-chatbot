@@ -59,10 +59,15 @@ class ReactAgent(BaseAgent):
                 step_content="",
                 input_query=query.input_query,
                 tools=query.tools,
-                parsed_output_list=[query.parsed_output]
+                parsed_output_list=[query.parsed_output],
+                customed_kargs=query.customed_kargs
                 )
         query_c = copy.deepcopy(query)
-        query_c.parsed_output = {"Question": "\n".join([f"{v}" for k, v in query.parsed_output.items() if k not in ["Action Status"]])}
+        query_c = self.start_action_step(query_c)
+        if query.parsed_output:
+            query_c.parsed_output = {"Question": "\n".join([f"{v}" for k, v in query.parsed_output.items() if k not in ["Action Status"]])}
+        else:
+            query_c.parsed_output = {"Question": query.input_query}
         react_memory.append(query_c)
         self_memory = self.memory if self.do_use_self_memory else None
         idx = 0
@@ -77,9 +82,7 @@ class ReactAgent(BaseAgent):
                 raise Exception(traceback.format_exc())
             
             output_message.role_content = "\n"+content
-            output_message.role_contents += [content]
             output_message.step_content += "\n"+output_message.role_content
-            output_message.step_contents + [output_message.role_content]
             yield output_message
 
             # logger.debug(f"{self.role.role_name}, {idx} iteration prompt: {prompt}")
@@ -87,7 +90,7 @@ class ReactAgent(BaseAgent):
 
             output_message = self.message_utils.parser(output_message)
             # when get finished signal can stop early
-            if output_message.action_status == ActionStatus.FINISHED: break
+            if output_message.action_status == ActionStatus.FINISHED or output_message.action_status == ActionStatus.STOPED: break
             # according the output to choose one action for code_content or tool_content
             output_message, observation_message = self.message_utils.step_router(output_message)
             output_message.parsed_output_list.append(output_message.parsed_output)
@@ -108,6 +111,8 @@ class ReactAgent(BaseAgent):
         # update memory pool
         # memory_pool.append(output_message)
         output_message.input_query = query.input_query
+        # end_action_step
+        output_message = self.end_action_step(output_message)
         # update memory pool
         memory_pool.append(output_message)
         yield output_message
@@ -122,7 +127,7 @@ class ReactAgent(BaseAgent):
         doc_infos = self.create_doc_prompt(query)
         code_infos = self.create_codedoc_prompt(query)
         # 
-        formatted_tools, tool_names = self.create_tools_prompt(query)
+        formatted_tools, tool_names, _ = self.create_tools_prompt(query)
         task_prompt = self.create_task_prompt(query)
         background_prompt = self.create_background_prompt(background)
         history_prompt = self.create_history_prompt(history)
@@ -136,7 +141,7 @@ class ReactAgent(BaseAgent):
         # # input_query = query.input_query + "\n" + "\n".join([f"{v}" for k, v in input_query if v])
         # input_query = "\n".join([f"{v}" for k, v in input_query if v])
         input_query = "\n".join(["\n".join([f"**{k}:**\n{v}" for k,v in _dict.items()]) for _dict in react_memory.get_parserd_output()])
-        logger.debug(f"input_query: {input_query}")
+        # logger.debug(f"input_query: {input_query}")
         
         prompt += "\n" + REACT_PROMPT_INPUT.format(**{"query": input_query})
 

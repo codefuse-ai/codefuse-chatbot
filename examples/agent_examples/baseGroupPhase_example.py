@@ -30,7 +30,7 @@ phase_configs = load_phase_configs(PHASE_CONFIGS)
 agent_module = importlib.import_module("dev_opsgpt.connector.agents")
 
 
-phase_name = "codeReactPhase"
+phase_name = "baseGroupPhase"
 phase = BasePhase(phase_name,
             task = None,
             phase_config = PHASE_CONFIGS,
@@ -43,9 +43,10 @@ phase = BasePhase(phase_name,
             )
 
 # round-1
-query_content = "确认本地是否存在book_data.csv，并查看它有哪些列和数据类型;然后画柱状图"
+query_content = "确认本地是否存在employee_data.csv，并查看它有哪些列和数据类型;然后画柱状图"
+# query_content = "帮我确认下127.0.0.1这个服务器的在10点是否存在异常，请帮我判断一下"
 query = Message(
-    role_name="human", role_type="user",
+    role_name="human", role_type="user", tools=tools,
     role_content=query_content, input_query=query_content, origin_query=query_content,
     )
 

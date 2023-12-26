@@ -43,6 +43,38 @@ class MessageUtils:
         output_message.code_docs = input_message.code_docs
         output_message.figures.update(input_message.figures)
         output_message.origin_query = input_message.origin_query
+        output_message.code_engine_name = input_message.code_engine_name
+
+        output_message.doc_engine_name = input_message.doc_engine_name
+        output_message.search_engine_name = input_message.search_engine_name
+        output_message.top_k = input_message.top_k
+        output_message.score_threshold = input_message.score_threshold
+        output_message.cb_search_type = input_message.cb_search_type
+        output_message.do_doc_retrieval = input_message.do_doc_retrieval
+        output_message.do_code_retrieval = input_message.do_code_retrieval
+        output_message.do_tool_retrieval = input_message.do_tool_retrieval
+        # 
+        output_message.tools = input_message.tools
+        output_message.agents = input_message.agents
+        # 存在bug导致相同key被覆盖
+        output_message.customed_kargs.update(input_message.customed_kargs)
+        return output_message
+    
+    def inherit_baseparam(self, input_message: Message, output_message: Message):
+        # 只更新参数
+        output_message.doc_engine_name = input_message.doc_engine_name
+        output_message.search_engine_name = input_message.search_engine_name
+        output_message.top_k = input_message.top_k
+        output_message.score_threshold = input_message.score_threshold
+        output_message.cb_search_type = input_message.cb_search_type
+        output_message.do_doc_retrieval = input_message.do_doc_retrieval
+        output_message.do_code_retrieval = input_message.do_code_retrieval
+        output_message.do_tool_retrieval = input_message.do_tool_retrieval
+        # 
+        output_message.tools = input_message.tools
+        output_message.agents = input_message.agents
+        # 存在bug导致相同key被覆盖
+        output_message.customed_kargs.update(input_message.customed_kargs)
         return output_message
 
     def get_extrainfo_step(self, message: Message, do_search, do_doc_retrieval, do_code_retrieval, do_tool_retrieval) -> Message:
@@ -92,18 +124,22 @@ class MessageUtils:
     def get_tool_retrieval(self, message: Message) -> Message:
         return message
     
-    def step_router(self, message: Message) -> tuple[Message, ...]:
+    def step_router(self, message: Message, history: Memory = None, background: Memory = None, memory_pool: Memory=None) -> tuple[Message, ...]:
         ''''''
         # message = self.parser(message)
         # logger.debug(f"message.action_status: {message.action_status}")
         observation_message = None
-        if message.action_status == ActionStatus.CODING:
+        if message.action_status == ActionStatus.CODE_EXECUTING:
             message, observation_message = self.code_step(message)
         elif message.action_status == ActionStatus.TOOL_USING:
             message, observation_message = self.tool_step(message)
         elif message.action_status == ActionStatus.CODING2FILE:
             self.save_code2file(message)
-
+        elif message.action_status == ActionStatus.CODE_RETRIEVAL:
+            pass
+        elif message.action_status == ActionStatus.CODING:
+            pass
+        
         return message, observation_message
 
     def code_step(self, message: Message) -> Message:
@@ -126,7 +162,6 @@ class MessageUtils:
             message.code_answer = f"\n**Observation:**: The return figure name is {uid} after executing the above code.\n"
             message.observation = f"\n**Observation:**: The return figure name is {uid} after executing the above code.\n"
             message.step_content += f"\n**Observation:**: The return figure name is {uid} after executing the above code.\n"
-            message.step_contents += [f"\n**Observation:**:The return figure name is {uid} after executing the above code.\n"]
             # message.role_content += f"\n**Observation:**:执行上述代码后生成一张图片, 图片名为{uid}\n"
             observation_message.role_content = f"\n**Observation:**: The return figure name is {uid} after executing the above code.\n"
             observation_message.parsed_output = {"Observation": f"The return figure name is {uid} after executing the above code."}
@@ -134,7 +169,6 @@ class MessageUtils:
             message.code_answer = code_answer.code_exe_response
             message.observation = code_answer.code_exe_response
             message.step_content += f"\n**Observation:**: {code_prompt}\n"
-            message.step_contents += [f"\n**Observation:**: {code_prompt}\n"]
             # message.role_content += f"\n**Observation:**: {code_prompt}\n"
             observation_message.role_content = f"\n**Observation:**: {code_prompt}\n"
             observation_message.parsed_output = {"Observation": code_prompt}
@@ -159,7 +193,6 @@ class MessageUtils:
             message.observation = "\n**Observation:** there is no tool can execute\n"    
             # message.role_content += f"\n**Observation:**: 不存在可以执行的tool\n"
             message.step_content += f"\n**Observation:** there is no tool can execute\n"
-            message.step_contents += [f"\n**Observation:** there is no tool can execute\n"]
             observation_message.role_content = f"\n**Observation:** there is no tool can execute\n"
             observation_message.parsed_output = {"Observation": "there is no tool can execute\n"}
         for tool in message.tools:
@@ -170,7 +203,6 @@ class MessageUtils:
                 message.observation = tool_res
                 # message.role_content += f"\n**Observation:**: {tool_res}\n"
                 message.step_content += f"\n**Observation:** {tool_res}\n"
-                message.step_contents += [f"\n**Observation:** {tool_res}\n"]
                 observation_message.role_content = f"\n**Observation:** {tool_res}\n"
                 observation_message.parsed_output = {"Observation": tool_res}
                 break

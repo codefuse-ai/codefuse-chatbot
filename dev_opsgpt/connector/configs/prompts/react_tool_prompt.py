@@ -16,7 +16,7 @@ valid "tool_name" value is:\n{tool_names}
 
 **Thoughts:** Based on the question and previous observations, plan the approach for using the tool effectively.
 
-**Action Status:** Set to either 'finished' or 'tool_using'. If 'finished', provide the final response to the original question. If 'tool_using', proceed with using the specified tool.
+**Action Status:** Set to either 'stoped' or 'tool_using'. If 'stoped', provide the final response to the original question. If 'tool_using', proceed with using the specified tool.
 
 **Action:** Use the tools by formatting the tool action in JSON. The format should be:
 
@@ -33,7 +33,7 @@ valid "tool_name" value is:\n{tool_names}
 
 **Thoughts:** Determine the final response based on the results.
 
-**Action Status:** Set to 'finished'
+**Action Status:** Set to 'stoped'
 
 **Action:** Conclude with the final response to the original question in this format:
 
@@ -49,7 +49,7 @@ valid "tool_name" value is:\n{tool_names}
 # REACT_TOOL_PROMPT = """尽可能地以有帮助和准确的方式回应人类。您可以使用以下工具:
 # {formatted_tools}
 # 使用json blob来指定一个工具，提供一个action关键字（工具名称）和一个tool_params关键字（工具输入）。
-# 有效的"action"值为："finished" 或 "tool_using" (使用工具来回答问题)
+# 有效的"action"值为："stoped" 或 "tool_using" (使用工具来回答问题)
 # 有效的"tool_name"值为：{tool_names}
 # 请仅在每个$JSON_BLOB中提供一个action，如下所示：
 # ```
@@ -73,7 +73,7 @@ valid "tool_name" value is:\n{tool_names}
 # 行动：
 # ```
 # {{{{
-# "action": "finished",
+# "action": "stoped",
 # "tool_name": "notool",
 # "tool_params": "最终返回答案给到用户"
 # }}}}

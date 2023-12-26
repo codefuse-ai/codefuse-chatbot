@@ -28,7 +28,7 @@ print(src_dir)
 # tools = toLangchainTools([TOOL_DICT[i] for i in TOOL_SETS if i in TOOL_DICT])
 
 TOOL_SETS = [
-     "StockInfo", "StockName"
+     "StockName", "StockInfo", 
     ]
 
 tools = toLangchainTools([TOOL_DICT[i] for i in TOOL_SETS if i in TOOL_DICT])
@@ -52,7 +52,7 @@ phase = BasePhase(phase_name,
             do_search=False,
             )
 
-query_content = "查询贵州茅台的股票代码，并查询截止到当前日期(2023年11月8日)的最近10天的每日时序数据，然后对时序数据画出折线图并分析"
+query_content = "查询贵州茅台的股票代码，并查询截止到当前日期(2023年12月24日)的最近10天的每日时序数据，然后对时序数据画出折线图并分析"
 
 query = Message(role_name="human", role_type="user", input_query=query_content, role_content=query_content, origin_query=query_content, tools=tools)
 

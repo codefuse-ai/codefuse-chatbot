@@ -12,15 +12,11 @@ class Message(BaseModel):
     input_query: str = None
     origin_query: str = None
 
-    # 模型最终返回
+    # llm output
     role_content: str = None
-    role_contents: List[str] = []
     step_content: str = None
-    step_contents: List[str] = []
-    chain_content: str = None
-    chain_contents: List[str] = []
 
-    # 模型结果解析
+    # llm parsed information
     plans: List[str] = None
     code_content: str = None
     code_filename: str = None
@@ -30,7 +26,7 @@ class Message(BaseModel):
     spec_parsed_output: dict = {}
     parsed_output_list: List[Dict] = []
 
-    # 执行结果
+    # llm\tool\code executre information
     action_status: str = ActionStatus.DEFAUILT
     agent_index: int = None
     code_answer: str = None
@@ -38,7 +34,7 @@ class Message(BaseModel):
     observation: str = None
     figures: Dict[str, str] = {}
 
-    # 辅助信息
+    # prompt support information
     tools: List[BaseTool] = []
     task: Task = None
     db_docs: List['Doc'] = []
@@ -46,7 +42,7 @@ class Message(BaseModel):
     search_docs: List['Doc'] = []
     agents: List = []
 
-    # 执行输入
+    # phase input
     phase_name: str = None
     chain_name: str = None
     do_search: bool = False
@@ -60,6 +56,8 @@ class Message(BaseModel):
     do_code_retrieval: bool = False
     do_tool_retrieval: bool = False
     history_node_list: List[str] = []
+    # user's customed kargs for init or end action
+    customed_kargs: dict = {}
 
     def to_tuple_message(self, return_all: bool = True, content_key="role_content"):
         role_content = self.to_str_content(False, content_key)

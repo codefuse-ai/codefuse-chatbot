@@ -18,6 +18,10 @@ from .service_factory import KBServiceFactory
 from dev_opsgpt.utils.server_utils import BaseResponse, ListResponse
 from dev_opsgpt.utils.path_utils import *
 from dev_opsgpt.orm.commands import *
+from dev_opsgpt.db_handler.graph_db_handler.nebula_handler import NebulaHandler
+from dev_opsgpt.db_handler.vector_db_handler.chroma_handler import ChromaHandler
+from configs.server_config import NEBULA_HOST, NEBULA_PORT, NEBULA_USER, NEBULA_PASSWORD, NEBULA_STORAGED_PORT
+from configs.server_config import CHROMA_PERSISTENT_PATH
 
 from configs.model_config import (
     CB_ROOT_PATH
@@ -119,6 +123,60 @@ def search_code(cb_name: str = Body(..., examples=["sofaboot"]),
             'context': context,
             'related_vertices': related_vertices
         }
+        return res
+    except Exception as e:
+        logger.exception(e)
+        return {}
+
+
+def search_related_vertices(cb_name: str = Body(..., examples=["sofaboot"]),
+                            vertex: str = Body(..., examples=['***'])) -> dict:
+
+    logger.info('cb_name={}'.format(cb_name))
+    logger.info('vertex={}'.format(vertex))
+
+    try:
+        # load codebase
+        nh = NebulaHandler(host=NEBULA_HOST, port=NEBULA_PORT, username=NEBULA_USER,
+                           password=NEBULA_PASSWORD, space_name=cb_name)
+
+        cypher = f'''MATCH (v1)--(v2) WHERE id(v1) == '{vertex}' RETURN id(v2) as id;'''
+
+        cypher_res = nh.execute_cypher(cypher=cypher, format_res=True)
+
+        related_vertices = cypher_res.get('id', [])
+
+        res = {
+            'vertices': related_vertices
+        }
+
+        return res
+    except Exception as e:
+        logger.exception(e)
+        return {}
+
+
+def search_code_by_vertex(cb_name: str = Body(..., examples=["sofaboot"]),
+                            vertex: str = Body(..., examples=['***'])) -> dict:
+
+    logger.info('cb_name={}'.format(cb_name))
+    logger.info('vertex={}'.format(vertex))
+
+    try:
+        ch = ChromaHandler(path=CHROMA_PERSISTENT_PATH, collection_name=cb_name)
+
+        # fix vertex
+        vertex_use = '#'.join(vertex.split('#')[0:2])
+        ids = [vertex_use]
+
+        chroma_res = ch.get(ids=ids)
+
+        code_text = chroma_res['result']['metadatas'][0]['code_text']
+
+        res = {
+            'code': code_text
+        }
+
         return res
     except Exception as e:
         logger.exception(e)

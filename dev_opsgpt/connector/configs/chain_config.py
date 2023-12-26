@@ -108,4 +108,20 @@ CHAIN_CONFIGS = {
         "do_checker": False,
         "chain_prompt": ""
     },
+    "baseGroupChain": {
+        "chain_name": "baseGroupChain",
+        "chain_type": "BaseChain",
+        "agents": ["baseGroup"],
+        "chat_turn": 1,
+        "do_checker": False,
+        "chain_prompt": ""
+    },
+    "codeChatXXChain": {
+        "chain_name": "codeChatXXChain",
+        "chain_type": "BaseChain",
+        "agents": ["codeChat1", "codeChat2"],
+        "chat_turn": 1,
+        "do_checker": False,
+        "chain_prompt": ""
+    }
 }

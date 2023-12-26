@@ -14,7 +14,7 @@ logging.basicConfig(format=LOG_FORMAT)
 # os.environ["OPENAI_PROXY"] = "socks5h://127.0.0.1:13659"
 os.environ["API_BASE_URL"] = "http://openai.com/v1/chat/completions"
 os.environ["OPENAI_API_KEY"] = ""
-os.environ["DUCKDUCKGO_PROXY"] = "socks5://127.0.0.1:13659"
+os.environ["DUCKDUCKGO_PROXY"] = os.environ.get("DUCKDUCKGO_PROXY") or "socks5://127.0.0.1:13659"
 os.environ["BAIDU_OCR_API_KEY"] = ""
 os.environ["BAIDU_OCR_SECRET_KEY"] = ""
 
@@ -60,46 +60,26 @@ ONLINE_LLM_MODEL = {
         "api_key": "",
         "openai_proxy": "",
     },
+    "example": {
+        "version": "gpt-3.5",  # 采用openai接口做示例
+        "api_base_url": "https://api.openai.com/v1",
+        "api_key": "",
+        "provider": "ExampleWorker",
+    },
 }
 
-
+# 建议使用chat模型，不要使用base，无法获取正确输出
 llm_model_dict = {
     "chatglm-6b": {
         "local_model_path": "THUDM/chatglm-6b",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     },
-
-    "chatglm-6b-int4": {
-        "local_model_path": "THUDM/chatglm2-6b-int4/",
-        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
-        "api_key": "EMPTY"
-    },
-
-    "chatglm2-6b": {
-        "local_model_path": "THUDM/chatglm2-6b",
-        "api_base_url": "http://localhost:8888/v1",  # URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
-        "api_key": "EMPTY"
-    },
-
-    "chatglm2-6b-int4": {
-        "local_model_path": "THUDM/chatglm2-6b-int4",
-        "api_base_url": "http://localhost:8888/v1",  # URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
-        "api_key": "EMPTY"
-    },
-
-    "chatglm2-6b-32k": {
-        "local_model_path": "THUDM/chatglm2-6b-32k",  # "THUDM/chatglm2-6b-32k",
-        "api_base_url": "http://localhost:8888/v1",  # "URL需要与运行fastchat服务端的server_config.FSCHAT_OPENAI_API一致
-        "api_key": "EMPTY"
-    },
-
-    "vicuna-13b-hf": {
-        "local_model_path": "",
-        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
-        "api_key": "EMPTY"
-    },
-
+    # 以下模型经过测试可接入，配置仿照上述即可
+    # 'codellama_34b', 'Baichuan2-13B-Base', 'Baichuan2-13B-Chat', 'baichuan2-7b-base', 'baichuan2-7b-chat', 
+    # 'internlm-7b-base', 'internlm-chat-7b', 'chatglm2-6b', 'qwen-14b-base', 'qwen-14b-chat', 'qwen-1-8B-Chat', 
+    # 'Qwen-7B', 'Qwen-7B-Chat', 'qwen-7b-base-v1.1', 'qwen-7b-chat-v1.1', 'chatglm3-6b', 'chatglm3-6b-32k', 
+    # 'chatglm3-6b-base', 'Qwen-72B-Chat-Int4'
     # 调用chatgpt时如果报出： urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='api.openai.com', port=443):
     #  Max retries exceeded with url: /v1/chat/completions
     # 则需要将urllib3版本修改为1.25.11
@@ -115,7 +95,22 @@ llm_model_dict = {
         "api_base_url": os.environ.get("API_BASE_URL"),
         "api_key": os.environ.get("OPENAI_API_KEY")
     },
+    "gpt-3.5-turbo-16k": {
+        "local_model_path": "gpt-3.5-turbo-16k",
+        "api_base_url": os.environ.get("API_BASE_URL"),
+        "api_key": os.environ.get("OPENAI_API_KEY")
+    },
 }
+
+# 建议使用chat模型，不要使用base，无法获取正确输出
+VLLM_MODEL_DICT = {
+ 'chatglm2-6b':  "THUDM/chatglm-6b",
+ }
+# 以下模型经过测试可接入，配置仿照上述即可
+# 'codellama_34b', 'Baichuan2-13B-Base', 'Baichuan2-13B-Chat', 'baichuan2-7b-base', 'baichuan2-7b-chat', 
+# 'internlm-7b-base', 'internlm-chat-7b', 'chatglm2-6b', 'qwen-14b-base', 'qwen-14b-chat', 'qwen-1-8B-Chat', 
+# 'Qwen-7B', 'Qwen-7B-Chat', 'qwen-7b-base-v1.1', 'qwen-7b-chat-v1.1', 'chatglm3-6b', 'chatglm3-6b-32k', 
+# 'chatglm3-6b-base', 'Qwen-72B-Chat-Int4'
 
 
 LOCAL_LLM_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "llm_models")
@@ -133,8 +128,12 @@ llm_model_dict = llm_model_dict_c
 
 
 # LLM 名称
-LLM_MODEL = "gpt-3.5-turbo"
-LLM_MODELs = ["chatglm2-6b"]
+# EMBEDDING_ENGINE = 'openai'
+EMBEDDING_ENGINE = 'model'
+EMBEDDING_MODEL = "text2vec-base"
+# LLM_MODEL = "gpt-4"
+LLM_MODEL = "gpt-3.5-turbo-16k"
+LLM_MODELs = ["gpt-3.5-turbo-16k"]
 USE_FASTCHAT = "gpt" not in LLM_MODEL # 判断是否进行fastchat
 
 # LLM 运行设备
@@ -161,7 +160,7 @@ NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__
 JUPYTER_WORK_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "jupyter_work")
 
 # WEB_CRAWL存储路径
-WEB_CRAWL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "sources/docs")
+WEB_CRAWL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "knowledge_base")
 
 # NEBULA_DATA存储路径
 NELUBA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/neluba_data")
@@ -257,3 +256,5 @@ BING_SUBSCRIPTION_KEY = ""
 # 通过增加标题判断，判断哪些文本为标题，并在metadata中进行标记；
 # 然后将文本与往上一级的标题进行拼合，实现文本信息的增强。
 ZH_TITLE_ENHANCE = False
+
+log_verbose = False

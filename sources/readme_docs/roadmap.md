@@ -8,14 +8,14 @@
 
 
 完整路线
-- [ ] Sandbox 环境
+- [x] Sandbox 环境
   - [x] 环境隔离的sandbox环境与代码执行
-  - [ ] 上传、下载文件
+  - [x] 上传、下载文件
   - [ ] 支持java执行环境
 - [ ] Vector Database & Retrieval
   - [ ] llama-index 兼容向量管理
-  - [ ] task retrieval
-  - [ ] tool retrieval
+  - [x] task retrieval
+  - [x] tool retrieval
 - [ ] Prompt Control
   - [ ] prompt flow
   - [ ] 基于不同prompt管理不同任务
@@ -27,10 +27,10 @@
   - [ ] 全流程自动
 - [x] 基于fastchat接入LLM
 - [x] 基于sentencebert接入Text Embedding
-  - [ ] 向量加载速度提升
-- [ ] Connector
-  - [ ] 基于langchain的react模式
-  - [ ] 基于langchain完成tool检索
+  - [x] 向量加载速度提升
+- [x] Connector
+  - [x] 基于langchain的react模式
+  - [x] 基于langchain完成tool检索
 - [ ] Web Crawl 通用能力
   - [x] 技术文档: 知乎、csdn、阿里云开发者论坛、腾讯云开发者论坛等
   - [ ] issue document
@@ -48,11 +48,11 @@
 <br>
 - v0.1
 - [x] Sandbox 环境: 上传、下载文件
-- [ ] Vector Database & Retrieval
-  - [ ] task retrieval
-  - [ ] tool retrieval
-- [ ] Connector
-  - [ ] 基于langchain的react模式
+- [x] Vector Database & Retrieval
+  - [x] task retrieval
+  - [x] tool retrieval
+- [x] Connector
+  - [x] 基于langchain的react模式
 - [x] 基于sentencebert接入Text Embedding: 向量加载速度提升
 <br>
 

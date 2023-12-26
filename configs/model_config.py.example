@@ -114,6 +114,7 @@ VLLM_MODEL_DICT = {
 
 
 LOCAL_LLM_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "llm_models")
+# 若不想修改模型地址，可取消相关地址设置
 llm_model_dict_c = {}
 for k, v in llm_model_dict.items():
     v_c = {}
@@ -125,6 +126,11 @@ for k, v in llm_model_dict.items():
     llm_model_dict_c[k] = v_c
 
 llm_model_dict = llm_model_dict_c
+# 若不想修改模型地址，可取消相关地址设置
+VLLM_MODEL_DICT_c = {}
+for k, v in VLLM_MODEL_DICT.items():
+    VLLM_MODEL_DICT_c[k] = f"/home/user/chatbot/llm_models/{v}" if is_running_in_docker() else f"{LOCAL_LLM_MODEL_DIR}/{v}" 
+VLLM_MODEL_DICT = VLLM_MODEL_DICT_c
 
 
 # LLM 名称

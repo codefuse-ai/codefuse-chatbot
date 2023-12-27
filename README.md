@@ -36,7 +36,7 @@ DevOps-ChatBot是由蚂蚁CodeFuse团队开发的开源AI智能助手，致力�
 💡 本项目旨在通过检索增强生成（Retrieval Augmented Generation，RAG）、工具学习（Tool Learning）和沙盒环境来构建软件开发全生命周期的AI智能助手，涵盖设计、编码、测试、部署和运维等阶段。 逐渐从各处资料查询、独立分散平台操作的传统开发运维模式转变到大模型问答的智能化开发运维模式，改变人们的开发运维习惯。
 
 本项目核心差异技术、功能点：
-- **🧠 智能调度核心：** 构建了体系链路完善的调度核心，支持多模式一键配置，简化操作流程。
+- **🧠 智能调度核心：** 构建了体系链路完善的调度核心，支持多模式一键配置，简化操作流程。 [使用说明](sources/readme_docs/multi-agent.md)
 - **💻 代码整库分析：** 实现了仓库级的代码深入理解，以及项目文件级的代码编写与生成，提升了开发效率。
 - **📄 文档分析增强：** 融合了文档知识库与知识图谱，通过检索和推理增强，为文档分析提供了更深层次的支持。
 - **🔧 垂类专属知识：** 为DevOps领域定制的专属知识库，支持垂类知识库的自助一键构建，便捷实用。
@@ -94,6 +94,8 @@ DevOps-ChatBot是由蚂蚁CodeFuse团队开发的开源AI智能助手，致力�
 
 请自行安装 nvidia 驱动程序，本项目已在 Python 3.9.18，CUDA 11.7 环境下，Windows、X86 架构的 macOS 系统中完成测试。
 
+Docker安装、私有化LLM接入及相关启动问题见：[快速使用明细](sources/readme_docs/start.md)
+
 1、python 环境准备
 
 - 推荐采用 conda 对 python 环境进行管理（可选）
@@ -110,45 +112,7 @@ cd codefuse-chatbot
 pip install -r requirements.txt
 ```
 
-2、沙盒环境准备
-- windows Docker 安装：
-[Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) 支持 64 位版本的 Windows 10 Pro，且必须开启 Hyper-V（若版本为 v1903 及以上则无需开启 Hyper-V），或者 64 位版本的 Windows 10 Home v1903 及以上版本。
-
-  - [【全面详细】Windows10 Docker安装详细教程](https://zhuanlan.zhihu.com/p/441965046)
-  - [Docker 从入门到实践](https://yeasy.gitbook.io/docker_practice/install/windows)
-  - [Docker Desktop requires the Server service to be enabled 处理](https://blog.csdn.net/sunhy_csdn/article/details/106526991)
-  - [安装wsl或者等报错提示](https://learn.microsoft.com/zh-cn/windows/wsl/install)
-
-- Linux Docker 安装：
-Linux 安装相对比较简单，请自行 baidu/google 相关安装
-
-- Mac Docker 安装
-  - [Docker 从入门到实践](https://yeasy.gitbook.io/docker_practice/install/mac)
-
-```bash
-# 构建沙盒环境的镜像，notebook版本问题见上述
-bash docker_build.sh
-```
-
-3、模型下载（可选）
-
-如需使用开源 LLM 与 Embedding 模型可以从 HuggingFace 下载。
-此处以 THUDM/chatglm2-6bm 和 text2vec-base-chinese 为例：
-
-```
-# install git-lfs
-git lfs install
-
-# install LLM-model
-git lfs clone https://huggingface.co/THUDM/chatglm2-6b
-
-# install Embedding-model
-git lfs clone https://huggingface.co/shibing624/text2vec-base-chinese
-cp ~/shibing624/text2vec-base-chinese ~/codefuse-chatbot/embedding_models/
-```
-
-
-4、基础配置
+2、基础配置
 
 ```bash
 # 修改服务启动的基础配置
@@ -161,13 +125,18 @@ os.environ["OPENAI_API_KEY"] = "sk-xxx"
 # 可自行替换自己需要的api_base_url
 os.environ["API_BASE_URL"] = "https://api.openai.com/v1"
 
-# vi model_config#105 你需要选择的语言模型
+# vi model_config#LLM_MODEL 你需要选择的语言模型
 LLM_MODEL = "gpt-3.5-turbo"
+LLM_MODELs = ["gpt-3.5-turbo"]
 
-# vi model_config#43 你需要选择的向量模型
+# vi model_config#EMBEDDING_MODEL 你需要选择的私有化向量模型
+EMBEDDING_ENGINE = 'model'
 EMBEDDING_MODEL = "text2vec-base"
 
-# vi model_config#25 修改成你的本地路径，如果能直接连接huggingface则无需修改
+# vi model_config#embedding_model_dict 修改成你的本地路径，如果能直接连接huggingface则无需修改
+# 若模型地址为：
+model_dir: ~/codefuse-chatbot/embedding_models/shibing624/text2vec-base-chinese
+# 配置如下
 "text2vec-base": "shibing624/text2vec-base-chinese",
 
 # vi server_config#8~14, 推荐采用容器启动服务
@@ -178,7 +147,7 @@ SANDBOX_DO_REMOTE = True
 NO_REMOTE_API = True
 ```
 
-5、启动服务
+3、启动服务
 
 默认只启动webui相关服务，未启动fastchat（可选）。
 ```bash
@@ -189,9 +158,11 @@ NO_REMOTE_API = True
 # start llm-service（可选）
 python dev_opsgpt/service/llm_api.py
 ```
+更多LLM接入方法见[详情...](sources/readme_docs/fastchat.md)
+<br>
 
 ```bash
-# 配置好server_config.py后，可一键启动
+# 完成server_config.py配置后，可一键启动
 cd examples
 python start.py
 ```

@@ -2,7 +2,7 @@
 ## RoadMap
 
 <div align=center>
-  <img src="../../sources/docs_imgs/devops-chatbot-module.png" alt="图片" width="600" height="400">
+  <img src="../../sources/docs_imgs/devops-chatbot-module-v2.png" alt="图片" width="600" height="400">
 </div>
 <br>
 
@@ -13,12 +13,10 @@
   - [x] 上传、下载文件
   - [ ] 支持java执行环境
 - [ ] Vector Database & Retrieval
-  - [ ] llama-index 兼容向量管理
   - [x] task retrieval
   - [x] tool retrieval
-- [ ] Prompt Control
-  - [ ] prompt flow
-  - [ ] 基于不同prompt管理不同任务
+- [ ] Prompt Management
+- [ ] memory Management
 - [ ] Multi Agent
   - [ ] PRD需求文档、系分、接口设计
   - [ ] 根据需求文档、系分、接口设计生产代码
@@ -54,17 +52,21 @@
 - [x] Connector
   - [x] 基于langchain的react模式
 - [x] 基于sentencebert接入Text Embedding: 向量加载速度提升
+
+Done
 <br>
 
 - v0.2
-- [ ] Prompt Control
-  - [ ] prompt flow
-  - [ ] 基于不同prompt管理不同任务
+- [ ] Prompt Management
+- [ ] memory Management
 - [ ] Vector Database & Retrieval
-  - [ ] llama-index 兼容向量管理
+
+DDL： 2024.01.31
 <br>
 
 - v0.3
+- [x] Sandbox 环境
+  - [ ] 支持java执行环境
 - [ ] Multi Agent
   - [ ] PRD需求文档、系分、接口设计
   - [ ] 根据需求文档、系分、接口设计生产代码
@@ -74,4 +76,6 @@
 - [ ] Web Crawl 通用能力
   - [ ] issue document
   - [ ] SDK Library Document
+
+DDL： 2024.12.31
 <br>

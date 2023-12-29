@@ -26,7 +26,7 @@ import yaml
 
 # 加载YAML文件
 webui_yaml_filename = "webui_zh.yaml" if True else "webui_en.yaml"
-with open(os.path.join(cur_dir, f"yamls/{webui_yaml_filename}"), 'r') as f:
+with open(os.path.join(cur_dir, f"yamls/{webui_yaml_filename}"), 'r', encoding='utf-8') as f:
     try:
         webui_configs = yaml.safe_load(f)
     except yaml.YAMLError as exc:

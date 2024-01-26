@@ -1,10 +1,8 @@
-<p align="left">
-    <a href="README.md">中文</a>&nbsp ｜ &nbsp<a>English&nbsp </a>
-</p>
-
 # <p align="center">Codefuse-ChatBot: Development by Private Knowledge Augmentation</p>
 
 <p align="center">
+    <a href="README.md"><img src="https://img.shields.io/badge/文档-中文版-yellow.svg" alt="ZH doc"></a>
+    <a href="README_EN.md"><img src="https://img.shields.io/badge/document-英文版-yellow.svg" alt="EN doc"></a>
     <img src="https://img.shields.io/github/license/codefuse-ai/codefuse-chatbot" alt="License">
     <a href="https://github.com/codefuse-ai/codefuse-chatbot/issues">
       <img alt="Open Issues" src="https://img.shields.io/github/issues-raw/codefuse-ai/codefuse-chatbot" />
@@ -15,6 +13,7 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 
 ## 🔔 Updates
+- [2023.12.26] Opening the capability to integrate with open-source private large models and large model interfaces based on FastChat
 - [2023.12.01] Release of Multi-Agent and codebase retrieval functionalities.
 - [2023.11.15] Addition of Q&A enhancement mode based on the local codebase.
 - [2023.09.15] Launch of sandbox functionality for local/isolated environments, enabling knowledge retrieval from specified URLs using web crawlers.
@@ -30,13 +29,13 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 💡 The aim of this project is to construct an AI intelligent assistant for the entire lifecycle of software development, covering design, coding, testing, deployment, and operations, through Retrieval Augmented Generation (RAG), Tool Learning, and sandbox environments. It transitions gradually from the traditional development and operations mode of querying information from various sources and operating on standalone, disparate platforms to an intelligent development and operations mode based on large-model Q&A, changing people's development and operations habits.
 
-- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process.
+- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process. [coagent](sources/readme_docs/coagent/coagent-en.md)
 - **💻 Comprehensive Code Repository Analysis:** Achieved in-depth understanding at the repository level and coding and generation at the project file level, enhancing development efficiency.
 - **📄 Enhanced Document Analysis:** Integrated document knowledge bases with knowledge graphs, providing deeper support for document analysis through enhanced retrieval and reasoning.
 - **🔧 Industry-Specific Knowledge:** Tailored a specialized knowledge base for the DevOps domain, supporting the self-service one-click construction of industry-specific knowledge bases for convenience and practicality.
 - **🤖 Compatible Models for Specific Verticals:** Designed small models specifically for the DevOps field, ensuring compatibility with related DevOps platforms and promoting the integration of the technological ecosystem.
 
-🌍 Relying on open-source LLM and Embedding models, this project can achieve offline private deployments based on open-source models. Additionally, this project also supports the use of the OpenAI API.
+🌍 Relying on open-source LLM and Embedding models, this project can achieve offline private deployments based on open-source models. Additionally, this project also supports the use of the OpenAI API.[Access Demo](sources/readme_docs/fastchat-en.md)
 
 👥 The core development team has been long-term focused on research in the AIOps + NLP domain. We initiated the CodefuseGPT project, hoping that everyone could contribute high-quality development and operations documents widely, jointly perfecting this solution to achieve the goal of "Making Development Seamless for Everyone."
 
@@ -64,7 +63,7 @@ This project is an open-source AI intelligent assistant, specifically designed f
 - 💬 **LLM:**：Supports various open-source models and LLM interfaces.
 - 🛠️ **API Management:：** Enables rapid integration of open-source components and operational platforms.
 
-For implementation details, see: [Technical Route Details](sources/readme_docs/roadmap.md)
+For implementation details, see: [Technical Route Details](sources/readme_docs/roadmap-en.md)
 
 
 ## 🌐 Model Integration
@@ -79,7 +78,13 @@ If you need to integrate a specific model, please inform us of your requirements
 
 
 ## 🚀 Quick Start
+### coagent-py
+More Detail see：[coagent](sources/readme_docs/coagent/coagent-en.md)
+```
+pip install coagent
+```
 
+### ChatBot-UI
 Please install the Nvidia driver yourself; this project has been tested on Python 3.9.18, CUDA 11.7, Windows, and X86 architecture macOS systems.
 
 1. Preparation of Python environment
@@ -172,17 +177,26 @@ By default, only webui related services are started, and fastchat is not started
 ```bash
 # if use codellama-34b-int4, you should replace fastchat's gptq.py
 # cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
-# dev_opsgpt/service/llm_api.py#258 => kwargs={"gptq_wbits": 4},
+# examples/llm_api.py#258 => kwargs={"gptq_wbits": 4},
 
 # start llm-service（可选）
-python dev_opsgpt/service/llm_api.py
+python examples/llm_api.py
 ```
+More details about accessing LLM Moldes[More Details...](sources/readme_docs/fastchat.md)
+<br>
 
 ```bash
 # After configuring server_config.py, you can start with just one click.
 cd examples
 bash start_webui.sh
 ```
+
+## 贡献指南
+Thank you for your interest in the Codefuse project. We warmly welcome any suggestions, opinions (including criticisms), comments, and contributions to the Codefuse project.
+
+Your suggestions, opinions, and comments on Codefuse can be directly submitted through GitHub Issues.
+
+There are many ways to participate in the Codefuse project and contribute to it: code implementation, test writing, process tool improvement, documentation enhancement, and more. We welcome any contributions and will add you to our list of contributors. See [contribution guide](sources/readme_docs/contribution/contribute_guide_en.md)
 
 ## 🤗 Acknowledgements
 

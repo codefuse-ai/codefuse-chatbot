@@ -11,6 +11,11 @@ aliases:
 
 
 ## Quick Start
+Attention：
+Testing has only been conducted on GPT-3.5-turbo and higher models. 
+The models need to possess strong command-following capabilities. 
+It is recommended to test with more powerful models like qwen-72b, openai, etc.
+
 ### First, set up the LLM configuration
 ```
 import os, sys

@@ -38,7 +38,7 @@
 
 
 ## 模块分类
-- [connector](/sources/readme_docs/coagent/connector.md)
+- [connector](/sources/readme_docs/coagent/connector/connector_agent.md)
 - document_loaders
 - embeddings
 - llm_models

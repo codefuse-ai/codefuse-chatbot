@@ -13,6 +13,7 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 
 ## 🔔 Updates
+- [2024.01.29] A configurational multi-agent framework, CoAgent, has been open-sourced. For more details, please refer to [coagent](sources/readme_docs/coagent/coagent-en.md)
 - [2023.12.26] Opening the capability to integrate with open-source private large models and large model interfaces based on FastChat
 - [2023.12.01] Release of Multi-Agent and codebase retrieval functionalities.
 - [2023.11.15] Addition of Q&A enhancement mode based on the local codebase.

@@ -34,7 +34,7 @@ The following modules will introduce the necessary components of the Multi Agent
 In summary, these five elements together construct a Multi-Agent framework, ensuring closer and more efficient cooperation between Agents while also adapting to more complex task requirements and a variety of interaction scenarios. By combining multiple Agent chains to implement a complete and complex project launch scenario (Dev Phase), such as Demand Chain (CEO), Product Argument Chain (CPO, CFO, CTO), Engineer Group Chain (Selector, Developer1~N), QA Engineer Chain (Developer, Tester), Deploy Chain (Developer, Deployer).
 
 ## 模块分类
-- [connector](/sources/readme_docs/coagent/connector.md)
+- [connector](/sources/readme_docs/coagent/connector/connector_agent.md)
 - document_loaders
 - embeddings
 - llm_models

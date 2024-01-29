@@ -1,4 +1,7 @@
 
+## Attention
+Attention：The overall content is not yet complete, and further refinements to the flow and other Agent diagrams will be made in the future.
+
 ## Introduction to Core Connectors
 To facilitate everyone's understanding of the entire CoAgent link, we use a Flow format to detail how to build through configuration settings.
 

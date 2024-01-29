@@ -14,6 +14,7 @@ DevOps-ChatBot是由蚂蚁CodeFuse团队开发的开源AI智能助手，致力�
 
 
 ## 🔔 更新
+- [2024.01.29] 开放可配置化的multi-agent框架：coagent，详情见[使用说明](sources/readme_docs/coagent/coagent.md)
 - [2023.12.26] 基于FastChat接入开源私有化大模型和大模型接口的能力开放
 - [2023.12.14] 量子位公众号专题报道：[文章链接](https://mp.weixin.qq.com/s/MuPfayYTk9ZW6lcqgMpqKA)
 - [2023.12.01] Multi-Agent和代码库检索功能开放

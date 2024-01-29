@@ -1,3 +1,7 @@
+<p align="left">
+    <a>中文</a>&nbsp ｜ &nbsp<a href="README_en.md">English&nbsp </a>
+</p>
+
 # <p align="center">CodeFuse-ChatBot: Development by Private Knowledge Augmentation</p>
 
 <p align="center">

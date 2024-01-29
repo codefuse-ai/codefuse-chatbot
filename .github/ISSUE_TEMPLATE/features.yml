@@ -1,0 +1,43 @@
+name: Feature request 🚀
+description: Suggest a new idea for Codefuse!
+labels: ['03 New Features']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        First, check out our [wiki page on Contributing](https://github.com/Significant-Gravitas/Nexus/wiki/Contributing)
+        Please provide a searchable summary of the issue in the title above ⬆️.
+  - type: checkboxes
+    attributes:
+      label: Duplicates
+      description: Please [search the history](https://github.com/Significant-Gravitas/AutoGPT/issues) to see if an issue already exists for the same problem.
+      options:
+        - label: I have searched the existing issues
+          required: true
+
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checked other resources
+      description: Please confirm and check all the following options.
+      options:
+        - label: I searched the Codefuse documentation with the integrated search.
+          required: true
+        - label: I used the GitHub search to find a similar question and didn't find it.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Summary 💡
+      description: Describe how it should work.
+
+  - type: textarea
+    attributes:
+      label: Examples 🌈
+      description: Provide a link to other implementations, or screenshots of the expected behavior.
+    
+  - type: textarea
+    attributes:
+      label: Motivation 🔦
+      description: What are you trying to accomplish? How has the lack of this feature affected you? Providing context helps us come up with a solution that is more useful in the real world.

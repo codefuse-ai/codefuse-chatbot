@@ -1,0 +1,140 @@
+name: "\U0001F41B Bug Report"
+description: Report a bug in Codefuse. To report a security issue, please instead use the security option below. 
+labels: ["01 Bug Report"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thank you for taking the time to file a bug report.  
+        
+        Use this to report bugs in Codefuse. 
+
+        If you're not certain that your issue is due to a bug in Codefuse, please use [GitHub Discussions](https://github.com/codefuse-ai/codefuse-chatbot/discussions)
+        to ask for help with your issue.
+
+        We warmly welcome any suggestions, opinions (including criticisms), comments, and contributions to the Codefuse project.
+
+        Relevant links to check before filing a bug report to see if your issue has already been reported, fixed or
+        if there's another way to solve your problem:
+      
+        [API Reference](https://codefuse-ai.github.io/),
+        [GitHub search](https://github.com/codefuse-ai/codefuse-chatbot),
+        [Chatbot Github Discussions](https://github.com/codefuse-ai/codefuse-chatbot/discussions),
+        [Chatbot Github Issues](https://github.com/codefuse-ai/codefuse-chatbot/issues)
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checked other resources
+      description: Please confirm and check all the following options.
+      options:
+        - label: I searched the Codefuse documentation with the integrated search.
+          required: true
+        - label: I used the GitHub search to find a similar question and didn't find it.
+          required: true
+        - label: I am sure that this is a bug in Codefuse-Repos rather than my code.
+          required: true
+        - label: I added a very descriptive title to this issue.
+          required: true
+
+  - type: dropdown
+    id: system-info
+    attributes:
+      label: System Info
+      description: >
+        Please select the operating system you were using to run codefuse-ai/repos when this problem occurred.
+      options:
+        - Windows
+        - Linux
+        - MacOS
+        - Docker
+        - Devcontainer / Codespace
+        - Windows Subsystem for Linux (WSL)
+        - Other
+    validations:
+      required: true
+      nested_fields:
+        - type: text
+          attributes:
+            label: Specify the system
+            description: Please specify the system you are working on.
+
+  - type: dropdown
+    attributes:
+      label: Code Version
+      description: |
+        Please select which version of Codefuse-Repos you were using when this issue occurred.
+        **If you weren't please try with the **.
+        If installed with git you can run `git branch` to see which version of codefuse-ai you are running.
+      options:
+        - Latest Release
+        - Stable (branch)
+        - Master (branch)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        What is the problem, question, or error?
+
+        Write a short description telling what you are doing, what you expect to happen, and what is currently happening.
+      placeholder: |
+        * I'm trying to use the `coagent` library to do X.
+        * I expect to see Y.
+        * Instead, it does Z.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    validations:
+      required: true
+    attributes:
+      label: Example Code
+      description: |
+        Please add a self-contained, [minimal, reproducible, example](https://stackoverflow.com/help/minimal-reproducible-example) with your use case.
+        
+        If a maintainer can copy it, run it, and see it right away, there's a much higher chance that you'll be able to get help.
+        
+        **Important!** 
+        
+        * Use code tags (e.g., ```python ... ```) to correctly [format your code](https://help.github.com/en/github/writing-on-github/creating-and-highlighting-code-blocks#syntax-highlighting).
+        * INCLUDE the language label (e.g. `python`) after the first three backticks to enable syntax highlighting. (e.g., ```python rather than ```).
+        * Reduce your code to the minimum required to reproduce the issue if possible. This makes it much easier for others to help you.
+        * Avoid screenshots when possible, as they are hard to read and (more importantly) don't allow others to copy-and-paste your code.
+
+      placeholder: |
+        The following code: 
+        
+        ```python
+        from coagent.tools import toLangchainTools, TOOL_DICT, TOOL_SETS
+        from coagent.connector.phase import BasePhase
+        from coagent.connector.schema import Message
+
+        phase_name = "baseGroupPhase"
+        phase = BasePhase(
+            phase_name, embed_config=embed_config, llm_config=llm_config, 
+        )
+
+        query_content = "确认本地是否存在employee_data.csv，并查看它有哪些列和数据类型;然后画柱状图"
+        query = Message(
+            role_name="human", role_type="user", tools=[],
+            role_content=query_content, input_query=query_content, origin_query=query_content,
+            )
+
+        output_message, output_memory = phase.step(query)
+        ```
+
+  - type: textarea
+    id: error
+    validations:
+      required: false
+    attributes:
+      label: Error Message and Stack Trace (if applicable)
+      description: |
+        If you are reporting an error, please include the full error message and stack trace.
+      placeholder: |
+        Exception + full stack trace

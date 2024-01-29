@@ -3,7 +3,6 @@ From python:3.9.18-bookworm
 WORKDIR /home/user
 
 COPY ./requirements.txt /home/user/docker_requirements.txt
-COPY ./jupyter_start.sh /home/user/jupyter_start.sh
 
 
 RUN apt-get update

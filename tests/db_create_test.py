@@ -7,6 +7,6 @@ src_dir = os.path.join(
 sys.path.append(src_dir)
 
 
-from dev_opsgpt.orm import create_tables
+from coagent.orm import create_tables
 
 create_tables()

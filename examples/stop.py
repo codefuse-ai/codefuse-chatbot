@@ -24,7 +24,7 @@ check_process(f"port=5050", do_stop=True)
 
 # 
 check_docker(client, CONTRAINER_NAME, do_stop=True, )
-check_process("service/api.py", do_stop=True)
-check_process("service/sdfile_api.py", do_stop=True)
-check_process("service/llm_api.py", do_stop=True)
+check_process("api.py", do_stop=True)
+check_process("sdfile_api.py", do_stop=True)
+check_process("llm_api.py", do_stop=True)
 check_process("webui.py", do_stop=True)

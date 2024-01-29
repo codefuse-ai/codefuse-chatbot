@@ -15,7 +15,7 @@ src_dir = os.path.join(
 )
 sys.path.append(src_dir)
 
-from dev_opsgpt.tools import (
+from coagent.tools import (
     WeatherInfo, WorldTimeGetTimezoneByArea, Multiplier, KSigmaDetector,
     toLangchainTools, get_tool_schema,
     TOOL_DICT, TOOL_SETS
@@ -86,7 +86,7 @@ agent = initialize_agent(
 
 # from dev_opsgpt.utils.common_utils import read_json_file
 # stock_name = read_json_file("../sources/stock.json")
-from dev_opsgpt.tools.ocr_tool import BaiduOcrTool
+from coagent.tools.ocr_tool import BaiduOcrTool
 
 print(BaiduOcrTool.run("D:/chromeDownloads/devopschat-bot/ocr_figure.png"))
 

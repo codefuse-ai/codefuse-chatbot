@@ -13,45 +13,59 @@ src_dir = os.path.join(
 )
 sys.path.append(src_dir)
 
-from dev_opsgpt.service.sdfile_api import sd_upload_file
-from dev_opsgpt.sandbox.pycodebox import PyCodeBox
-from pathlib import Path
 
-
-# python = Path(sys.executable).absolute()
-# print(Path(python).as_posix())
-# print(python)
-# print(sys.executable)
-
-
+from configs.model_config import JUPYTER_WORK_PATH
+from coagent.sandbox.pycodebox import PyCodeBox
 import requests
 
-# # 设置Jupyter Notebook服务器的URL
-# url = 'http://172.25.0.3:5050'  # 或者是你自己的Jupyter服务器的URL
-
-# # 发送GET请求来获取Jupyter Notebook的登录页面
-# response = requests.get(url)
-
-# # 检查响应状态码
-# if response.status_code == 200:
-#     # 打印响应内容
-#     print('connect success')
-# else:
-#     print('connect fail')
 
 # import subprocess 
-# jupyter = subprocess.Popen(
-#                     [
-#                         "juptyer", "notebnook",
-#                         "--NotebookApp.token=mytoken",
-#                         f"--port=4949",
-#                         "--no-browser",
-#                         "--ServerApp.disable_check_xsrf=True",
-#                     ],
-#                     stderr=subprocess.PIPE,
-#                     stdin=subprocess.PIPE,
-#                     stdout=subprocess.PIPE,
-#                 )
+# import time
+# from loguru import logger
+
+# class PyCodeBox:
+
+#     enter_status: bool = False
+
+#     def __init__(
+#             self, 
+#             remote_url: str = "",
+#             remote_ip: str = "localhost",
+#             remote_port: str = "5050",
+#             token: str = "mytoken",
+#             do_code_exe: bool = False,
+#             do_remote: bool = False,
+#             do_check_net: bool = True,
+#     ):
+#         self.enter_status = True
+#         self.do_check_net = do_check_net
+#         self.start()
+
+
+#     def start(self, ):
+#         logger.debug("start!")
+#         jupyter = subprocess.Popen(
+#             [
+#                 "jupyter", "notebook",
+#                 "--NotebookApp.token=mytoken",
+#                 "--port=5050",
+#                 "--no-browser",
+#                 "--ServerApp.disable_check_xsrf=True",
+#             ],
+#             stderr=subprocess.PIPE,
+#             # stdin=subprocess.PIPE,
+#             stdout=subprocess.PIPE,
+#         )
+#         logger.debug("start over")
+
+# pycodebox = PyCodeBox()
+
+# logger.debug("start to sleep")
+# idx = 0
+# while True:
+#     time.sleep(5)
+#     logger.debug(f"sleep {idx}")
+#     idx+=1
 
 # # 测试1
 # import time, psutil
@@ -61,56 +75,28 @@ pycodebox = PyCodeBox(remote_url="http://localhost:5050",
                remote_ip="http://localhost", 
             remote_port="5050", 
             token="mytoken",
+            jupyter_work_path=JUPYTER_WORK_PATH,
             do_code_exe=True, 
-            do_remote=False)
-
-# pycodebox.list_files()
-# file = "./torch_test.py"
-# upload_file = st_load_file(file, filename="torch_test.py")
-
-# file_content = upload_file.read()  # 读取上传文件的内容
-# print(upload_file, file_content)
-# pycodebox.upload("torch_test.py", upload_file)
-
-# asyncio.run(pycodebox.alist_files())
+            do_remote=False,
+            use_stop=True,
+            do_check_net=False
+            )
 
 
-reuslt = pycodebox.chat("```'hello world!'```", do_code_exe=True)
+reuslt = pycodebox.chat("```import os\nos.getcwd()```", do_code_exe=True)
 print(reuslt)
 
-# reuslt = pycodebox.chat("print('hello world!')", do_code_exe=False)
-# print(reuslt)
+reuslt = pycodebox.chat("print('hello world!')", do_code_exe=False)
+print(reuslt)
 
-# for process in psutil.process_iter(["pid", "name", "cmdline"]):
-#     # 检查进程名是否包含"jupyter"
-#     if 'port=5050' in str(process.info["cmdline"]).lower() and \
-#         "jupyter" in process.info['name'].lower():
-
-#         logger.warning(f'port=5050, {process.info}')
-#         # 关闭进程
-#         process.terminate()
-        
-
+    
 # 测试2
 # with PyCodeBox(remote_url="http://localhost:5050", 
 #                remote_ip="http://localhost", 
 #             remote_port="5050", 
 #             token="mytoken",
 #             do_code_exe=True, 
-#             do_remote=True) as codebox:
+#             do_remote=False) as codebox:
     
-#     result = codebox.run("print('hello world!')")
+#     result = codebox.run("'hello world!'")
 #     print(result)
-
-
-
-# with PyCodeBox(
-#     remote_ip="http://localhost", 
-#     remote_port="5555", 
-#     token="mytoken",
-#     do_code_exe=True, 
-#     do_remote=False
-#     ) as codebox:
-    
-#     result = codebox.run("print('hello world!')")
-    # print(result)

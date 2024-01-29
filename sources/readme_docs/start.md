@@ -1,6 +1,7 @@
-请自行安装 nvidia 驱动程序，本项目已在 Python 3.9.18，CUDA 11.7 环境下，Windows、X86 架构的 macOS 系统中完成测试。
 
-1、python 环境准备
+如需使用私有化模型部署，请自行安装 nvidia 驱动程序。
+
+### python 环境准备
 
 - 推荐采用 conda 对 python 环境进行管理（可选）
 ```bash
@@ -16,7 +17,7 @@ cd codefuse-chatbot
 pip install -r requirements.txt
 ```
 
-2、沙盒环境准备
+### 沙盒环境准备
 - windows Docker 安装：
 [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) 支持 64 位版本的 Windows 10 Pro，且必须开启 Hyper-V（若版本为 v1903 及以上则无需开启 Hyper-V），或者 64 位版本的 Windows 10 Home v1903 及以上版本。
 
@@ -36,7 +37,7 @@ Linux 安装相对比较简单，请自行 baidu/google 相关安装
 bash docker_build.sh
 ```
 
-3、模型下载（可选）
+### 模型下载（可选）
 
 如需使用开源 LLM 与 Embedding 模型可以从 HuggingFace 下载。
 此处以 THUDM/chatglm2-6bm 和 text2vec-base-chinese 为例：
@@ -55,7 +56,7 @@ cp ~/shibing624/text2vec-base-chinese ~/codefuse-chatbot/embedding_models/
 ```
 
 
-4、基础配置
+### 基础配置
 
 ```bash
 # 修改服务启动的基础配置
@@ -76,32 +77,30 @@ LLM_MODELs = ["gpt-3.5-turbo"]
 EMBEDDING_ENGINE = 'model'
 EMBEDDING_MODEL = "text2vec-base"
 
-# vi model_config#embedding_model_dict 修改成你的本地路径，如果能直接连接huggingface则无需修改
+# 向量模型接入示例，修改 model_config#embedding_model_dict
 # 若模型地址为：
 model_dir: ~/codefuse-chatbot/embedding_models/shibing624/text2vec-base-chinese
 # 配置如下
-"text2vec-base": "shibing624/text2vec-base-chinese",
+"text2vec-base": "shibing624/text2vec-base-chinese"
 
 # vi server_config#8~14, 推荐采用容器启动服务
 DOCKER_SERVICE = True
 # 是否采用容器沙箱
 SANDBOX_DO_REMOTE = True
-# 是否采用api服务来进行
-NO_REMOTE_API = True
 ```
 
-5、启动服务
+### 启动服务
 
 默认只启动webui相关服务，未启动fastchat（可选）。
 ```bash
 # 若需要支撑codellama-34b-int4模型，需要给fastchat打一个补丁
 # cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
-# dev_opsgpt/service/llm_api.py#258 修改为 kwargs={"gptq_wbits": 4},
+# examples/llm_api.py#258 修改为 kwargs={"gptq_wbits": 4},
 
 # start llm-service（可选）
-python dev_opsgpt/service/llm_api.py
+python examples/llm_api.py
 ```
-更多LLM接入方法见[详情...](./fastchat.md)
+更多LLM接入方法见[详情...](sources/readme_docs/fastchat.md)
 <br>
 
 ```bash

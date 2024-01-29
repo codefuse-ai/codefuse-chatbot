@@ -12,6 +12,7 @@ SANDBOX_DO_REMOTE = True
 NO_REMOTE_API = True
 # 各服务器默认绑定host
 DEFAULT_BIND_HOST = "127.0.0.1"
+os.environ["DEFAULT_BIND_HOST"] = DEFAULT_BIND_HOST
 
 # 
 CONTRAINER_NAME = "devopsgpt_webui"

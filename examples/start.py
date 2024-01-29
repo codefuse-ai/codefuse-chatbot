@@ -12,7 +12,7 @@ from configs.model_config import USE_FASTCHAT, JUPYTER_WORK_PATH
 from configs.server_config import (
     NO_REMOTE_API, SANDBOX_SERVER, SANDBOX_IMAGE_NAME, SANDBOX_CONTRAINER_NAME, 
     WEBUI_SERVER, API_SERVER, SDFILE_API_SERVER, CONTRAINER_NAME, IMAGE_NAME, DOCKER_SERVICE,
-    DEFAULT_BIND_HOST, NEBULA_GRAPH_SERVER
+    DEFAULT_BIND_HOST, NEBULA_GRAPH_SERVER, SANDBOX_DO_REMOTE
 )
 
 
@@ -49,7 +49,7 @@ def check_docker(client, container_name, do_stop=False):
                     # wrap up db
                     logger.info(f'inside {container_name}')
                     # cp nebula data
-                    res = container.exec_run('''sh chatbot/dev_opsgpt/utils/nebula_cp.sh''')
+                    res = container.exec_run('''sh chatbot/coagent/utils/nebula_cp.sh''')
                     logger.info(f'cp res={res}')
 
                     # stop nebula service
@@ -116,7 +116,6 @@ def start_sandbox_service(network_name ='my_network'):
         client = docker.from_env()
         # 启动容器
         logger.info("start container sandbox service")
-        script_shs = ["bash jupyter_start.sh"]
         JUPYTER_WORK_PATH = "/home/user/chatbot/jupyter_work"
         script_shs = [f"cd /home/user/chatbot/jupyter_work && nohup jupyter-notebook --NotebookApp.token=mytoken --port=5050 --allow-root --ip=0.0.0.0 --notebook-dir={JUPYTER_WORK_PATH} --no-browser --ServerApp.disable_check_xsrf=True &"]
         ports = {f"{SANDBOX_SERVER['docker_port']}/tcp": f"{SANDBOX_SERVER['port']}/tcp"}
@@ -150,9 +149,9 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
     if DOCKER_SERVICE:
         client = docker.from_env()
         logger.info("start container service")
-        check_process("service/api.py", do_stop=True)
-        check_process("service/sdfile_api.py", do_stop=True)
-        check_process("service/sdfile_api.py", do_stop=True)
+        check_process("api.py", do_stop=True)
+        check_process("sdfile_api.py", do_stop=True)
+        check_process("sdfile_api.py", do_stop=True)
         check_process("webui.py", do_stop=True)
         mount = Mount(
             type='bind',
@@ -193,10 +192,15 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19669/flags"''',
             '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19779/flags"''',
 
-            "nohup python chatbot/dev_opsgpt/service/sdfile_api.py > /home/user/logs/sdfile_api.log 2>&1 &",
+            "pip install zdatafront-sdk-python==0.1.2 -i https://artifacts.antgroup-inc.cn/simple",
+
+            "pip install jieba",
+            "pip install duckduckgo-search",
+
+            "nohup python chatbot/examples/sdfile_api.py > /home/user/logs/sdfile_api.log 2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
-                nohup python chatbot/dev_opsgpt/service/api.py > /home/user/logs/api.log 2>&1 &",
-            "nohup python chatbot/dev_opsgpt/service/llm_api.py > /home/user/  2>&1 &",
+                nohup python chatbot/examples/api.py > /home/user/logs/api.log 2>&1 &",
+            "nohup python chatbot/examples/llm_api.py > /home/user/llm.log  2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
                 cd chatbot/examples && nohup streamlit run webui.py > /home/user/logs/start_webui.log 2>&1 &"
             ]
@@ -208,25 +212,28 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
         # 关闭之前启动的docker 服务
         # check_docker(client, CONTRAINER_NAME, do_stop=True, )
 
-        api_sh = "nohup python ../dev_opsgpt/service/api.py > ../logs/api.log 2>&1 &"
-        sdfile_sh = "nohup python ../dev_opsgpt/service/sdfile_api.py > ../logs/sdfile_api.log 2>&1 &"
+        # api_sh = "nohup python ../coagent/service/api.py > ../logs/api.log 2>&1 &"
+        api_sh = "nohup python api.py > ../logs/api.log 2>&1 &"
+        # sdfile_sh = "nohup python ../coagent/service/sdfile_api.py > ../logs/sdfile_api.log 2>&1 &"
+        sdfile_sh = "nohup python sdfile_api.py > ../logs/sdfile_api.log 2>&1 &"
         notebook_sh = f"nohup jupyter-notebook --NotebookApp.token=mytoken --port={SANDBOX_SERVER['port']} --allow-root --ip=0.0.0.0 --notebook-dir={JUPYTER_WORK_PATH} --no-browser --ServerApp.disable_check_xsrf=True > ../logs/sandbox.log 2>&1  &"
-        llm_sh = "nohup python ../dev_opsgpt/service/llm_api.py > ../logs/llm_api.log 2>&1 &"
+        # llm_sh = "nohup python ../coagent/service/llm_api.py > ../logs/llm_api.log 2>&1 &"
+        llm_sh = "nohup python llm_api.py > ../logs/llm_api.log 2>&1 &"
         webui_sh = "streamlit run webui.py" if USE_TTY else "streamlit run webui.py"
 
-        if check_process("jupyter-notebook --NotebookApp"):
-            logger.debug(f"{notebook_sh}")
-            subprocess.Popen(notebook_sh, shell=True)
+        # if SANDBOX_DO_REMOTE and check_process("jupyter-notebook --NotebookApp"):
+        #     logger.debug(f"{notebook_sh}")
+        #     subprocess.Popen(notebook_sh, shell=True)
         #
-        if not NO_REMOTE_API and check_process("service/api.py"):
+        if not NO_REMOTE_API and check_process("api.py"):
             subprocess.Popen(api_sh, shell=True)
         # 
-        if USE_FASTCHAT and check_process("service/llm_api.py"):
+        if USE_FASTCHAT and check_process("llm_api.py"):
             subprocess.Popen(llm_sh, shell=True)
         # 
-        if check_process("service/sdfile_api.py"):
+        if check_process("sdfile_api.py"):
             subprocess.Popen(sdfile_sh, shell=True)
-
+        
         subprocess.Popen(webui_sh, shell=True)
 
 
@@ -245,4 +252,5 @@ if __name__ == "__main__":
                 sandbox_host = container1_networks.get(network_name)["IPAddress"]
                 break
     start_api_service(sandbox_host)
+
 

@@ -2,11 +2,6 @@
 
 依托于开源的 LLM 与 Embedding 模型，本项目可实现基于开源模型的离线私有部署。此外，本项目也支持 OpenAI API 的调用。
 
-## 📜 目录
-- [ 本地私有化模型接入](#本地私有化模型接入)
-- [ 公开大模型接口接入](#公开大模型接口接入)
-- [ 启动大模型服务](#启动大模型服务)
-
 ## 本地私有化模型接入
 
 <br>模型地址配置示例，model_config.py配置修改
@@ -16,24 +11,7 @@
 # 注意：当llm_model_dict和VLLM_MODEL_DICT同时存在时，优先启动VLLM_MODEL_DICT中的模型配置
 
 # llm_model_dict 配置接入示例如下
-llm_model_dict = {
-    "chatglm-6b": {
-        "local_model_path": "THUDM/chatglm-6b",
-        "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
-        "api_key": "EMPTY"
-    }
-}
 
-# VLLM_MODEL_DICT 配置接入示例如下
-VLLM_MODEL_DICT = {
- 'chatglm2-6b':  "THUDM/chatglm-6b",
-}
-
-```
-
-<br>模型路径填写示例
-
-```bash
 # 1、若把模型放到 ~/codefuse-chatbot/llm_models 路径下
 # 若模型地址如下
 model_dir: ~/codefuse-chatbot/llm_models/THUDM/chatglm-6b
@@ -72,21 +50,21 @@ model_dir: ~/THUDM/chatglm-6b
 # 参考配置如下
 llm_model_dict = {
     "chatglm-6b": {
-        "local_model_path": "~/THUDM/chatglm-6b",
+        "local_model_path": "your personl dir/THUDM/chatglm-6b",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
         "api_key": "EMPTY"
     }
 }
 
 VLLM_MODEL_DICT = {
- 'chatglm2-6b':  "~/THUDM/chatglm-6b",
+ 'chatglm2-6b':  "your personl dir/THUDM/chatglm-6b",
 }
 ```
 
 ```bash
 # 3、指定启动的模型服务，两者保持一致
-LLM_MODEL = "gpt-3.5-turbo-16k"
-LLM_MODELs = ["gpt-3.5-turbo-16k"]
+LLM_MODEL = "chatglm-6b"
+LLM_MODELs = ["chatglm-6b"]
 ```
 
 ```bash
@@ -106,7 +84,7 @@ cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
 # 若需要支撑qwen-72b-int4模型，需要给fastchat打一个补丁
 cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
 # 量化需修改llm_api.py的配置
-# dev_opsgpt/service/llm_api.py#559 取消注释 kwargs["gptq_wbits"] = 4
+# examples/llm_api.py#559 取消注释 kwargs["gptq_wbits"] = 4
 ```
 
 ## 公开大模型接口接入
@@ -117,15 +95,15 @@ cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
 # 其它接口开发来自于langchain-chatchat项目，缺少相关账号未经测试
 
 # 指定启动的模型服务，两者保持一致
-LLM_MODEL = "gpt-3.5-turbo-16k"
-LLM_MODELs = ["gpt-3.5-turbo-16k"]
+LLM_MODEL = "gpt-3.5-turbo"
+LLM_MODELs = ["gpt-3.5-turbo"]
 ```
 
 外部大模型接口接入示例
 
 ```bash
 # 1、实现新的模型接入类
-# 参考  ~/dev_opsgpt/service/model_workers/openai.py#ExampleWorker
+# 参考  ~/examples/model_workers/openai.py#ExampleWorker
 # 实现do_chat函数即可使用LLM的能力
 
 class XXWorker(ApiModelWorker):
@@ -156,7 +134,7 @@ class XXWorker(ApiModelWorker):
         return {"error_code": 500, "text": f"{self.model_names[0]}未实现chat功能"}
 
 
-# 最后在 ~/dev_opsgpt/service/model_workers/__init__.py 中完成注册
+# 最后在 ~/examples/model_workers/__init__.py 中完成注册
 # from .xx import XXWorker
 
 # 2、通过已有模型接入类完成接入
@@ -188,7 +166,7 @@ ONLINE_LLM_MODEL = {
 ## 启动大模型服务
 ```bash
 # start llm-service（可选）  单独启动大模型服务
-python dev_opsgpt/service/llm_api.py
+python examples/llm_api.py
 ```
 
 ```bash
@@ -219,5 +197,5 @@ or
 ```bash
 # model_config.py#USE_FASTCHAT 判断是否进行fastchat接入本地模型
 USE_FASTCHAT = "gpt" not in LLM_MODEL
-python start.py #224 自动执行 python service/llm_api.py
+python start.py #221 自动执行 python llm_api.py
 ```

@@ -10,4 +10,8 @@ code_base
 .DS_Store
 .idea
 data
+.pyc
 tests
+*egg-info
+build
+dist

@@ -5,7 +5,7 @@ src_dir = os.path.join(
 )
 sys.path.append(src_dir)
 
-from dev_opsgpt.text_splitter import LCTextSplitter
+from coagent.text_splitter import LCTextSplitter
 
 filepath = ""
 lc_textSplitter = LCTextSplitter(filepath)

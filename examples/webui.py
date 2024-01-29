@@ -16,13 +16,15 @@ src_dir = os.path.join(
 )
 sys.path.append(src_dir)
 
-from dev_opsgpt.webui import *
-from configs import VERSION, LLM_MODEL
+from webui import *
+from configs.model_config import VERSION, LLM_MODEL
 from configs.server_config import NO_REMOTE_API
+from configs.model_config import CB_ROOT_PATH
+
+from configs.model_config import embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE, WEB_CRAWL_PATH
 
 
-
-api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=NO_REMOTE_API)
+api = ApiRequest(base_url="http://127.0.0.1:7861", no_remote_api=NO_REMOTE_API, cb_root_path=CB_ROOT_PATH)
 
 
 if __name__ == "__main__":
@@ -88,3 +90,6 @@ if __name__ == "__main__":
 
     if selected_page in pages:
         pages[selected_page]["func"](api)
+    # pages["对话"]["func"](api, )
+    # pages["知识库管理"]["func"](api, embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE, WEB_CRAWL_PATH)
+    # pages["代码知识库管理"]["func"](api, )

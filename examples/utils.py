@@ -19,7 +19,7 @@ def get_model_worker_config(
     加载model worker的配置项。
     优先级:FSCHAT_MODEL_WORKERS[model_name] > ONLINE_LLM_MODEL[model_name] > FSCHAT_MODEL_WORKERS["default"]
     '''
-    from coagent.service import model_workers
+    import model_workers
     
     config = fastchat_mdoel_workers.get("default", {}).copy()
     config.update(online_llm_model.get(model_name, {}).copy())

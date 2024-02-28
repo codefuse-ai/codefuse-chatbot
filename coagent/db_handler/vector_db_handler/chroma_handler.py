@@ -16,7 +16,11 @@ class ChromaHandler:
         @param path: path of data
         @collection_name: name of collection
         '''
-        self.client = chromadb.PersistentClient(path)
+        settings = chromadb.get_settings()
+        # disable the posthog telemetry mechnism that may raise the connection error, such as
+        # "requests.exceptions.ConnectTimeout: HTTPSConnectionPool(host='us-api.i.posthog.com', port 443)"
+        settings.anonymized_telemetry = False
+        self.client = chromadb.PersistentClient(path, settings)
         self.client.heartbeat()
 
         if collection_name:

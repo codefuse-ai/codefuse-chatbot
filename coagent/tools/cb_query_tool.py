@@ -9,9 +9,7 @@ from pydantic import BaseModel, Field
 from loguru import logger
 
 from coagent.llm_models import LLMConfig, EmbedConfig
-
 from .base_tool import BaseToolModel
-
 from coagent.service.cb_api import search_code
 
 
@@ -29,7 +27,17 @@ class CodeRetrieval(BaseToolModel):
         code: str  = Field(..., description="检索代码")
 
     @classmethod
-    def run(cls, code_base_name, query, code_limit=1, history_node_list=[], search_type="tag", llm_config: LLMConfig=None, embed_config: EmbedConfig=None):
+    def run(cls,
+            code_base_name,
+            query,
+            code_limit=1,
+            history_node_list=[],
+            search_type="tag",
+            llm_config: LLMConfig=None,
+            embed_config: EmbedConfig=None,
+            use_nh: str=True,
+            local_graph_path: str=''
+            ):
         """excute your tool!"""
         
         search_type = {
@@ -45,7 +53,8 @@ class CodeRetrieval(BaseToolModel):
         codes = search_code(code_base_name, query, code_limit, search_type=search_type, history_node_list=history_node_list,
                             embed_engine=embed_config.embed_engine, embed_model=embed_config.embed_model, embed_model_path=embed_config.embed_model_path,
                             model_device=embed_config.model_device, model_name=llm_config.model_name, temperature=llm_config.temperature,
-                            api_base_url=llm_config.api_base_url, api_key=llm_config.api_key
+                            api_base_url=llm_config.api_base_url, api_key=llm_config.api_key, use_nh=use_nh,
+                            local_graph_path=local_graph_path, embed_config=embed_config
                             )
         return_codes = []
         context = codes['context']

@@ -11,7 +11,7 @@ from coagent.chat.search_chat import SEARCH_ENGINES
 from coagent.connector import PHASE_LIST, PHASE_CONFIGS
 from coagent.service.service_factory import get_cb_details_by_cb_name
 
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, embedding_model_dict, EMBEDDING_ENGINE, KB_ROOT_PATH
+from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, embedding_model_dict, EMBEDDING_ENGINE, KB_ROOT_PATH, llm_model_dict
 chat_box = ChatBox(
     assistant_avatar="../sources/imgs/devops-chatbot2.png"
 )
@@ -174,7 +174,7 @@ def dialogue_page(api: ApiRequest):
             is_detailed = st.toggle(webui_configs["dialogue"]["phase_toggle_detailed_name"], False)
             tool_using_on = st.toggle(
                 webui_configs["dialogue"]["phase_toggle_doToolUsing"], 
-                PHASE_CONFIGS[choose_phase]["do_using_tool"])
+                PHASE_CONFIGS[choose_phase].get("do_using_tool", False))
             tool_selects = []
             if tool_using_on:
                 with st.expander("工具军火库", True):
@@ -183,7 +183,7 @@ def dialogue_page(api: ApiRequest):
                         TOOL_SETS, ["WeatherInfo"])
             
             search_on = st.toggle(webui_configs["dialogue"]["phase_toggle_doSearch"], 
-                                  PHASE_CONFIGS[choose_phase]["do_search"])
+                                  PHASE_CONFIGS[choose_phase].get("do_search", False))
             search_engine, top_k = None, 3
             if search_on:
                 with st.expander(webui_configs["dialogue"]["expander_search_name"], True):
@@ -195,7 +195,8 @@ def dialogue_page(api: ApiRequest):
 
             doc_retrieval_on = st.toggle(
                 webui_configs["dialogue"]["phase_toggle_doDocRetrieval"], 
-                  PHASE_CONFIGS[choose_phase]["do_doc_retrieval"])
+                  PHASE_CONFIGS[choose_phase].get("do_doc_retrieval", False)
+            )
             selected_kb, top_k, score_threshold = None, 3, 1.0
             if doc_retrieval_on:
                 with st.expander(webui_configs["dialogue"]["kbase_expander_name"], True):
@@ -215,7 +216,7 @@ def dialogue_page(api: ApiRequest):
                     
             code_retrieval_on = st.toggle(
                 webui_configs["dialogue"]["phase_toggle_doCodeRetrieval"], 
-                  PHASE_CONFIGS[choose_phase]["do_code_retrieval"])
+                  PHASE_CONFIGS[choose_phase].get("do_code_retrieval", False))
             selected_cb, top_k = None, 1
             cb_search_type = "tag"
             if code_retrieval_on:
@@ -296,7 +297,8 @@ def dialogue_page(api: ApiRequest):
             r = api.chat_chat(
                 prompt, history, no_remote_api=True, 
                 embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,
+                model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                 llm_model=LLM_MODEL)
             for t in r:
                 if error_msg := check_error_msg(t):  # check whether error occured
@@ -362,6 +364,8 @@ def dialogue_page(api: ApiRequest):
                 "embed_engine": EMBEDDING_ENGINE,
                 "kb_root_path": KB_ROOT_PATH,
                 "model_name": LLM_MODEL,
+                "api_key": llm_model_dict[LLM_MODEL]["api_key"],
+                "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],
             }
             text = ""
             d = {"docs": []}
@@ -405,7 +409,10 @@ def dialogue_page(api: ApiRequest):
                 api.knowledge_base_chat(
                     prompt, selected_kb, kb_top_k, score_threshold, history,
                     embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                    model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL)
+                    model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
+                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                    )
                     ):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
@@ -415,11 +422,7 @@ def dialogue_page(api: ApiRequest):
                 # chat_box.update_msg("知识库匹配结果: \n\n".join(d["docs"]), element_index=1, streaming=False, state="complete")
             chat_box.update_msg(text, element_index=0, streaming=False)  # 更新最终的字符串，去除光标
             chat_box.update_msg("{webui_configs['chat']['chatbox_doc_result']}: \n\n".join(d["docs"]), element_index=1, streaming=False, state="complete")
-            # # 判断是否存在代码, 并提高编辑功能，执行功能
-            # code_text = api.codebox.decode_code_from_text(text)
-            # GLOBAL_EXE_CODE_TEXT = code_text
-            # if code_text and code_exec_on:
-            #     codebox_res = api.codebox_chat("```"+code_text+"```", do_code_exe=True)
+
         elif dialogue_mode == webui_configs["dialogue"]["mode"][2]:
             logger.info('prompt={}'.format(prompt))
             logger.info('history={}'.format(history))
@@ -438,7 +441,9 @@ def dialogue_page(api: ApiRequest):
                                                              cb_search_type=cb_search_type,
                                                              no_remote_api=True, embed_model=EMBEDDING_MODEL, 
                                                              embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                                             embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL
+                                                             embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
+                                                             api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                                             api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                                                              )):
                 if error_msg := check_error_msg(d):
                     st.error(error_msg)
@@ -448,6 +453,7 @@ def dialogue_page(api: ApiRequest):
                     chat_box.update_msg(text, element_index=0)
 
             # postprocess
+            logger.debug(f"d={d}")
             text = replace_lt_gt(text)
             chat_box.update_msg(text, element_index=0, streaming=False)  # 更新最终的字符串，去除光标
             logger.debug('text={}'.format(text))
@@ -467,7 +473,9 @@ def dialogue_page(api: ApiRequest):
                 api.search_engine_chat(
                     prompt, search_engine, se_top_k, history, embed_model=EMBEDDING_MODEL, 
                     embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                    model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL)
+                    model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
+                    pi_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                     ):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
@@ -477,55 +485,10 @@ def dialogue_page(api: ApiRequest):
                 # chat_box.update_msg("搜索匹配结果: \n\n".join(d["docs"]), element_index=1, streaming=False)
             chat_box.update_msg(text, element_index=0, streaming=False)  # 更新最终的字符串，去除光标
             chat_box.update_msg(f"{webui_configs['chat']['chatbox_search_result']}: \n\n".join(d["docs"]), element_index=1, streaming=False, state="complete")
-            # # 判断是否存在代码, 并提高编辑功能，执行功能
-            # code_text = api.codebox.decode_code_from_text(text)
-            # GLOBAL_EXE_CODE_TEXT = code_text
-            # if code_text and code_exec_on:
-            #     codebox_res = api.codebox_chat("```"+code_text+"```", do_code_exe=True)
 
         # 将上传文件清空
         st.session_state["interpreter_file_key"] += 1
         st.experimental_rerun()
-
-    # if code_interpreter_on:
-    #     with st.expander(webui_configs['sandbox']['expander_code_name'], False):
-    #         code_part = st.text_area(
-    #             webui_configs['sandbox']['textArea_code_name'], code_text, key="code_text")
-    #         cols = st.columns(2)
-    #         if cols[0].button(
-    #             webui_configs['sandbox']['button_modify_code_name'],
-    #             use_container_width=True,
-    #         ):
-    #             code_text = code_part
-    #             GLOBAL_EXE_CODE_TEXT = code_text
-    #             st.toast(webui_configs['sandbox']['text_modify_code'])
-
-    #         if cols[1].button(
-    #             webui_configs['sandbox']['button_exec_code_name'],
-    #             use_container_width=True
-    #         ):
-    #             if code_text:
-    #                 codebox_res = api.codebox_chat("```"+code_text+"```", do_code_exe=True)
-    #                 st.toast(webui_configs['sandbox']['text_execing_code'],)
-    #             else:
-    #                 st.toast(webui_configs['sandbox']['text_error_exec_code'],)
-
-    # #TODO 这段信息会被记录到history里
-    # if codebox_res is not None and codebox_res.code_exe_status != 200:
-    #     st.toast(f"{codebox_res.code_exe_response}")
-
-    # if codebox_res is not None and codebox_res.code_exe_status == 200:
-    #     st.toast(f"codebox_chat {codebox_res}")
-    #     chat_box.ai_say(Markdown(code_text, in_expander=True, title="code interpreter", unsafe_allow_html=True), )
-    #     if codebox_res.code_exe_type == "image/png":
-    #         base_text = f"```\n{code_text}\n```\n\n"
-    #         img_html = "<img src='data:image/png;base64,{}' class='img-fluid'>".format(
-    #             codebox_res.code_exe_response
-    #         )
-    #         chat_box.update_msg(img_html, streaming=False, state="complete")
-    #     else:
-    #         chat_box.update_msg('```\n'+code_text+'\n```'+"\n\n"+'```\n'+codebox_res.code_exe_response+'\n```', 
-    #                             streaming=False, state="complete")
 
     now = datetime.now()
     with st.sidebar:

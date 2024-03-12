@@ -72,20 +72,25 @@ def parse_text_to_dict(text):
 def parse_dict_to_dict(parsed_dict) -> dict:
     code_pattern = r'```python\n(.*?)```'
     tool_pattern = r'```json\n(.*?)```'
+    java_pattern = r'```java\n(.*?)```'
     
-    pattern_dict = {"code": code_pattern, "json": tool_pattern}
+    pattern_dict = {"code": code_pattern, "json": tool_pattern, "java": java_pattern}
     spec_parsed_dict = copy.deepcopy(parsed_dict)
     for key, pattern in pattern_dict.items():
         for k, text in parsed_dict.items():
             # Search for the code block
-            if not isinstance(text, str): continue
+            if not isinstance(text, str): 
+                spec_parsed_dict[k] = text
+                continue
             _match = re.search(pattern, text, re.DOTALL)
             if _match:
                 # Add the code block to the dictionary
                 try:
                     spec_parsed_dict[key] = json.loads(_match.group(1).strip())
+                    spec_parsed_dict[k] = json.loads(_match.group(1).strip())
                 except:
                     spec_parsed_dict[key] = _match.group(1).strip()
+                    spec_parsed_dict[k] = _match.group(1).strip()
                 break
     return spec_parsed_dict
 

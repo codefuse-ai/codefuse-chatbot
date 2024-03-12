@@ -3,13 +3,15 @@ import copy
 import random
 from loguru import logger
 
+from langchain.schema import BaseRetriever
+
 from coagent.connector.schema import (
     Memory, Task, Role, Message, PromptField, LogVerboseEnum
 )
 from coagent.connector.memory_manager import BaseMemoryManager
-from coagent.connector.configs.prompts import BEGIN_PROMPT_INPUT
 from coagent.connector.memory_manager import LocalMemoryManager
 from coagent.llm_models import LLMConfig, EmbedConfig
+from coagent.base_configs.env_config import JUPYTER_WORK_PATH, KB_ROOT_PATH
 from .base_agent import BaseAgent
 
 
@@ -30,14 +32,17 @@ class SelectorAgent(BaseAgent):
             llm_config: LLMConfig = None,
             embed_config: EmbedConfig = None,
             sandbox_server: dict = {},
-            jupyter_work_path: str = "",
-            kb_root_path: str = "",
+            jupyter_work_path: str = JUPYTER_WORK_PATH,
+            kb_root_path: str = KB_ROOT_PATH,
+            doc_retrieval: Union[BaseRetriever] = None,
+            code_retrieval = None,
+            search_retrieval = None,
             log_verbose: str = "0"
             ):
         
         super().__init__(role, prompt_config, prompt_manager_type, task, memory, chat_turn, 
                          focus_agents, focus_message_keys, llm_config, embed_config, sandbox_server,
-                         jupyter_work_path, kb_root_path, log_verbose
+                         jupyter_work_path, kb_root_path, doc_retrieval, code_retrieval, search_retrieval, log_verbose
                          )
         self.group_agents = group_agents
 
@@ -56,9 +61,8 @@ class SelectorAgent(BaseAgent):
                 llm_config=self.embed_config
             )
             memory_manager.append(query)
-            memory_pool = memory_manager.current_memory
-        else:
-            memory_pool = memory_manager.current_memory
+        memory_pool = memory_manager.get_memory_pool(query_c.user_name)
+
         prompt = self.prompt_manager.generate_full_prompt(
                 previous_agent_message=query_c, agent_long_term_memory=self.memory, ui_history=history, chain_summary_messages=background, react_memory=None, 
                 memory_pool=memory_pool, agents=self.group_agents)
@@ -90,6 +94,9 @@ class SelectorAgent(BaseAgent):
             for agent in self.group_agents:
                 if agent.role.role_name == select_message.parsed_output.get("Role", ""):
                     break
+            
+            # 把除了role以外的信息传给下一个agent
+            query_c.parsed_output.update({k:v for k,v in select_message.parsed_output.items() if k!="Role"})
             for output_message in agent.astep(query_c, history, background=background, memory_manager=memory_manager):
                 yield output_message or select_message
             # update self_memory
@@ -103,6 +110,7 @@ class SelectorAgent(BaseAgent):
             memory_manager.append(output_message)
 
             select_message.parsed_output = output_message.parsed_output
+            select_message.spec_parsed_output.update(output_message.spec_parsed_output)
             select_message.parsed_output_list.extend(output_message.parsed_output_list)
         yield select_message
 
@@ -115,76 +123,3 @@ class SelectorAgent(BaseAgent):
 
         for agent in self.group_agents:
             agent.pre_print(query=query, history=history, background=background, memory_manager=memory_manager)
-
-    # def create_prompt(
-    #         self, query: Message, memory: Memory =None, history: Memory = None, background: Memory = None, memory_manager: BaseMemoryManager=None, prompt_mamnger=None) -> str:
-    #     '''
-    #     role\task\tools\docs\memory
-    #     '''
-    #     # 
-    #     doc_infos = self.create_doc_prompt(query)
-    #     code_infos = self.create_codedoc_prompt(query)
-    #     # 
-    #     formatted_tools, tool_names, tools_descs = self.create_tools_prompt(query)
-    #     agent_names, agents = self.create_agent_names()
-    #     task_prompt = self.create_task_prompt(query)
-    #     background_prompt = self.create_background_prompt(background)
-    #     history_prompt = self.create_history_prompt(history)
-    #     selfmemory_prompt = self.create_selfmemory_prompt(memory, control_key="step_content")
-        
-
-    #     DocInfos = ""
-    #     if doc_infos is not None and doc_infos!="" and doc_infos!="不存在知识库辅助信息":
-    #         DocInfos += f"\nDocument Information: {doc_infos}"
-
-    #     if code_infos is not None and code_infos!="" and code_infos!="不存在代码库辅助信息":
-    #         DocInfos += f"\nCodeBase Infomation: {code_infos}"
-
-    #     input_query = query.input_query
-    #     logger.debug(f"{self.role.role_name}  input_query: {input_query}")
-    #     prompt = self.role.role_prompt.format(**{"agent_names": agent_names, "agents": agents, "formatted_tools": tools_descs, "tool_names": tool_names})
-    #     #
-    #     memory_pool_select_by_agent_key = self.select_memory_by_agent_key(memory_manager.current_memory)
-    #     memory_pool_select_by_agent_key_context = '\n\n'.join([f"*{k}*\n{v}" for parsed_output in memory_pool_select_by_agent_key.get_parserd_output_list() for k, v in parsed_output.items() if k not in ['Action Status']])
-
-    #     input_keys = parse_section(self.role.role_prompt, 'Input Format')
-    #     # 
-    #     prompt += "\n" + BEGIN_PROMPT_INPUT
-    #     for input_key in input_keys:
-    #         if input_key == "Origin Query": 
-    #             prompt += "\n**Origin Query:**\n" + query.origin_query
-    #         elif input_key == "Context":
-    #             context =  "\n".join([f"*{k}*\n{v}" for i in query.parsed_output_list for k,v in i.items() if "Action Status" !=k])
-    #             if history:
-    #                 context = history_prompt + "\n" + context
-    #             if not context:
-    #                 context = "there is no context"
-
-    #             if self.focus_agents and memory_pool_select_by_agent_key_context:
-    #                 context = memory_pool_select_by_agent_key_context
-    #             prompt += "\n**Context:**\n" + context + "\n" + input_query
-    #         elif input_key == "DocInfos":
-    #             prompt += "\n**DocInfos:**\n" + DocInfos
-    #         elif input_key == "Question":
-    #             prompt += "\n**Question:**\n" + input_query
-
-    #     while "{{" in prompt or "}}" in prompt:
-    #         prompt = prompt.replace("{{", "{")
-    #         prompt = prompt.replace("}}", "}")
-
-    #     # logger.debug(f"{self.role.role_name}  prompt: {prompt}")
-    #     return prompt
-    
-    # def create_agent_names(self):
-    #     random.shuffle(self.group_agents)
-    #     agent_names = ", ".join([f'{agent.role.role_name}' for agent in self.group_agents])
-    #     agent_descs = []
-    #     for agent in self.group_agents:
-    #         role_desc = agent.role.role_prompt.split("####")[1]
-    #         while "\n\n" in role_desc:
-    #             role_desc = role_desc.replace("\n\n", "\n")
-    #         role_desc = role_desc.replace("\n", ",")
-
-    #         agent_descs.append(f'"role name: {agent.role.role_name}\nrole description: {role_desc}"')
-
-    #     return agent_names, "\n".join(agent_descs)

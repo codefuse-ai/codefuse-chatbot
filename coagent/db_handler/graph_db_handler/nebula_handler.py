@@ -43,7 +43,7 @@ class NebulaHandler:
                 elif self.space_name:
                     cypher = f'USE {self.space_name};{cypher}'
 
-            logger.debug(cypher)
+            # logger.debug(cypher)
             resp = session.execute(cypher)
 
             if format_res:
@@ -244,6 +244,24 @@ class NebulaHandler:
         else:
             cypher = f'MATCH (v) RETURN v LIMIT {limit};'
 
+        res = self.execute_cypher(cypher, self.space_name)
+        return self.result_to_dict(res)
+
+    def get_all_vertices(self,):
+        '''
+        get all vertices
+        @return:
+        '''
+        cypher = "MATCH (v) RETURN v;"
+        res = self.execute_cypher(cypher, self.space_name)
+        return self.result_to_dict(res)
+    
+    def get_relative_vertices(self, vertice):
+        '''
+        get all vertices
+        @return:
+        '''
+        cypher = f'''MATCH (v1)--(v2) WHERE id(v1) == '{vertice}' RETURN id(v2) as id;'''
         res = self.execute_cypher(cypher, self.space_name)
         return self.result_to_dict(res)
 

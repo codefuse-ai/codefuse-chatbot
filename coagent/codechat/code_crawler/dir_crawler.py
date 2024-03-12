@@ -27,7 +27,7 @@ class DirCrawler:
         logger.info(java_file_list)
 
         for java_file in java_file_list:
-            with open(java_file) as f:
+            with open(java_file, encoding="utf-8") as f:
                 java_code = ''.join(f.readlines())
                 java_code_dict[java_file] = java_code
         return java_code_dict

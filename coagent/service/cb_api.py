@@ -20,9 +20,6 @@ from coagent.utils.path_utils import *
 from coagent.orm.commands import *
 from coagent.db_handler.graph_db_handler.nebula_handler import NebulaHandler
 from coagent.db_handler.vector_db_handler.chroma_handler import ChromaHandler
-# from configs.server_config import NEBULA_HOST, NEBULA_PORT, NEBULA_USER, NEBULA_PASSWORD, NEBULA_STORAGED_PORT
-# from configs.server_config import CHROMA_PERSISTENT_PATH
-
 from coagent.base_configs.env_config import (
     CB_ROOT_PATH, 
     NEBULA_HOST, NEBULA_PORT, NEBULA_USER, NEBULA_PASSWORD, NEBULA_STORAGED_PORT,
@@ -58,10 +55,11 @@ async def create_cb(zip_file,
                     model_name: bool = Body(..., examples=["samples"]),
                     temperature: bool = Body(..., examples=["samples"]),
                     model_device: bool = Body(..., examples=["samples"]),
+                    embed_config: EmbedConfig = None,
                     ) -> BaseResponse:
     logger.info('cb_name={}, zip_path={}, do_interpret={}'.format(cb_name, code_path, do_interpret))
 
-    embed_config: EmbedConfig = EmbedConfig(**locals())
+    embed_config: EmbedConfig = EmbedConfig(**locals()) if embed_config is None else embed_config
     llm_config: LLMConfig = LLMConfig(**locals())
 
     # Create selected knowledge base
@@ -101,9 +99,10 @@ async def delete_cb(
         model_name: bool = Body(..., examples=["samples"]),
         temperature: bool = Body(..., examples=["samples"]),
         model_device: bool = Body(..., examples=["samples"]),
+        embed_config: EmbedConfig = None,
         ) -> BaseResponse:
     logger.info('cb_name={}'.format(cb_name))
-    embed_config: EmbedConfig = EmbedConfig(**locals())
+    embed_config: EmbedConfig = EmbedConfig(**locals()) if embed_config is None else embed_config
     llm_config: LLMConfig = LLMConfig(**locals())
     # Create selected knowledge base
     if not validate_kb_name(cb_name):
@@ -143,18 +142,24 @@ def search_code(cb_name: str = Body(..., examples=["sofaboot"]),
                 model_name: bool = Body(..., examples=["samples"]),
                 temperature: bool = Body(..., examples=["samples"]),
                 model_device: bool = Body(..., examples=["samples"]),
+                use_nh: bool = True,
+                local_graph_path: str = '',
+                embed_config: EmbedConfig = None,
                 ) -> dict:
-
-    logger.info('cb_name={}'.format(cb_name))
-    logger.info('query={}'.format(query))
-    logger.info('code_limit={}'.format(code_limit))
-    logger.info('search_type={}'.format(search_type))
-    logger.info('history_node_list={}'.format(history_node_list))
-    embed_config: EmbedConfig = EmbedConfig(**locals())
+    
+    if os.environ.get("log_verbose", "0") >= "2":
+        logger.info(f'local_graph_path={local_graph_path}')
+        logger.info('cb_name={}'.format(cb_name))
+        logger.info('query={}'.format(query))
+        logger.info('code_limit={}'.format(code_limit))
+        logger.info('search_type={}'.format(search_type))
+        logger.info('history_node_list={}'.format(history_node_list))
+    embed_config: EmbedConfig = EmbedConfig(**locals()) if embed_config is None else embed_config
     llm_config: LLMConfig = LLMConfig(**locals())
     try:
         # load codebase
-        cbh = CodeBaseHandler(codebase_name=cb_name, embed_config=embed_config, llm_config=llm_config)
+        cbh = CodeBaseHandler(codebase_name=cb_name, embed_config=embed_config, llm_config=llm_config,
+                              use_nh=use_nh, local_graph_path=local_graph_path)
 
         # search code
         context, related_vertices = cbh.search_code(query, search_type=search_type, limit=code_limit)
@@ -179,11 +184,13 @@ def search_related_vertices(cb_name: str = Body(..., examples=["sofaboot"]),
         # load codebase
         nh = NebulaHandler(host=NEBULA_HOST, port=NEBULA_PORT, username=NEBULA_USER,
                            password=NEBULA_PASSWORD, space_name=cb_name)
-
-        cypher = f'''MATCH (v1)--(v2) WHERE id(v1) == '{vertex}' RETURN id(v2) as id;'''
-
+        
+        if vertex.endswith(".java"):
+            cypher = f'''MATCH (v1)--(v2:package) WHERE id(v1) == '{vertex}' RETURN id(v2) as id;'''
+        else:
+            cypher = f'''MATCH (v1)--(v2) WHERE id(v1) == '{vertex}' RETURN id(v2) as id;'''
+        # cypher = f'''MATCH (v1)--(v2) WHERE id(v1) == '{vertex}' RETURN v2;'''
         cypher_res = nh.execute_cypher(cypher=cypher, format_res=True)
-
         related_vertices = cypher_res.get('id', [])
         related_vertices = [i.as_string() for i in related_vertices]
 
@@ -200,8 +207,8 @@ def search_related_vertices(cb_name: str = Body(..., examples=["sofaboot"]),
 def search_code_by_vertex(cb_name: str = Body(..., examples=["sofaboot"]),
                             vertex: str = Body(..., examples=['***'])) -> dict:
 
-    logger.info('cb_name={}'.format(cb_name))
-    logger.info('vertex={}'.format(vertex))
+    # logger.info('cb_name={}'.format(cb_name))
+    # logger.info('vertex={}'.format(vertex))
 
     try:
         nh = NebulaHandler(host=NEBULA_HOST, port=NEBULA_PORT, username=NEBULA_USER,
@@ -233,7 +240,7 @@ def search_code_by_vertex(cb_name: str = Body(..., examples=["sofaboot"]),
         return res
     except Exception as e:
         logger.exception(e)
-        return {}
+        return {'code': ""}
 
 
 def cb_exists_api(cb_name: str = Body(..., examples=["sofaboot"])) -> bool:

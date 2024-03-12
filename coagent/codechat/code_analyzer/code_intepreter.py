@@ -12,7 +12,7 @@ from langchain.schema import (
 
 # from configs.model_config import CODE_INTERPERT_TEMPLATE
 from coagent.connector.configs.prompts import CODE_INTERPERT_TEMPLATE
-from coagent.llm_models.openai_model import getChatModel, getChatModelFromConfig
+from coagent.llm_models.openai_model import getChatModelFromConfig
 from coagent.llm_models.llm_config import LLMConfig
 
 
@@ -53,9 +53,15 @@ class CodeIntepreter:
             message = CODE_INTERPERT_TEMPLATE.format(code=code)
             messages.append(message)
 
-        chat_ress = chat_model.batch(messages)
+        try:
+            chat_ress = [chat_model(messages) for message in messages]
+        except:
+            chat_ress = chat_model.batch(messages)
         for chat_res, code in zip(chat_ress, code_list):
-            res[code] = chat_res.content
+            try:
+                res[code] = chat_res.content
+            except:
+                res[code] = chat_res
         return res
 
 

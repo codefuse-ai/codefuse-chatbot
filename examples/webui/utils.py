@@ -299,7 +299,9 @@ class ApiRequest:
         stream: bool = True,
         no_remote_api: bool = None,
         embed_model: str="", embed_model_path: str="", model_device: str="", embed_engine: str="",
-        llm_model: str ="", temperature: float= 0.2
+        llm_model: str ="", temperature: float= 0.2,
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/chat/chat接口
@@ -311,8 +313,8 @@ class ApiRequest:
             "query": query,
             "history": history,
             "stream": stream,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -339,7 +341,9 @@ class ApiRequest:
         stream: bool = True,
         no_remote_api: bool = None,
         embed_model: str="", embed_model_path: str="", model_device: str="", embed_engine: str="",
-        llm_model: str ="", temperature: float= 0.2
+        llm_model: str ="", temperature: float= 0.2,
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/chat/knowledge_base_chat接口
@@ -355,8 +359,8 @@ class ApiRequest:
             "history": history,
             "stream": stream,
             "local_doc_url": no_remote_api,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -386,7 +390,10 @@ class ApiRequest:
         stream: bool = True,
         no_remote_api: bool = None,
         embed_model: str="", embed_model_path: str="", model_device: str="", embed_engine: str="",
-        llm_model: str ="", temperature: float= 0.2
+        llm_model: str ="", temperature: float= 0.2,
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
+
     ):
         '''
         对应api.py/chat/search_engine_chat接口
@@ -400,8 +407,8 @@ class ApiRequest:
             "top_k": top_k,
             "history": history,
             "stream": stream,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -432,7 +439,9 @@ class ApiRequest:
         stream: bool = True,
         no_remote_api: bool = None,
         embed_model: str="", embed_model_path: str="", model_device: str="", embed_engine: str="",
-        llm_model: str ="", temperature: float= 0.2
+        llm_model: str ="", temperature: float= 0.2,
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/chat/knowledge_base_chat接口
@@ -458,8 +467,8 @@ class ApiRequest:
             "cb_search_type": cb_search_type,
             "stream": stream,
             "local_doc_url": no_remote_api,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -510,6 +519,8 @@ class ApiRequest:
         embed_model: str="", embed_model_path: str="", 
         model_device: str="", embed_engine: str="",
         temperature: float=0.2, model_name:str ="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/chat/chat接口
@@ -541,8 +552,8 @@ class ApiRequest:
             "isDetailed": isDetailed,
             "upload_file": upload_file,
             "kb_root_path": kb_root_path,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -588,6 +599,8 @@ class ApiRequest:
         embed_model: str="", embed_model_path: str="", 
         model_device: str="", embed_engine: str="",
         temperature: float=0.2, model_name: str="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/chat/chat接口
@@ -620,8 +633,8 @@ class ApiRequest:
             "isDetailed": isDetailed,
             "upload_file": upload_file,
             "kb_root_path": kb_root_path,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -694,7 +707,9 @@ class ApiRequest:
         no_remote_api: bool = None,
         kb_root_path: str =KB_ROOT_PATH,
         embed_model: str="", embed_model_path: str="", 
-        embedding_device: str="", embed_engine: str=""
+        embedding_device: str="", embed_engine: str="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/knowledge_base/create_knowledge_base接口
@@ -706,8 +721,8 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "vector_store_type": vector_store_type,
             "kb_root_path": kb_root_path,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "model_device": embedding_device,
@@ -781,7 +796,9 @@ class ApiRequest:
         no_remote_api: bool = None,
         kb_root_path: str = KB_ROOT_PATH,
         embed_model: str="", embed_model_path: str="", 
-        model_device: str="", embed_engine: str=""
+        model_device: str="", embed_engine: str="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/knowledge_base/upload_docs接口
@@ -810,8 +827,8 @@ class ApiRequest:
                 override,
                 not_refresh_vs_cache,
                 kb_root_path=kb_root_path,
-                api_key=os.environ["OPENAI_API_KEY"],
-                api_base_url=os.environ["API_BASE_URL"],
+                api_key=api_key,
+                api_base_url=api_base_url,
                 embed_model=embed_model,
                 embed_model_path=embed_model_path,
                 model_device=model_device,
@@ -839,7 +856,9 @@ class ApiRequest:
         no_remote_api: bool = None,
         kb_root_path: str = KB_ROOT_PATH,
         embed_model: str="", embed_model_path: str="", 
-        model_device: str="", embed_engine: str=""
+        model_device: str="", embed_engine: str="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/knowledge_base/delete_doc接口
@@ -853,8 +872,8 @@ class ApiRequest:
             "delete_content": delete_content,
             "not_refresh_vs_cache": not_refresh_vs_cache,
             "kb_root_path": kb_root_path,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "model_device": model_device,
@@ -878,7 +897,9 @@ class ApiRequest:
         not_refresh_vs_cache: bool = False,
         no_remote_api: bool = None,
         embed_model: str="", embed_model_path: str="", 
-        model_device: str="", embed_engine: str=""
+        model_device: str="", embed_engine: str="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/knowledge_base/update_doc接口
@@ -889,8 +910,8 @@ class ApiRequest:
         if no_remote_api:
             response = run_async(update_doc(
                 knowledge_base_name, file_name, not_refresh_vs_cache, kb_root_path=KB_ROOT_PATH,
-                                api_key=os.environ["OPENAI_API_KEY"],
-                api_base_url=os.environ["API_BASE_URL"],
+                                api_key=api_key,
+                api_base_url=api_base_url,
                 embed_model=embed_model,
                 embed_model_path=embed_model_path,
                 model_device=model_device,
@@ -915,7 +936,9 @@ class ApiRequest:
         no_remote_api: bool = None,
         kb_root_path: str =KB_ROOT_PATH,
         embed_model: str="", embed_model_path: str="", 
-        embedding_device: str="", embed_engine: str=""
+        embedding_device: str="", embed_engine: str="",
+        api_key: str=os.environ["OPENAI_API_KEY"],
+        api_base_url: str = os.environ["API_BASE_URL"],
     ):
         '''
         对应api.py/knowledge_base/recreate_vector_store接口
@@ -928,8 +951,8 @@ class ApiRequest:
             "allow_empty_kb": allow_empty_kb,
             "vs_type": vs_type,
             "kb_root_path": kb_root_path,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "model_device": embedding_device,
@@ -1041,7 +1064,9 @@ class ApiRequest:
     # code base 相关操作
     def create_code_base(self, cb_name, zip_file, do_interpret: bool, no_remote_api: bool = None,
                          embed_model: str="", embed_model_path: str="", embedding_device: str="", embed_engine: str="",
-                         llm_model: str ="", temperature: float= 0.2
+                         llm_model: str ="", temperature: float= 0.2,
+                         api_key: str=os.environ["OPENAI_API_KEY"],
+                         api_base_url: str = os.environ["API_BASE_URL"],
                          ):
         '''
         创建 code_base
@@ -1067,8 +1092,8 @@ class ApiRequest:
             "cb_name": cb_name,
             "code_path": raw_code_path,
             "do_interpret": do_interpret,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,
@@ -1091,7 +1116,9 @@ class ApiRequest:
 
     def delete_code_base(self, cb_name: str, no_remote_api: bool = None,
                          embed_model: str="", embed_model_path: str="", embedding_device: str="", embed_engine: str="",
-                         llm_model: str ="", temperature: float= 0.2
+                         llm_model: str ="", temperature: float= 0.2,
+                         api_key: str=os.environ["OPENAI_API_KEY"],
+                         api_base_url: str = os.environ["API_BASE_URL"],
                          ):
         '''
         删除 code_base
@@ -1102,8 +1129,8 @@ class ApiRequest:
             no_remote_api = self.no_remote_api
         data = {
             "cb_name": cb_name,
-            "api_key": os.environ["OPENAI_API_KEY"],
-            "api_base_url": os.environ["API_BASE_URL"],
+            "api_key": api_key,
+            "api_base_url": api_base_url,
             "embed_model": embed_model,
             "embed_model_path": embed_model_path,
             "embed_engine": embed_engine,

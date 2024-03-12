@@ -215,15 +215,15 @@ class Env(BaseModel):
 class Role(BaseModel):
     role_type: str
     role_name: str
-    role_desc: str
-    agent_type: str = ""
+    role_desc: str = ""
+    agent_type: str = "BaseAgent"
     role_prompt: str = ""
     template_prompt: str = ""
 
 
 class ChainConfig(BaseModel):
     chain_name: str
-    chain_type: str
+    chain_type: str = "BaseChain"
     agents: List[str]
     do_checker: bool = False
     chat_turn: int = 1

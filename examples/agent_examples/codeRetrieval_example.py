@@ -18,8 +18,7 @@ from coagent.connector.schema import (
     )
 from coagent.connector.memory_manager import BaseMemoryManager
 from coagent.connector.configs import AGETN_CONFIGS, CHAIN_CONFIGS, PHASE_CONFIGS, BASE_PROMPT_CONFIGS
-from coagent.connector.utils import parse_section
-from coagent.connector.prompt_manager import PromptManager
+from coagent.connector.prompt_manager.prompt_manager import PromptManager
 import importlib
 
 from loguru import logger
@@ -230,7 +229,7 @@ os.environ["log_verbose"] = "2"
 
 phase_name = "codeRetrievalPhase"
 llm_config = LLMConfig(
-    model_name="gpt-3.5-turbo", model_device="cpu",api_key=os.environ["OPENAI_API_KEY"], 
+    model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"], 
     api_base_url=os.environ["API_BASE_URL"], temperature=0.3
     )
 embed_config = EmbedConfig(
@@ -246,7 +245,7 @@ query_content = "UtilsTest 这个类中测试了哪些函数,测试的函数代�
 query = Message(
     role_name="human", role_type="user", 
     role_content=query_content, input_query=query_content, origin_query=query_content,
-    code_engine_name="client", score_threshold=1.0, top_k=3, cb_search_type="tag"
+    code_engine_name="client_1", score_threshold=1.0, top_k=3, cb_search_type="tag"
     )
 
 

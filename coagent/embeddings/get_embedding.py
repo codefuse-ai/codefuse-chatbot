@@ -10,13 +10,14 @@ from loguru import logger
 # from configs.model_config import EMBEDDING_MODEL
 from coagent.embeddings.openai_embedding import OpenAIEmbedding
 from coagent.embeddings.huggingface_embedding import HFEmbedding
-
+from coagent.llm_models.llm_config import EmbedConfig
 
 def get_embedding(
         engine: str, 
         text_list: list, 
         model_path: str = "text2vec-base-chinese",
         embedding_device: str = "cpu",
+        embed_config: EmbedConfig = None,
         ):
     '''
     get embedding
@@ -25,8 +26,12 @@ def get_embedding(
     @return:
     '''
     emb_res = {}
-
-    if engine == 'openai':
+    if embed_config and embed_config.langchain_embeddings:
+        emb_res = embed_config.langchain_embeddings.embed_documents(text_list)
+        emb_res = {
+            text_list[idx]: emb_res[idx] for idx in range(len(text_list))
+        }
+    elif engine == 'openai':
         oae = OpenAIEmbedding()
         emb_res = oae.get_emb(text_list)
     elif engine == 'model':

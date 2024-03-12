@@ -22,7 +22,7 @@ from coagent.service.service_factory import get_cb_details, get_cb_details_by_cb
 from coagent.orm import table_init
 
 
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict
+from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,llm_model_dict
 # SENTENCE_SIZE = 100
 
 cell_renderer = JsCode("""function(params) {if(params.value==true){return '✓'}else{return '×'}}""")
@@ -117,6 +117,8 @@ def code_page(api: ApiRequest):
                     embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
                     embedding_device=EMBEDDING_DEVICE,
                     llm_model=LLM_MODEL,
+                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_cb_name"] = cb_name
@@ -153,6 +155,8 @@ def code_page(api: ApiRequest):
                     embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
                     embedding_device=EMBEDDING_DEVICE,
                     llm_model=LLM_MODEL,
+                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                     )
             st.toast(ret.get("msg", "删除成功"))
             time.sleep(0.05)

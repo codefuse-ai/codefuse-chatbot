@@ -9,8 +9,10 @@ import numpy as np
 from loguru import logger
 
 from .base_tool import BaseToolModel
-
-from duckduckgo_search import DDGS
+try:
+    from duckduckgo_search import DDGS
+except:
+    logger.warning("can't find duckduckgo_search, if you need it, please `pip install duckduckgo_search`")
 
 
 class DDGSTool(BaseToolModel):

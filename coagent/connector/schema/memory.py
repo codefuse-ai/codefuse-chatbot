@@ -131,6 +131,9 @@ class Memory(BaseModel):
         #     logger.debug(f"{message.role_name}: {message.parsed_output_list}")
         # return [parsed_output for message in self.messages for parsed_output in message.parsed_output_list[1:]]
         return [parsed_output for message in self.messages for parsed_output in message.parsed_output_list]
+
+    def get_spec_parserd_output(self, ):
+        return [message.spec_parsed_output for message in self.messages]
     
     def get_rolenames(self, ):
         ''''''

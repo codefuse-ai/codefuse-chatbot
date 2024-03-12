@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Tuple, Union
 from loguru import logger
 import copy, os
 
-from coagent.connector.agents import BaseAgent
+from langchain.schema import BaseRetriever
 
+from coagent.connector.agents import BaseAgent
 from coagent.connector.schema import (
     Memory, Role, Message, ActionStatus, ChainConfig,
     load_role_configs
@@ -11,31 +12,32 @@ from coagent.connector.schema import (
 from coagent.connector.memory_manager import BaseMemoryManager
 from coagent.connector.message_process import MessageUtils
 from coagent.llm_models.llm_config import LLMConfig, EmbedConfig
+from coagent.base_configs.env_config import JUPYTER_WORK_PATH, KB_ROOT_PATH
 from coagent.connector.configs.agent_config import AGETN_CONFIGS
 role_configs = load_role_configs(AGETN_CONFIGS)
-
-# from configs.model_config import JUPYTER_WORK_PATH
-# from configs.server_config import SANDBOX_SERVER
 
 
 class BaseChain:
     def __init__(
             self, 
-            # chainConfig: ChainConfig,
+            chainConfig: ChainConfig,
             agents: List[BaseAgent],
-            chat_turn: int = 1,
-            do_checker: bool = False,
+            # chat_turn: int = 1,
+            # do_checker: bool = False,
             sandbox_server: dict = {},
-            jupyter_work_path: str = "",
-            kb_root_path: str = "",
+            jupyter_work_path: str = JUPYTER_WORK_PATH,
+            kb_root_path: str = KB_ROOT_PATH,
             llm_config: LLMConfig = LLMConfig(),
             embed_config: EmbedConfig = None,
+            doc_retrieval: Union[BaseRetriever] = None,
+            code_retrieval = None,
+            search_retrieval = None,
             log_verbose: str = "0"
             ) -> None:
-        # self.chainConfig = chainConfig
+        self.chainConfig = chainConfig
         self.agents: List[BaseAgent] = agents
-        self.chat_turn = chat_turn
-        self.do_checker = do_checker
+        self.chat_turn = chainConfig.chat_turn
+        self.do_checker = chainConfig.do_checker
         self.sandbox_server = sandbox_server
         self.jupyter_work_path = jupyter_work_path
         self.llm_config = llm_config
@@ -45,9 +47,11 @@ class BaseChain:
             task = None, memory = None,
             llm_config=llm_config, embed_config=embed_config,
             sandbox_server=sandbox_server, jupyter_work_path=jupyter_work_path,
-            kb_root_path=kb_root_path
+            kb_root_path=kb_root_path,
+            doc_retrieval=doc_retrieval, code_retrieval=code_retrieval,
+            search_retrieval=search_retrieval
             )
-        self.messageUtils = MessageUtils(None, sandbox_server, self.jupyter_work_path, embed_config, llm_config, kb_root_path, log_verbose)
+        self.messageUtils = MessageUtils(None, sandbox_server, self.jupyter_work_path, embed_config, llm_config, kb_root_path, doc_retrieval, code_retrieval, search_retrieval, log_verbose)
         # all memory created by agent until instance deleted
         self.global_memory = Memory(messages=[])
 
@@ -62,12 +66,15 @@ class BaseChain:
         for agent in self.agents:
             agent.pre_print(query, history, background=background, memory_manager=memory_manager)
     
-    def astep(self, query: Message, history: Memory = None, background: Memory = None, memory_manager: BaseMemoryManager = None) -> Message:
+    def astep(self, query: Message, history: Memory = None, background: Memory = None, memory_manager: BaseMemoryManager = None) -> Tuple[Message, Memory]:
         '''execute chain'''
         local_memory = Memory(messages=[])
         input_message = copy.deepcopy(query)
         step_nums = copy.deepcopy(self.chat_turn)
         check_message = None
+
+        # if input_message not in memory_manager:
+        #     memory_manager.append(input_message)
 
         self.global_memory.append(input_message)
         # local_memory.append(input_message)
@@ -78,7 +85,7 @@ class BaseChain:
                     yield output_message, local_memory + output_message
                 output_message = self.messageUtils.inherit_extrainfo(input_message, output_message)
                 # according the output to choose one action for code_content or tool_content
-                output_message = self.messageUtils.parser(output_message)
+                # output_message = self.messageUtils.parser(output_message)
                 yield output_message, local_memory + output_message
                 # output_message = self.step_router(output_message)
                 input_message = output_message

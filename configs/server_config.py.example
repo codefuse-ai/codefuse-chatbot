@@ -58,9 +58,6 @@ NEBULA_GRAPH_SERVER = {
     "docker_port": NEBULA_PORT
 }
 
-# chroma conf
-CHROMA_PERSISTENT_PATH = '/home/user/chatbot/data/chroma_data'
-
 # sandbox api server
 SANDBOX_CONTRAINER_NAME = "devopsgpt_sandbox"
 SANDBOX_IMAGE_NAME = "devopsgpt:py39"

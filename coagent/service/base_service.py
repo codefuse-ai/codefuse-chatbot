@@ -17,7 +17,7 @@ from coagent.orm.commands import *
 from coagent.utils.path_utils import *
 from coagent.orm.utils import DocumentFile
 from coagent.embeddings.utils import load_embeddings, load_embeddings_from_path
-from coagent.text_splitter import LCTextSplitter
+from coagent.retrieval.text_splitter import LCTextSplitter
 from coagent.llm_models.llm_config import EmbedConfig
 
 
@@ -46,7 +46,7 @@ class KBService(ABC):
 
     def _load_embeddings(self) -> Embeddings:
         # return load_embeddings(self.embed_model, embed_device, embedding_model_dict)
-        return load_embeddings_from_path(self.embed_config.embed_model_path, self.embed_config.model_device)
+        return load_embeddings_from_path(self.embed_config.embed_model_path, self.embed_config.model_device, self.embed_config.langchain_embeddings)
 
     def create_kb(self):
         """

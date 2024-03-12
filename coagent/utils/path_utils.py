@@ -1,7 +1,7 @@
 import os
 from langchain.document_loaders import CSVLoader, PyPDFLoader, UnstructuredFileLoader, TextLoader, PythonLoader
 
-from coagent.document_loaders import JSONLLoader, JSONLoader
+from coagent.retrieval.document_loaders import JSONLLoader, JSONLoader
 # from configs.model_config import (
 #     embedding_model_dict,
 #     KB_ROOT_PATH,

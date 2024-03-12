@@ -151,9 +151,9 @@ def create_app():
              )(delete_cb)
 
     app.post("/code_base/code_base_chat",
-             tags=["Code Base Management"],
-             summary="删除 code_base"
-             )(delete_cb)
+            tags=["Code Base Management"],
+            summary="code_base 对话"
+            )(search_code)
 
     app.get("/code_base/list_code_bases",
             tags=["Code Base Management"],

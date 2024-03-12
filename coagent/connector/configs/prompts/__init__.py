@@ -14,7 +14,8 @@ from .qa_template_prompt import QA_PROMPT, CODE_QA_PROMPT, QA_TEMPLATE_PROMPT, C
 
 from .executor_template_prompt import EXECUTOR_TEMPLATE_PROMPT
 from .refine_template_prompt import REFINE_TEMPLATE_PROMPT
-
+from .code2doc_template_prompt import Code2DocGroup_PROMPT, Class2Doc_PROMPT, Func2Doc_PROMPT
+from .code2test_template_prompt import code2Tests_PROMPT, judgeCode2Tests_PROMPT
 from .agent_selector_template_prompt import SELECTOR_AGENT_TEMPLATE_PROMPT
 
 from .react_template_prompt import REACT_TEMPLATE_PROMPT
@@ -37,5 +38,7 @@ __all__ = [
     "SELECTOR_AGENT_TEMPLATE_PROMPT",
     "PLANNER_TEMPLATE_PROMPT", "GENERAL_PLANNER_PROMPT", "DATA_PLANNER_PROMPT", "TOOL_PLANNER_PROMPT",
     "REACT_TEMPLATE_PROMPT", 
-    "REACT_CODE_PROMPT", "REACT_TOOL_PROMPT", "REACT_TOOL_AND_CODE_PROMPT", "REACT_TOOL_AND_CODE_PLANNER_PROMPT"
+    "REACT_CODE_PROMPT", "REACT_TOOL_PROMPT", "REACT_TOOL_AND_CODE_PROMPT", "REACT_TOOL_AND_CODE_PLANNER_PROMPT",
+    "Code2DocGroup_PROMPT", "Class2Doc_PROMPT", "Func2Doc_PROMPT",
+    "code2Tests_PROMPT", "judgeCode2Tests_PROMPT"
 ]

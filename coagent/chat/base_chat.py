@@ -7,7 +7,7 @@ from langchain import LLMChain
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.prompts.chat import ChatPromptTemplate
 
-from coagent.llm_models import getChatModel, getChatModelFromConfig
+from coagent.llm_models import getChatModelFromConfig
 from coagent.chat.utils import History, wrap_done
 from coagent.llm_models.llm_config import LLMConfig, EmbedConfig
 # from configs.model_config import (llm_model_dict, LLM_MODEL, VECTOR_SEARCH_TOP_K, SCORE_THRESHOLD)

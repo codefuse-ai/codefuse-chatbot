@@ -1,8 +1,8 @@
-from .openai_model import getChatModel, getExtraModel, getChatModelFromConfig
+from .openai_model import getExtraModel, getChatModelFromConfig
 from .llm_config import LLMConfig, EmbedConfig
 
 
 __all__ = [
-    "getChatModel", "getExtraModel", "getChatModelFromConfig",
+    "getExtraModel", "getChatModelFromConfig",
     "LLMConfig", "EmbedConfig"
 ]

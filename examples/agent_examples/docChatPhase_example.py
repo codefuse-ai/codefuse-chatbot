@@ -17,7 +17,7 @@ from coagent.connector.schema import Message, Memory
 
 tools = toLangchainTools([TOOL_DICT[i] for i in TOOL_SETS if i in TOOL_DICT])
 llm_config = LLMConfig(
-    model_name="gpt-3.5-turbo", model_device="cpu",api_key=os.environ["OPENAI_API_KEY"], 
+    model_name="gpt-3.5-turbo",api_key=os.environ["OPENAI_API_KEY"], 
     api_base_url=os.environ["API_BASE_URL"], temperature=0.3
     )
 embed_config = EmbedConfig(

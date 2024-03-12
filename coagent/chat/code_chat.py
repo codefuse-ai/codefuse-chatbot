@@ -22,7 +22,7 @@ from coagent.connector.configs.prompts import CODE_PROMPT_TEMPLATE
 from coagent.chat.utils import History, wrap_done
 from coagent.utils import BaseResponse
 from .base_chat import Chat
-from coagent.llm_models import getChatModel, getChatModelFromConfig
+from coagent.llm_models import getChatModelFromConfig
 
 from coagent.llm_models.llm_config import LLMConfig, EmbedConfig
 
@@ -67,6 +67,7 @@ class CodeChat(Chat):
                                 embed_model_path=embed_config.embed_model_path,
                                 embed_engine=embed_config.embed_engine,
                                 model_device=embed_config.model_device,
+                                embed_config=embed_config
                                 )
 
         context = codes_res['context']

@@ -1,19 +1,21 @@
 from enum import Enum
-from .prompts import (
-    REACT_PROMPT_INPUT, CHECK_PROMPT_INPUT, EXECUTOR_PROMPT_INPUT, CONTEXT_PROMPT_INPUT, QUERY_CONTEXT_PROMPT_INPUT,PLAN_PROMPT_INPUT,
-    RECOGNIZE_INTENTION_PROMPT,
-    CHECKER_TEMPLATE_PROMPT,
-    CONV_SUMMARY_PROMPT,
-    QA_PROMPT, CODE_QA_PROMPT, QA_TEMPLATE_PROMPT,
-    EXECUTOR_TEMPLATE_PROMPT,
-    REFINE_TEMPLATE_PROMPT,
-    SELECTOR_AGENT_TEMPLATE_PROMPT,
-    PLANNER_TEMPLATE_PROMPT, GENERAL_PLANNER_PROMPT, DATA_PLANNER_PROMPT, TOOL_PLANNER_PROMPT,
-    PRD_WRITER_METAGPT_PROMPT, DESIGN_WRITER_METAGPT_PROMPT, TASK_WRITER_METAGPT_PROMPT, CODE_WRITER_METAGPT_PROMPT,
-    REACT_TEMPLATE_PROMPT,
-    REACT_TOOL_PROMPT, REACT_CODE_PROMPT, REACT_TOOL_AND_CODE_PLANNER_PROMPT, REACT_TOOL_AND_CODE_PROMPT
-)
-from .prompt_config import BASE_PROMPT_CONFIGS, EXECUTOR_PROMPT_CONFIGS, SELECTOR_PROMPT_CONFIGS, BASE_NOTOOLPROMPT_CONFIGS
+from .prompts import *
+# from .prompts import (
+#     REACT_PROMPT_INPUT, CHECK_PROMPT_INPUT, EXECUTOR_PROMPT_INPUT, CONTEXT_PROMPT_INPUT, QUERY_CONTEXT_PROMPT_INPUT,PLAN_PROMPT_INPUT,
+#     RECOGNIZE_INTENTION_PROMPT,
+#     CHECKER_TEMPLATE_PROMPT,
+#     CONV_SUMMARY_PROMPT,
+#     QA_PROMPT, CODE_QA_PROMPT, QA_TEMPLATE_PROMPT,
+#     EXECUTOR_TEMPLATE_PROMPT,
+#     REFINE_TEMPLATE_PROMPT,
+#     SELECTOR_AGENT_TEMPLATE_PROMPT,
+#     PLANNER_TEMPLATE_PROMPT, GENERAL_PLANNER_PROMPT, DATA_PLANNER_PROMPT, TOOL_PLANNER_PROMPT,
+#     PRD_WRITER_METAGPT_PROMPT, DESIGN_WRITER_METAGPT_PROMPT, TASK_WRITER_METAGPT_PROMPT, CODE_WRITER_METAGPT_PROMPT,
+#     REACT_TEMPLATE_PROMPT,
+#     REACT_TOOL_PROMPT, REACT_CODE_PROMPT, REACT_TOOL_AND_CODE_PLANNER_PROMPT, REACT_TOOL_AND_CODE_PROMPT
+# )
+from .prompt_config import *
+# BASE_PROMPT_CONFIGS, EXECUTOR_PROMPT_CONFIGS, SELECTOR_PROMPT_CONFIGS, BASE_NOTOOLPROMPT_CONFIGS
 
 
 
@@ -260,5 +262,69 @@ AGETN_CONFIGS = {
         "chat_turn": 1,
         "focus_agents": ["metaGPT_DESIGN", "metaGPT_TASK"],
         "focus_message_keys": [],
+    },
+    "class2Docer": {
+        "role": {
+            "role_prompt": Class2Doc_PROMPT,
+            "role_type": "assistant",
+            "role_name": "class2Docer",
+            "role_desc": "",
+            "agent_type": "CodeGenDocer"
+        },
+        "prompt_config": CODE2DOC_PROMPT_CONFIGS,
+        "prompt_manager_type": "Code2DocPM",
+        "chat_turn": 1,
+        "focus_agents": [],
+        "focus_message_keys": [],
+    },
+    "func2Docer": {
+        "role": {
+            "role_prompt": Func2Doc_PROMPT,
+            "role_type": "assistant",
+            "role_name": "func2Docer",
+            "role_desc": "",
+            "agent_type": "CodeGenDocer"
+        },
+        "prompt_config": CODE2DOC_PROMPT_CONFIGS,
+        "prompt_manager_type": "Code2DocPM",
+        "chat_turn": 1,
+        "focus_agents": [],
+        "focus_message_keys": [],
+    },
+    "code2DocsGrouper": {
+        "role": {
+            "role_prompt": Code2DocGroup_PROMPT,
+            "role_type": "assistant",
+            "role_name": "code2DocsGrouper",
+            "role_desc": "",
+            "agent_type": "SelectorAgent"
+        },
+        "prompt_config": CODE2DOC_GROUP_PROMPT_CONFIGS,
+        "group_agents": ["class2Docer", "func2Docer"],
+        "chat_turn": 1,
+    },
+    "Code2TestJudger": {
+        "role": {
+            "role_prompt": judgeCode2Tests_PROMPT,
+            "role_type": "assistant",
+            "role_name": "Code2TestJudger",
+            "role_desc": "",
+            "agent_type": "CodeRetrieval"
+        },
+        "prompt_config": CODE2TESTS_PROMPT_CONFIGS,
+        "prompt_manager_type": "CodeRetrievalPM",
+        "chat_turn": 1,
+    },
+    "code2Tests": {
+        "role": {
+            "role_prompt": code2Tests_PROMPT,
+            "role_type": "assistant",
+            "role_name": "code2Tests",
+            "role_desc": "",
+            "agent_type": "CodeRetrieval"
+        },
+        "prompt_config": CODE2TESTS_PROMPT_CONFIGS,
+        "prompt_manager_type": "CodeRetrievalPM",
+        "chat_turn": 1,
     },
 }

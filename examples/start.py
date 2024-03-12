@@ -98,12 +98,6 @@ def start_docker(client, script_shs, ports, image_name, container_name, mounts=N
 network_name ='my_network'
 
 def start_sandbox_service(network_name ='my_network'):
-    # networks = client.networks.list()
-    # if any([network_name==i.attrs["Name"] for i in networks]):
-    #     network = client.networks.get(network_name)
-    # else:
-    #     network = client.networks.create('my_network', driver='bridge')
-
     mount = Mount(
             type='bind',
             source=os.path.join(src_dir, "jupyter_work"),
@@ -114,6 +108,12 @@ def start_sandbox_service(network_name ='my_network'):
     # 沙盒的启动与服务的启动是独立的
     if SANDBOX_SERVER["do_remote"]:
         client = docker.from_env()
+        networks = client.networks.list()
+        if any([network_name==i.attrs["Name"] for i in networks]):
+            network = client.networks.get(network_name)
+        else:
+            network = client.networks.create('my_network', driver='bridge')
+
         # 启动容器
         logger.info("start container sandbox service")
         JUPYTER_WORK_PATH = "/home/user/chatbot/jupyter_work"
@@ -150,7 +150,7 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
         client = docker.from_env()
         logger.info("start container service")
         check_process("api.py", do_stop=True)
-        check_process("sdfile_api.py", do_stop=True)
+        check_process("llm_api.py", do_stop=True)
         check_process("sdfile_api.py", do_stop=True)
         check_process("webui.py", do_stop=True)
         mount = Mount(
@@ -159,27 +159,28 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             target='/home/user/chatbot/',
             read_only=False  # 如果需要只读访问，将此选项设置为True
         )
-        mount_database = Mount(
-            type='bind',
-            source=os.path.join(src_dir, "knowledge_base"),
-            target='/home/user/knowledge_base/',
-            read_only=False  # 如果需要只读访问，将此选项设置为True
-        )
-        mount_code_database = Mount(
-            type='bind',
-            source=os.path.join(src_dir, "code_base"),
-            target='/home/user/code_base/',
-            read_only=False  # 如果需要只读访问，将此选项设置为True
-        )
+        # mount_database = Mount(
+        #     type='bind',
+        #     source=os.path.join(src_dir, "knowledge_base"),
+        #     target='/home/user/knowledge_base/',
+        #     read_only=False  # 如果需要只读访问，将此选项设置为True
+        # )
+        # mount_code_database = Mount(
+        #     type='bind',
+        #     source=os.path.join(src_dir, "code_base"),
+        #     target='/home/user/code_base/',
+        #     read_only=False  # 如果需要只读访问，将此选项设置为True
+        # )
         ports={
                 f"{API_SERVER['docker_port']}/tcp": f"{API_SERVER['port']}/tcp", 
                 f"{WEBUI_SERVER['docker_port']}/tcp": f"{WEBUI_SERVER['port']}/tcp",
                 f"{SDFILE_API_SERVER['docker_port']}/tcp": f"{SDFILE_API_SERVER['port']}/tcp",
                 f"{NEBULA_GRAPH_SERVER['docker_port']}/tcp": f"{NEBULA_GRAPH_SERVER['port']}/tcp"
                 }
-        mounts = [mount, mount_database, mount_code_database]
+        # mounts = [mount, mount_database, mount_code_database]
+        mounts = [mount]
         script_shs = [
-            "mkdir -p /home/user/logs",
+            "mkdir -p /home/user/chatbot/logs",
             '''
             if [ -d "/home/user/chatbot/data/nebula_data/data/meta" ]; then
                 cp -r /home/user/chatbot/data/nebula_data/data /usr/local/nebula/
@@ -197,12 +198,12 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             "pip install jieba",
             "pip install duckduckgo-search",
 
-            "nohup python chatbot/examples/sdfile_api.py > /home/user/logs/sdfile_api.log 2>&1 &",
+            "nohup python chatbot/examples/sdfile_api.py > /home/user/chatbot/logs/sdfile_api.log 2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
-                nohup python chatbot/examples/api.py > /home/user/logs/api.log 2>&1 &",
+                nohup python chatbot/examples/api.py > /home/user/chatbot/logs/api.log 2>&1 &",
             "nohup python chatbot/examples/llm_api.py > /home/user/llm.log  2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
-                cd chatbot/examples && nohup streamlit run webui.py > /home/user/logs/start_webui.log 2>&1 &"
+                cd chatbot/examples && nohup streamlit run webui.py > /home/user/chatbot/logs/start_webui.log 2>&1 &"
             ]
         if check_docker(client, CONTRAINER_NAME, do_stop=True):
             container = start_docker(client, script_shs, ports, IMAGE_NAME, CONTRAINER_NAME, mounts, network=network_name)
@@ -212,12 +213,9 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
         # 关闭之前启动的docker 服务
         # check_docker(client, CONTRAINER_NAME, do_stop=True, )
 
-        # api_sh = "nohup python ../coagent/service/api.py > ../logs/api.log 2>&1 &"
         api_sh = "nohup python api.py > ../logs/api.log 2>&1 &"
-        # sdfile_sh = "nohup python ../coagent/service/sdfile_api.py > ../logs/sdfile_api.log 2>&1 &"
         sdfile_sh = "nohup python sdfile_api.py > ../logs/sdfile_api.log 2>&1 &"
         notebook_sh = f"nohup jupyter-notebook --NotebookApp.token=mytoken --port={SANDBOX_SERVER['port']} --allow-root --ip=0.0.0.0 --notebook-dir={JUPYTER_WORK_PATH} --no-browser --ServerApp.disable_check_xsrf=True > ../logs/sandbox.log 2>&1  &"
-        # llm_sh = "nohup python ../coagent/service/llm_api.py > ../logs/llm_api.log 2>&1 &"
         llm_sh = "nohup python llm_api.py > ../logs/llm_api.log 2>&1 &"
         webui_sh = "streamlit run webui.py" if USE_TTY else "streamlit run webui.py"
 

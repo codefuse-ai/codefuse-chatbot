@@ -14,7 +14,8 @@ from coagent.orm import table_init
 
 from configs.model_config import (
     KB_ROOT_PATH, kbs_config, DEFAULT_VS_TYPE, WEB_CRAWL_PATH,
-    EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict
+    EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,
+    llm_model_dict
 )
 
 # SENTENCE_SIZE = 100
@@ -136,6 +137,8 @@ def knowledge_page(
                     embed_engine=EMBEDDING_ENGINE,
                     embedding_device= EMBEDDING_DEVICE,
                     embed_model_path=embedding_model_dict[embed_model],
+                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_kb_name"] = kb_name
@@ -160,7 +163,10 @@ def knowledge_page(
             data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True, "embed_model": EMBEDDING_MODEL,
             "embed_model_path": embedding_model_dict[EMBEDDING_MODEL],
             "model_device": EMBEDDING_DEVICE,
-            "embed_engine": EMBEDDING_ENGINE}
+            "embed_engine": EMBEDDING_ENGINE,
+            "api_key": llm_model_dict[LLM_MODEL]["api_key"],
+            "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],
+            }
                     for f in files]
             data[-1]["not_refresh_vs_cache"]=False
             for k in data:
@@ -210,7 +216,9 @@ def knowledge_page(
                          "embed_model": EMBEDDING_MODEL,
                         "embed_model_path": embedding_model_dict[EMBEDDING_MODEL],
                         "model_device": EMBEDDING_DEVICE,
-                        "embed_engine": EMBEDDING_ENGINE}]
+                        "embed_engine": EMBEDDING_ENGINE,
+                        "api_key": llm_model_dict[LLM_MODEL]["api_key"],
+                        "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],}]
                 for k in data:
                     ret = api.upload_kb_doc(**k)
                     logger.info(ret)
@@ -297,7 +305,9 @@ def knowledge_page(
                     api.update_kb_doc(kb, row["file_name"], 
                                       embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
                                       embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                      model_device=EMBEDDING_DEVICE
+                                      model_device=EMBEDDING_DEVICE,
+                                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                                       )
                 st.experimental_rerun()
 
@@ -311,7 +321,9 @@ def knowledge_page(
                     api.delete_kb_doc(kb, row["file_name"],
                                       embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
                                       embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                      model_device=EMBEDDING_DEVICE)
+                                      model_device=EMBEDDING_DEVICE,
+                                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                 st.experimental_rerun()
 
             if cols[3].button(
@@ -323,7 +335,9 @@ def knowledge_page(
                     ret = api.delete_kb_doc(kb, row["file_name"], True,
                                       embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
                                       embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                      model_device=EMBEDDING_DEVICE)
+                                      model_device=EMBEDDING_DEVICE,
+                                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                     st.toast(ret.get("msg", " "))
                 st.experimental_rerun()
 
@@ -344,6 +358,8 @@ def knowledge_page(
                 for d in api.recreate_vector_store(
                     kb, vs_type=default_vs_type, embed_model=embedding_model, embedding_device=EMBEDDING_DEVICE,
                       embed_model_path=embedding_model_dict["embedding_model"], embed_engine=EMBEDDING_ENGINE,
+                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                     ):
                     if msg := check_error_msg(d):
                         st.toast(msg)

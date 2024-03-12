@@ -2,11 +2,7 @@ from pydantic import BaseModel, Field
 from loguru import logger
 
 from coagent.llm_models.llm_config import EmbedConfig
-
 from .base_tool import BaseToolModel
-
-
-
 from coagent.service.kb_api import search_docs
 
 

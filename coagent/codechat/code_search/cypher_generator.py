@@ -8,7 +8,7 @@
 from langchain import PromptTemplate
 from loguru import logger
 
-from coagent.llm_models.openai_model import getChatModel, getChatModelFromConfig
+from coagent.llm_models.openai_model import getChatModelFromConfig
 from coagent.llm_models.llm_config import LLMConfig
 from coagent.utils.postprocess import replace_lt_gt
 from langchain.schema import (

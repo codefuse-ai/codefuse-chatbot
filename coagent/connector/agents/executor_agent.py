@@ -2,14 +2,15 @@ from typing import List, Union
 import copy
 from loguru import logger
 
+from langchain.schema import BaseRetriever
+
 from coagent.connector.schema import (
     Memory, Task, Env, Role, Message, ActionStatus, PromptField, LogVerboseEnum
 )
 from coagent.connector.memory_manager import BaseMemoryManager
-from coagent.connector.configs.prompts import BEGIN_PROMPT_INPUT
 from coagent.llm_models import LLMConfig, EmbedConfig
 from coagent.connector.memory_manager import LocalMemoryManager
-
+from coagent.base_configs.env_config import JUPYTER_WORK_PATH, KB_ROOT_PATH
 from .base_agent import BaseAgent
 
 
@@ -17,7 +18,7 @@ class ExecutorAgent(BaseAgent):
     def __init__(
             self, 
             role: Role,
-            prompt_config: [PromptField],
+            prompt_config: List[PromptField],
             prompt_manager_type: str= "PromptManager",
             task: Task = None,
             memory: Memory = None,
@@ -28,14 +29,17 @@ class ExecutorAgent(BaseAgent):
             llm_config: LLMConfig = None,
             embed_config: EmbedConfig = None,
             sandbox_server: dict = {},
-            jupyter_work_path: str = "",
-            kb_root_path: str = "",
+            jupyter_work_path: str = JUPYTER_WORK_PATH,
+            kb_root_path: str = KB_ROOT_PATH,
+            doc_retrieval: Union[BaseRetriever] = None,
+            code_retrieval = None,
+            search_retrieval = None,
             log_verbose: str = "0"
             ):
         
         super().__init__(role, prompt_config, prompt_manager_type, task, memory, chat_turn,
                          focus_agents, focus_message_keys, llm_config, embed_config, sandbox_server,
-                         jupyter_work_path, kb_root_path, log_verbose
+                         jupyter_work_path, kb_root_path, doc_retrieval, code_retrieval, search_retrieval, log_verbose
                          )
         self.do_all_task = True # run all tasks
 
@@ -45,6 +49,7 @@ class ExecutorAgent(BaseAgent):
         task_executor_memory = Memory(messages=[])
         # insert query
         output_message = Message(
+                user_name=query.user_name,
                 role_name=self.role.role_name,
                 role_type="assistant", #self.role.role_type,
                 role_content=query.input_query,
@@ -115,7 +120,7 @@ class ExecutorAgent(BaseAgent):
             history: Memory, background: Memory, memory_manager: BaseMemoryManager, 
             task_memory: Memory) -> Union[Message, Memory]:
         '''execute the llm predict by created prompt'''
-        memory_pool = memory_manager.current_memory
+        memory_pool = memory_manager.get_memory_pool(query.user_name)
         prompt = self.prompt_manager.generate_full_prompt(
             previous_agent_message=query, agent_long_term_memory=self_memory, ui_history=history, chain_summary_messages=background, memory_pool=memory_pool,
             task_memory=task_memory)

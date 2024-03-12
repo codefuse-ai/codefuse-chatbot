@@ -5,6 +5,8 @@ import importlib
 import copy
 from loguru import logger
 
+from langchain.schema import BaseRetriever
+
 from coagent.connector.agents import BaseAgent
 from coagent.connector.chains import BaseChain
 from coagent.connector.schema import (
@@ -17,9 +19,6 @@ from coagent.connector.configs import AGETN_CONFIGS, CHAIN_CONFIGS, PHASE_CONFIG
 from coagent.connector.message_process import MessageUtils
 from coagent.llm_models.llm_config import EmbedConfig, LLMConfig
 from coagent.base_configs.env_config import JUPYTER_WORK_PATH, KB_ROOT_PATH
-
-# from configs.model_config import JUPYTER_WORK_PATH, KB_ROOT_PATH
-# from configs.server_config import SANDBOX_SERVER
 
 
 role_configs = load_role_configs(AGETN_CONFIGS)
@@ -39,20 +38,24 @@ class BasePhase:
             kb_root_path: str = KB_ROOT_PATH,
             jupyter_work_path: str = JUPYTER_WORK_PATH,
             sandbox_server: dict = {},
-            embed_config: EmbedConfig = EmbedConfig(),
-            llm_config: LLMConfig = LLMConfig(),
+            embed_config: EmbedConfig = None,
+            llm_config: LLMConfig = None,
             task: Task = None,
             base_phase_config: Union[dict, str] = PHASE_CONFIGS,
             base_chain_config: Union[dict, str] = CHAIN_CONFIGS,
             base_role_config: Union[dict, str] = AGETN_CONFIGS,
+            chains: List[BaseChain] = [],
+            doc_retrieval: Union[BaseRetriever] = None,
+            code_retrieval = None,
+            search_retrieval = None,
             log_verbose: str = "0"
             ) -> None:
         # 
         self.phase_name = phase_name
         self.do_summary = False
-        self.do_search = False
-        self.do_code_retrieval = False
-        self.do_doc_retrieval = False
+        self.do_search = search_retrieval is not None
+        self.do_code_retrieval = code_retrieval is not None
+        self.do_doc_retrieval = doc_retrieval is not None
         self.do_tool_retrieval = False
         # memory_pool dont have specific order
         # self.memory_pool = Memory(messages=[])
@@ -62,12 +65,15 @@ class BasePhase:
         self.jupyter_work_path = jupyter_work_path
         self.kb_root_path = kb_root_path
         self.log_verbose = max(os.environ.get("log_verbose", "0"), log_verbose)
-        
-        self.message_utils = MessageUtils(None, sandbox_server, jupyter_work_path, embed_config, llm_config, kb_root_path, log_verbose)
+        # TODO透传
+        self.doc_retrieval = doc_retrieval
+        self.code_retrieval = code_retrieval
+        self.search_retrieval = search_retrieval
+        self.message_utils = MessageUtils(None, sandbox_server, jupyter_work_path, embed_config, llm_config, kb_root_path, doc_retrieval, code_retrieval, search_retrieval, log_verbose)
         self.global_memory = Memory(messages=[])
         self.phase_memory: List[Memory] = []
         # according phase name to init the phase contains
-        self.chains: List[BaseChain] = self.init_chains(
+        self.chains: List[BaseChain] = chains if chains else self.init_chains(
             phase_name,
             phase_config,
             task=task, 
@@ -90,7 +96,9 @@ class BasePhase:
             kb_root_path=kb_root_path
             )
 
-    def astep(self, query: Message, history: Memory = None) -> Tuple[Message, Memory]:
+    def astep(self, query: Message, history: Memory = None, reinit_memory=False) -> Tuple[Message, Memory]:
+        if reinit_memory:
+            self.memory_manager.re_init(reinit_memory)
         self.memory_manager.append(query)
         summary_message = None
         chain_message = Memory(messages=[])
@@ -139,8 +147,8 @@ class BasePhase:
         message.role_name = self.phase_name
         yield message, local_phase_memory
 
-    def step(self, query: Message, history: Memory = None) -> Tuple[Message, Memory]:
-        for message, local_phase_memory in self.astep(query, history=history):
+    def step(self, query: Message, history: Memory = None, reinit_memory=False) -> Tuple[Message, Memory]:
+        for message, local_phase_memory in self.astep(query, history=history, reinit_memory=reinit_memory):
             pass
         return message, local_phase_memory
 
@@ -194,6 +202,9 @@ class BasePhase:
                     sandbox_server=self.sandbox_server,
                     jupyter_work_path=self.jupyter_work_path,
                     kb_root_path=self.kb_root_path,
+                    doc_retrieval=self.doc_retrieval,
+                    code_retrieval=self.code_retrieval,
+                    search_retrieval=self.search_retrieval,
                     log_verbose=self.log_verbose
                 ) 
                 if agent_config.role.agent_type == "SelectorAgent":
@@ -205,7 +216,7 @@ class BasePhase:
                         group_base_agent = baseAgent(
                             role=group_agent_config.role, 
                             prompt_config = group_agent_config.prompt_config,
-                            prompt_manager_type=agent_config.prompt_manager_type,
+                            prompt_manager_type=group_agent_config.prompt_manager_type,
                             task = task,
                             memory = memory,
                             chat_turn=group_agent_config.chat_turn,
@@ -216,6 +227,9 @@ class BasePhase:
                             sandbox_server=self.sandbox_server,
                             jupyter_work_path=self.jupyter_work_path,
                             kb_root_path=self.kb_root_path,
+                            doc_retrieval=self.doc_retrieval,
+                            code_retrieval=self.code_retrieval,
+                            search_retrieval=self.search_retrieval,
                             log_verbose=self.log_verbose
                         ) 
                         base_agent.group_agents.append(group_base_agent)
@@ -223,13 +237,16 @@ class BasePhase:
                 agents.append(base_agent)
             
             chain_instance = BaseChain(
-                agents, chain_config.chat_turn, 
-                do_checker=chain_configs[chain_name].do_checker, 
+                chain_config,
+                agents, 
                 jupyter_work_path=self.jupyter_work_path,
                 sandbox_server=self.sandbox_server,
                 embed_config=self.embed_config,
                 llm_config=self.llm_config,
                 kb_root_path=self.kb_root_path,
+                doc_retrieval=self.doc_retrieval,
+                code_retrieval=self.code_retrieval,
+                search_retrieval=self.search_retrieval,
                 log_verbose=self.log_verbose
                 )
             chains.append(chain_instance)

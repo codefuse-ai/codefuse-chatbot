@@ -7,7 +7,7 @@ from pathlib import Path
 from io import BytesIO
 from fastapi import Body, File, Form, Body, Query, UploadFile
 from tempfile import SpooledTemporaryFile
-
+import json
 
 
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -110,3 +110,5 @@ def get_uploadfile(file: Union[str, Path, bytes], filename=None) -> UploadFile:
     temp_file.write(file.read())
     temp_file.seek(0)
     return UploadFile(file=temp_file, filename=filename)
+
+

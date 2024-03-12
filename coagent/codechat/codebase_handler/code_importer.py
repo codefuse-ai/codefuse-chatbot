@@ -6,11 +6,10 @@
 @desc:
 '''
 import time
+import json
+import os
 from loguru import logger
 
-# from configs.server_config import NEBULA_HOST, NEBULA_PORT, NEBULA_USER, NEBULA_PASSWORD, NEBULA_STORAGED_PORT
-# from configs.server_config import CHROMA_PERSISTENT_PATH
-# from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL
 from coagent.db_handler.graph_db_handler.nebula_handler import NebulaHandler
 from coagent.db_handler.vector_db_handler.chroma_handler import ChromaHandler
 from coagent.embeddings.get_embedding import get_embedding
@@ -18,12 +17,14 @@ from coagent.llm_models.llm_config import EmbedConfig
 
 
 class CodeImporter:
-    def __init__(self, codebase_name: str, embed_config: EmbedConfig, nh: NebulaHandler, ch: ChromaHandler):
+    def __init__(self, codebase_name: str, embed_config: EmbedConfig, nh: NebulaHandler, ch: ChromaHandler,
+                 local_graph_file_path: str):
         self.codebase_name = codebase_name
         # self.engine = engine
-        self.embed_config: EmbedConfig= embed_config
+        self.embed_config: EmbedConfig = embed_config
         self.nh = nh
         self.ch = ch
+        self.local_graph_file_path = local_graph_file_path
 
     def import_code(self, static_analysis_res: dict, interpretation: dict, do_interpret: bool = True):
         '''
@@ -31,9 +32,14 @@ class CodeImporter:
         @return:
         '''
         static_analysis_res = self.filter_out_vertex(static_analysis_res, interpretation)
-        logger.info(f'static_analysis_res={static_analysis_res}')
 
-        self.analysis_res_to_graph(static_analysis_res)
+        if self.nh:
+            self.analysis_res_to_graph(static_analysis_res)
+        else:
+            # persist to local dir
+            with open(self.local_graph_file_path, 'w') as f:
+                json.dump(static_analysis_res, f)
+
         self.interpretation_to_db(static_analysis_res, interpretation, do_interpret)
 
     def filter_out_vertex(self, static_analysis_res, interpretation):
@@ -114,12 +120,12 @@ class CodeImporter:
         # create vertex
         for tag_name, value_dict in vertex_value_dict.items():
             res = self.nh.insert_vertex(tag_name, value_dict)
-            logger.debug(res.error_msg())
+            # logger.debug(res.error_msg())
 
         # create edge
         for tag_name, value_dict in edge_value_dict.items():
             res = self.nh.insert_edge(tag_name, value_dict)
-            logger.debug(res.error_msg())
+            # logger.debug(res.error_msg())
 
         return
 
@@ -132,7 +138,7 @@ class CodeImporter:
         if do_interpret:
             logger.info('start get embedding for interpretion')
             interp_list = list(interpretation.values())
-            emb = get_embedding(engine=self.embed_config.embed_engine, text_list=interp_list, model_path=self.embed_config.embed_model_path, embedding_device= self.embed_config.model_device)
+            emb = get_embedding(engine=self.embed_config.embed_engine, text_list=interp_list, model_path=self.embed_config.embed_model_path, embedding_device= self.embed_config.model_device, embed_config=self.embed_config)
             logger.info('get embedding done')
         else:
             emb = {i: [0] for i in list(interpretation.values())}
@@ -161,7 +167,7 @@ class CodeImporter:
 
         # add documents to chroma
         res = self.ch.add_data(ids=ids, embeddings=embeddings, documents=documents, metadatas=metadatas)
-        logger.debug(res)
+        # logger.debug(res)
 
     def init_graph(self):
         '''
@@ -169,7 +175,7 @@ class CodeImporter:
         @return:
         '''
         res = self.nh.create_space(space_name=self.codebase_name, vid_type='FIXED_STRING(1024)')
-        logger.debug(res.error_msg())
+        # logger.debug(res.error_msg())
         time.sleep(5)
 
         self.nh.set_space_name(self.codebase_name)
@@ -179,29 +185,29 @@ class CodeImporter:
         tag_name = 'package'
         prop_dict = {}
         res = self.nh.create_tag(tag_name, prop_dict)
-        logger.debug(res.error_msg())
+        # logger.debug(res.error_msg())
 
         tag_name = 'class'
         prop_dict = {}
         res = self.nh.create_tag(tag_name, prop_dict)
-        logger.debug(res.error_msg())
+        # logger.debug(res.error_msg())
 
         tag_name = 'method'
         prop_dict = {}
         res = self.nh.create_tag(tag_name, prop_dict)
-        logger.debug(res.error_msg())
+        # logger.debug(res.error_msg())
 
         # create edge type
         edge_type_name = 'contain'
         prop_dict = {}
         res = self.nh.create_edge_type(edge_type_name, prop_dict)
-        logger.debug(res.error_msg())
+        # logger.debug(res.error_msg())
 
         # create edge type
         edge_type_name = 'depend'
         prop_dict = {}
         res = self.nh.create_edge_type(edge_type_name, prop_dict)
-        logger.debug(res.error_msg())
+        # logger.debug(res.error_msg())
 
 
 if __name__ == '__main__':

@@ -8,17 +8,6 @@ from loguru import logger
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain.vectorstores.utils import DistanceStrategy
-
-# from configs.model_config import (
-#     KB_ROOT_PATH,
-#     CACHED_VS_NUM,
-#     EMBEDDING_MODEL,
-#     EMBEDDING_DEVICE,
-#     SCORE_THRESHOLD,
-#     FAISS_NORMALIZE_L2
-# )
-# from configs.model_config import embedding_model_dict
 
 from coagent.base_configs.env_config import (
     KB_ROOT_PATH,
@@ -52,15 +41,15 @@ def load_vector_store(
         tick: int = 0,  # tick will be changed by upload_doc etc. and make cache refreshed.
         kb_root_path: str = KB_ROOT_PATH,
 ):
-    print(f"loading vector store in '{knowledge_base_name}'.")
+    # print(f"loading vector store in '{knowledge_base_name}'.")
     vs_path = get_vs_path(knowledge_base_name, kb_root_path)
     if embeddings is None:
-        embeddings = load_embeddings_from_path(embed_config.embed_model_path, embed_config.model_device)
+        embeddings = load_embeddings_from_path(embed_config.embed_model_path, embed_config.model_device, embed_config.langchain_embeddings)
 
     if not os.path.exists(vs_path):
         os.makedirs(vs_path)
     
-    distance_strategy = DistanceStrategy.EUCLIDEAN_DISTANCE
+    distance_strategy = "EUCLIDEAN_DISTANCE"
     if "index.faiss" in os.listdir(vs_path):
         search_index = FAISS.load_local(vs_path, embeddings, normalize_L2=FAISS_NORMALIZE_L2, distance_strategy=distance_strategy)
     else:

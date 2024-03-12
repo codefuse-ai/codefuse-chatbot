@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import List
+from typing import List, Dict
 import os, sys, copy, json
 from jieba.analyse import extract_tags
 from collections import Counter
@@ -10,12 +10,13 @@ from langchain.docstore.document import Document
 
 from .schema import Memory, Message
 from coagent.service.service_factory import KBServiceFactory
-from coagent.llm_models import getChatModel, getChatModelFromConfig
+from coagent.llm_models import getChatModelFromConfig
 from coagent.llm_models.llm_config import EmbedConfig, LLMConfig
 from coagent.embeddings.utils import load_embeddings_from_path
 from coagent.utils.common_utils import save_to_json_file, read_json_file, addMinutesToTime
 from coagent.connector.configs.prompts import CONV_SUMMARY_PROMPT_SPEC
 from coagent.orm import table_init
+from coagent.base_configs.env_config import KB_ROOT_PATH
 # from configs.model_config import KB_ROOT_PATH, EMBEDDING_MODEL, EMBEDDING_DEVICE, SCORE_THRESHOLD
 # from configs.model_config import embedding_model_dict
 
@@ -70,16 +71,22 @@ class BaseMemoryManager(ABC):
         self.unique_name = unique_name
         self.memory_type = memory_type
         self.do_init = do_init
-        self.current_memory = Memory(messages=[])
-        self.recall_memory = Memory(messages=[])
-        self.summary_memory = Memory(messages=[])
+        # self.current_memory = Memory(messages=[])
+        # self.recall_memory = Memory(messages=[])
+        # self.summary_memory = Memory(messages=[])
+        self.current_memory_dict: Dict[str, Memory] = {}
+        self.recall_memory_dict: Dict[str, Memory] = {}
+        self.summary_memory_dict: Dict[str, Memory] = {}
         self.save_message_keys = [
             'chat_index', 'role_name', 'role_type', 'role_prompt', 'input_query', 'origin_query',
             'datetime', 'role_content', 'step_content', 'parsed_output', 'spec_parsed_output', 'parsed_output_list', 
             'task', 'db_docs', 'code_docs', 'search_docs', 'phase_name', 'chain_name', 'customed_kargs']
         self.init_vb()
 
-    def init_vb(self):
+    def re_init(self, do_init: bool=False):
+        self.init_vb()
+
+    def init_vb(self, do_init: bool=None):
         """
         Initializes the vb.
         """
@@ -135,13 +142,15 @@ class BaseMemoryManager(ABC):
         """
         pass
 
-    def save_to_vs(self, embed_model="", embed_device=""):
+    def save_to_vs(self, ):
         """
         Saves the memory to the vector space.
+        """
+        pass
 
-        Args:
-        - embed_model: A string representing the embedding model. Default is EMBEDDING_MODEL.
-        - embed_device: A string representing the embedding device. Default is EMBEDDING_DEVICE.
+    def get_memory_pool(self, user_name: str, ):
+        """
+        return memory_pool
         """
         pass
 
@@ -230,7 +239,7 @@ class LocalMemoryManager(BaseMemoryManager):
             unique_name: str = "default",
             memory_type: str = "recall",
             do_init: bool = False,
-            kb_root_path: str = "",
+            kb_root_path: str = KB_ROOT_PATH,
         ):
         self.user_name = user_name
         self.unique_name = unique_name
@@ -239,16 +248,22 @@ class LocalMemoryManager(BaseMemoryManager):
         self.kb_root_path = kb_root_path
         self.embed_config: EmbedConfig = embed_config
         self.llm_config: LLMConfig = llm_config
-        self.current_memory = Memory(messages=[])
-        self.recall_memory = Memory(messages=[])
-        self.summary_memory = Memory(messages=[])
+        # self.current_memory = Memory(messages=[])
+        # self.recall_memory = Memory(messages=[])
+        # self.summary_memory = Memory(messages=[])
+        self.current_memory_dict: Dict[str, Memory] = {}
+        self.recall_memory_dict: Dict[str, Memory] = {}
+        self.summary_memory_dict: Dict[str, Memory] = {}
         self.save_message_keys = [
             'chat_index', 'role_name', 'role_type', 'role_prompt', 'input_query', 'origin_query',
             'datetime', 'role_content', 'step_content', 'parsed_output', 'spec_parsed_output', 'parsed_output_list', 
             'task', 'db_docs', 'code_docs', 'search_docs', 'phase_name', 'chain_name', 'customed_kargs']
         self.init_vb()
 
-    def init_vb(self):
+    def re_init(self, do_init: bool=False):
+        self.init_vb(do_init)
+
+    def init_vb(self, do_init: bool=None):
         vb_name = f"{self.user_name}/{self.unique_name}/{self.memory_type}"
         # default to recreate a new vb
         table_init()
@@ -256,31 +271,37 @@ class LocalMemoryManager(BaseMemoryManager):
         if vb:
             status = vb.clear_vs()
 
-        if not self.do_init:
+        check_do_init = do_init if do_init else self.do_init
+        if not check_do_init:
             self.load(self.kb_root_path)
             self.save_to_vs()
 
     def append(self, message: Message):
-        self.recall_memory.append(message)
+        self.check_user_name(message.user_name)
+
+        uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
+        self.recall_memory_dict[uuid_name].append(message)
         # 
         if message.role_type == "summary":
-            self.summary_memory.append(message)
+            self.summary_memory_dict[uuid_name].append(message)
         else:
-            self.current_memory.append(message)
+            self.current_memory_dict[uuid_name].append(message)
 
         self.save(self.kb_root_path)
         self.save_new_to_vs([message])
 
-    def extend(self, memory: Memory):
-        self.recall_memory.extend(memory)
-        self.current_memory.extend(self.recall_memory.filter_by_role_type(["summary"]))
-        self.summary_memory.extend(self.recall_memory.select_by_role_type(["summary"]))
-        self.save(self.kb_root_path)
-        self.save_new_to_vs(memory.messages)
+    # def extend(self, memory: Memory):
+    #     self.recall_memory.extend(memory)
+    #     self.current_memory.extend(self.recall_memory.filter_by_role_type(["summary"]))
+    #     self.summary_memory.extend(self.recall_memory.select_by_role_type(["summary"]))
+    #     self.save(self.kb_root_path)
+    #     self.save_new_to_vs(memory.messages)
 
     def save(self, save_dir: str = "./"):
         file_path = os.path.join(save_dir, f"{self.user_name}/{self.unique_name}/{self.memory_type}/converation.jsonl")
-        memory_messages = self.recall_memory.dict()
+        uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
+
+        memory_messages = self.recall_memory_dict[uuid_name].dict()
         memory_messages = {k: [
                 {kkk: vvv for kkk, vvv in vv.items() if kkk in self.save_message_keys}
                 for vv in v ] 
@@ -291,18 +312,28 @@ class LocalMemoryManager(BaseMemoryManager):
 
     def load(self, load_dir: str = "./") -> Memory:
         file_path = os.path.join(load_dir, f"{self.user_name}/{self.unique_name}/{self.memory_type}/converation.jsonl")
+        uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
 
         if os.path.exists(file_path):
-            self.recall_memory = Memory(**read_json_file(file_path))
-            self.current_memory = Memory(messages=self.recall_memory.filter_by_role_type(["summary"]))
-            self.summary_memory = Memory(messages=self.recall_memory.select_by_role_type(["summary"]))
+            # self.recall_memory = Memory(**read_json_file(file_path))
+            # self.current_memory = Memory(messages=self.recall_memory.filter_by_role_type(["summary"]))
+            # self.summary_memory = Memory(messages=self.recall_memory.select_by_role_type(["summary"]))
+
+            recall_memory = Memory(**read_json_file(file_path))
+            self.recall_memory_dict[uuid_name] = recall_memory
+            self.current_memory_dict[uuid_name] = Memory(messages=recall_memory.filter_by_role_type(["summary"]))
+            self.summary_memory_dict[uuid_name] = Memory(messages=recall_memory.select_by_role_type(["summary"]))
+        else:
+            self.recall_memory_dict[uuid_name] = Memory(messages=[])
+            self.current_memory_dict[uuid_name] = Memory(messages=[])
+            self.summary_memory_dict[uuid_name] = Memory(messages=[])
 
     def save_new_to_vs(self, messages: List[Message]):
         if self.embed_config:
             vb_name = f"{self.user_name}/{self.unique_name}/{self.memory_type}"
             # default to faiss, todo: add new vstype
             vb = KBServiceFactory.get_service(vb_name, "faiss", self.embed_config, self.kb_root_path)
-            embeddings = load_embeddings_from_path(self.embed_config.embed_model_path, self.embed_config.model_device,)
+            embeddings = load_embeddings_from_path(self.embed_config.embed_model_path, self.embed_config.model_device, self.embed_config.langchain_embeddings)
             messages = [
                     {k: v for k, v in m.dict().items() if k in self.save_message_keys}
                     for m in messages] 
@@ -311,23 +342,26 @@ class LocalMemoryManager(BaseMemoryManager):
             vb.do_add_doc(docs, embeddings)
 
     def save_to_vs(self):
-        vb_name = f"{self.user_name}/{self.unique_name}/{self.memory_type}"
-        # default to recreate a new vb
-        vb = KBServiceFactory.get_service_by_name(vb_name, self.embed_config, self.kb_root_path)
-        if vb:
-            status = vb.clear_vs()
-        # create_kb(vb_name, "faiss", embed_model)
+        '''only after load'''
+        if self.embed_config:
+            vb_name = f"{self.user_name}/{self.unique_name}/{self.memory_type}"
+            uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
+            # default to recreate a new vb
+            vb = KBServiceFactory.get_service_by_name(vb_name, self.embed_config, self.kb_root_path)
+            if vb:
+                status = vb.clear_vs()
+            # create_kb(vb_name, "faiss", embed_model)
 
-        # default to faiss, todo: add new vstype
-        vb = KBServiceFactory.get_service(vb_name, "faiss", self.embed_config, self.kb_root_path)
-        embeddings = load_embeddings_from_path(self.embed_config.embed_model_path, self.embed_config.model_device,)
-        messages = self.recall_memory.dict()
-        messages = [
-                {kkk: vvv for kkk, vvv in vv.items() if kkk in self.save_message_keys}
-                for k, v in messages.items() for vv in v] 
-        docs = [{"page_content": m["step_content"] or m["role_content"] or m["input_query"] or m["origin_query"], "metadata": m} for m in messages]
-        docs = [Document(**doc) for doc in docs]
-        vb.do_add_doc(docs, embeddings)
+            # default to faiss, todo: add new vstype
+            vb = KBServiceFactory.get_service(vb_name, "faiss", self.embed_config, self.kb_root_path)
+            embeddings = load_embeddings_from_path(self.embed_config.embed_model_path, self.embed_config.model_device, self.embed_config.langchain_embeddings)
+            messages = self.recall_memory_dict[uuid_name].dict()
+            messages = [
+                    {kkk: vvv for kkk, vvv in vv.items() if kkk in self.save_message_keys}
+                    for k, v in messages.items() for vv in v] 
+            docs = [{"page_content": m["step_content"] or m["role_content"] or m["input_query"] or m["origin_query"], "metadata": m} for m in messages]
+            docs = [Document(**doc) for doc in docs]
+            vb.do_add_doc(docs, embeddings)
 
     # def load_from_vs(self, embed_model=EMBEDDING_MODEL) -> Memory:
     #     vb_name = f"{self.user_name}/{self.unique_name}/{self.memory_type}"
@@ -338,7 +372,12 @@ class LocalMemoryManager(BaseMemoryManager):
     #     docs =  vb.get_all_documents()
     #     print(docs)
 
-    def router_retrieval(self, text: str=None, datetime: str = None, n=5, top_k=5, retrieval_type: str = "embedding", **kwargs) -> List[Message]:
+    def get_memory_pool(self, user_name: str, ):
+        self.check_user_name(user_name)
+        uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
+        return self.recall_memory_dict[uuid_name]
+
+    def router_retrieval(self, user_name: str = "default", text: str=None, datetime: str = None, n=5, top_k=5, retrieval_type: str = "embedding", **kwargs) -> List[Message]:
         retrieval_func_dict = {
             "embedding": self.embedding_retrieval, "text": self.text_retrieval, "datetime": self.datetime_retrieval
             }
@@ -356,20 +395,22 @@ class LocalMemoryManager(BaseMemoryManager):
         # 
         return retrieval_func(**params)
         
-    def embedding_retrieval(self, text: str, top_k=1, score_threshold=1.0, **kwargs) -> List[Message]:
+    def embedding_retrieval(self, text: str, top_k=1, score_threshold=1.0, user_name: str = "default", **kwargs) -> List[Message]:
         if text is None: return []
-        vb_name = f"{self.user_name}/{self.unique_name}/{self.memory_type}"
+        vb_name = f"{user_name}/{self.unique_name}/{self.memory_type}"
         vb = KBServiceFactory.get_service(vb_name, "faiss", self.embed_config, self.kb_root_path)
         docs = vb.search_docs(text, top_k=top_k, score_threshold=score_threshold)
         return [Message(**doc.metadata) for doc, score in docs]
     
-    def text_retrieval(self, text: str, **kwargs)  -> List[Message]:
+    def text_retrieval(self, text: str, user_name: str = "default", **kwargs)  -> List[Message]:
         if text is None: return []
-        return self._text_retrieval_from_cache(self.recall_memory.messages, text, score_threshold=0.3, topK=5, **kwargs)
+        uuid_name = "_".join([user_name, self.unique_name, self.memory_type])
+        return self._text_retrieval_from_cache(self.recall_memory_dict[uuid_name].messages, text, score_threshold=0.3, topK=5, **kwargs)
 
-    def datetime_retrieval(self, datetime: str, text: str = None, n: int = 5, **kwargs) -> List[Message]:
+    def datetime_retrieval(self,  datetime: str, text: str = None, n: int = 5, user_name: str = "default", **kwargs) -> List[Message]:
         if datetime is None: return []
-        return self._datetime_retrieval_from_cache(self.recall_memory.messages, datetime, text, n, **kwargs)
+        uuid_name = "_".join([user_name, self.unique_name, self.memory_type])
+        return self._datetime_retrieval_from_cache(self.recall_memory_dict[uuid_name].messages, datetime, text, n, **kwargs)
     
     def _text_retrieval_from_cache(self, messages: List[Message], text: str = None, score_threshold=0.3, topK=5, tag_topK=5, **kwargs) -> List[Message]:
         keywords = extract_tags(text, topK=tag_topK)
@@ -428,3 +469,17 @@ class LocalMemoryManager(BaseMemoryManager):
         summary_message.parsed_output_list.append({"summary": content})
         newest_messages.insert(0, summary_message)
         return newest_messages
+    
+    def check_user_name(self, user_name: str):
+        # logger.debug(f"self.user_name is {self.user_name}")
+        if user_name != self.user_name:
+            self.user_name = user_name
+            self.init_vb()
+
+        uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
+        if uuid_name not in self.recall_memory_dict:
+            self.recall_memory_dict[uuid_name] = Memory(messages=[])
+            self.current_memory_dict[uuid_name] = Memory(messages=[])
+            self.summary_memory_dict[uuid_name] = Memory(messages=[])
+
+        # logger.debug(f"self.user_name is {self.user_name}")

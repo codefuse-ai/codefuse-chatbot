@@ -6,6 +6,7 @@ import os
 import pickle
 import uuid
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
@@ -22,10 +23,22 @@ import numpy as np
 
 from langchain.docstore.base import AddableMixin, Docstore
 from langchain.docstore.document import Document
-from langchain.docstore.in_memory import InMemoryDocstore
+# from langchain.docstore.in_memory import InMemoryDocstore
+from .in_memory import InMemoryDocstore
 from langchain.embeddings.base import Embeddings
 from langchain.vectorstores.base import VectorStore
-from langchain.vectorstores.utils import DistanceStrategy, maximal_marginal_relevance
+from langchain.vectorstores.utils import maximal_marginal_relevance
+
+
+class DistanceStrategy(str, Enum):
+    """Enumerator of the Distance strategies for calculating distances
+    between vectors."""
+
+    EUCLIDEAN_DISTANCE = "EUCLIDEAN_DISTANCE"
+    MAX_INNER_PRODUCT = "MAX_INNER_PRODUCT"
+    DOT_PRODUCT = "DOT_PRODUCT"
+    JACCARD = "JACCARD"
+    COSINE = "COSINE"
 
 
 def dependable_faiss_import(no_avx2: Optional[bool] = None) -> Any:
@@ -219,6 +232,9 @@ class FAISS(VectorStore):
         if self._normalize_L2:
             faiss.normalize_L2(vector)
         scores, indices = self.index.search(vector, k if filter is None else fetch_k)
+        # 经过normalize的结果会超出1
+        if self._normalize_L2:
+            scores = np.array([row / np.linalg.norm(row) if np.max(row) > 1 else row for row in scores])
         docs = []
         for j, i in enumerate(indices[0]):
             if i == -1:
@@ -565,7 +581,7 @@ class FAISS(VectorStore):
         vecstore = cls(
             embedding.embed_query,
             index,
-            InMemoryDocstore(),
+            InMemoryDocstore({}),
             {},
             normalize_L2=normalize_L2,
             distance_strategy=distance_strategy,

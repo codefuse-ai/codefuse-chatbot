@@ -26,9 +26,12 @@ JUPYTER_WORK_PATH = os.environ.get("JUPYTER_WORK_PATH", None) or os.path.join(ex
 WEB_CRAWL_PATH = os.environ.get("WEB_CRAWL_PATH", None) or os.path.join(executable_path, "knowledge_base")
 
 # NEBULA_DATA存储路径
-NELUBA_PATH = os.environ.get("NELUBA_PATH", None) or os.path.join(executable_path, "data/neluba_data")
+NEBULA_PATH = os.environ.get("NEBULA_PATH", None) or os.path.join(executable_path, "data/nebula_data")
 
-for _path in [LOG_PATH, SOURCE_PATH, KB_ROOT_PATH, NLTK_DATA_PATH, JUPYTER_WORK_PATH, WEB_CRAWL_PATH, NELUBA_PATH]:
+# CHROMA 存储路径
+CHROMA_PERSISTENT_PATH = os.environ.get("CHROMA_PERSISTENT_PATH", None) or os.path.join(executable_path, "data/chroma_data")
+
+for _path in [LOG_PATH, SOURCE_PATH, KB_ROOT_PATH, CB_ROOT_PATH, NLTK_DATA_PATH, JUPYTER_WORK_PATH, WEB_CRAWL_PATH, NEBULA_PATH, CHROMA_PERSISTENT_PATH]:
     if not os.path.exists(_path):
         os.makedirs(_path, exist_ok=True)
 
@@ -58,7 +61,8 @@ NEBULA_GRAPH_SERVER = {
 }
 
 # CHROMA CONFIG
-CHROMA_PERSISTENT_PATH = '/home/user/chatbot/data/chroma_data'
+# CHROMA_PERSISTENT_PATH = '/home/user/chatbot/data/chroma_data'
+# CHROMA_PERSISTENT_PATH = '/Users/bingxu/Desktop/工作/大模型/chatbot/codefuse-chatbot-antcode/data/chroma_data'
 
 
 # 默认向量库类型。可选：faiss, milvus, pg.

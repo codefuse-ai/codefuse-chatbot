@@ -33,7 +33,7 @@ except:
     pass
 
 # add your openai key
-OPENAI_API_BASE = "http://openai.com/v1/chat/completions"
+OPENAI_API_BASE = "https://api.openai.com/v1"
 os.environ["API_BASE_URL"] = OPENAI_API_BASE
 os.environ["OPENAI_API_KEY"] = "sk-xx"
 openai.api_key = "sk-xx"

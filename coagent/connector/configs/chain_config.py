@@ -123,5 +123,21 @@ CHAIN_CONFIGS = {
         "chat_turn": 1,
         "do_checker": False,
         "chain_prompt": ""
+    },
+    "code2DocsGroupChain": {
+        "chain_name": "code2DocsGroupChain",
+        "chain_type": "BaseChain",
+        "agents": ["code2DocsGrouper"],
+        "chat_turn": 1,
+        "do_checker": False,
+        "chain_prompt": ""
+    },
+    "code2TestsChain": {
+        "chain_name": "code2TestsChain",
+        "chain_type": "BaseChain",
+        "agents": ["Code2TestJudger", "code2Tests"],
+        "chat_turn": 1,
+        "do_checker": False,
+        "chain_prompt": ""
     }
 }

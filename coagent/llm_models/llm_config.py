@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import List, Union
 
+from langchain.embeddings.base import Embeddings
+from langchain.llms.base import LLM, BaseLLM
+
 
 
 @dataclass
@@ -12,7 +15,8 @@ class LLMConfig:
             stop: Union[List[str], str] = None,
             api_key: str = "",
             api_base_url: str = "",
-            model_device: str = "cpu",
+            model_device: str = "cpu", # unuse，will delete it
+            llm: LLM = None,
             **kwargs
         ):
 
@@ -21,7 +25,7 @@ class LLMConfig:
         self.stop: Union[List[str], str] = stop
         self.api_key: str = api_key
         self.api_base_url: str = api_base_url
-        self.model_device: str = model_device
+        self.llm: LLM = llm
         # 
         self.check_config()
 
@@ -42,6 +46,7 @@ class EmbedConfig:
             embed_model_path: str = "",
             embed_engine: str = "",
             model_device: str = "cpu",
+            langchain_embeddings: Embeddings = None,
             **kwargs
         ):
         self.embed_model: str = embed_model
@@ -50,6 +55,8 @@ class EmbedConfig:
         self.model_device: str = model_device
         self.api_key: str = api_key
         self.api_base_url: str = api_base_url
+        # 
+        self.langchain_embeddings = langchain_embeddings
         # 
         self.check_config()
 

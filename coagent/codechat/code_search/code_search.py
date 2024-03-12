@@ -5,6 +5,7 @@
 @time: 2023/11/21 下午2:35
 @desc:
 '''
+import json
 import time
 from loguru import logger
 from collections import defaultdict
@@ -15,7 +16,7 @@ from coagent.db_handler.vector_db_handler.chroma_handler import ChromaHandler
 from coagent.codechat.code_search.cypher_generator import CypherGenerator
 from coagent.codechat.code_search.tagger import Tagger
 from coagent.embeddings.get_embedding import get_embedding
-from coagent.llm_models.llm_config import LLMConfig
+from coagent.llm_models.llm_config import LLMConfig, EmbedConfig
 
 
 # from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL
@@ -29,7 +30,8 @@ MAX_DISTANCE = 1000
 
 
 class CodeSearch:
-    def __init__(self, llm_config: LLMConfig, nh: NebulaHandler, ch: ChromaHandler, limit: int = 3):
+    def __init__(self, llm_config: LLMConfig, nh: NebulaHandler, ch: ChromaHandler, limit: int = 3,
+                 local_graph_file_path: str = ''):
         '''
         init
         @param nh: NebulaHandler
@@ -37,7 +39,13 @@ class CodeSearch:
         @param limit: limit of result
         '''
         self.llm_config = llm_config
+
         self.nh = nh
+
+        if not self.nh:
+            with open(local_graph_file_path, 'r') as f:
+                self.graph = json.load(f)
+
         self.ch = ch
         self.limit = limit
 
@@ -51,7 +59,7 @@ class CodeSearch:
         tag_list = tagger.generate_tag_query(query)
         logger.info(f'query tag={tag_list}')
 
-        # get all verticex
+        # get all vertices
         vertex_list = self.nh.get_vertices().get('v', [])
         vertex_vid_list = [i.as_node().get_id().as_string() for i in vertex_list]
 
@@ -81,7 +89,7 @@ class CodeSearch:
         # get most prominent package tag
         package_score_dict = defaultdict(lambda: 0)
 
-        for vertex, score in vertex_score_dict.items():
+        for vertex, score in vertex_score_dict_final.items():
             if '#' in vertex:
                 # get class name first
                 cypher = f'''MATCH (v1:class)-[e:contain]->(v2) WHERE id(v2) == '{vertex}' RETURN id(v1) as id;'''
@@ -111,6 +119,53 @@ class CodeSearch:
         logger.info(f'ids={ids}')
         chroma_res = self.ch.get(ids=ids, include=['metadatas'])
 
+        for vertex, score in package_score_tuple:
+            index = chroma_res['result']['ids'].index(vertex)
+            code_text = chroma_res['result']['metadatas'][index]['code_text']
+            res.append({
+                "vertex": vertex,
+                "code_text": code_text}
+            )
+            if len(res) >= self.limit:
+                break
+        # logger.info(f'retrival code={res}')
+        return res
+
+    def search_by_tag_by_graph(self, query: str):
+        '''
+        search code by tag with graph
+        @param query:
+        @return:
+        '''
+        tagger = Tagger()
+        tag_list = tagger.generate_tag_query(query)
+        logger.info(f'query tag={tag_list}')
+
+        # loop to get package node
+        package_score_dict = {}
+        for code, structure in self.graph.items():
+            score = 0
+            for class_name in structure['class_name_list']:
+                for tag in tag_list:
+                    if tag.lower() in class_name.lower():
+                        score += 1
+
+            for func_name_list in structure['func_name_dict'].values():
+                for func_name in func_name_list:
+                    for tag in tag_list:
+                        if tag.lower() in func_name.lower():
+                            score += 1
+            package_score_dict[structure['pac_name']] = score
+
+        # get respective code
+        res = []
+        package_score_tuple = list(package_score_dict.items())
+        package_score_tuple.sort(key=lambda x: x[1], reverse=True)
+
+        ids = [i[0] for i in package_score_tuple]
+        logger.info(f'ids={ids}')
+        chroma_res = self.ch.get(ids=ids, include=['metadatas'])
+
         # logger.info(chroma_res)
         for vertex, score in package_score_tuple:
             index = chroma_res['result']['ids'].index(vertex)
@@ -121,23 +176,22 @@ class CodeSearch:
             )
             if len(res) >= self.limit:
                 break
-        logger.info(f'retrival code={res}')
+        # logger.info(f'retrival code={res}')
         return res
 
-    def search_by_desciption(self, query: str, engine: str, model_path: str = "text2vec-base-chinese", embedding_device: str = "cpu"):
+    def search_by_desciption(self, query: str, engine: str, model_path: str = "text2vec-base-chinese", embedding_device: str = "cpu", embed_config: EmbedConfig=None):
         '''
         search by perform sim search
         @param query:
         @return:
         '''
         query = query.replace(',', '，')
-        query_emb = get_embedding(engine=engine, text_list=[query], model_path=model_path, embedding_device= embedding_device,)
+        query_emb = get_embedding(engine=engine, text_list=[query], model_path=model_path, embedding_device= embedding_device, embed_config=embed_config)
         query_emb = query_emb[query]
 
         query_embeddings = [query_emb]
         query_result = self.ch.query(query_embeddings=query_embeddings, n_results=self.limit,
                                      include=['metadatas', 'distances'])
-        logger.debug(query_result)
 
         res = []
         for idx, distance in enumerate(query_result['result']['distances'][0]):

@@ -117,7 +117,7 @@ PHASE_CONFIGS.update({
 
 
 llm_config = LLMConfig(
-    model_name="gpt-3.5-turbo", model_device="cpu",api_key=os.environ["OPENAI_API_KEY"], 
+    model_name="gpt-3.5-turbo", api_key=os.environ["OPENAI_API_KEY"], 
     api_base_url=os.environ["API_BASE_URL"], temperature=0.3
     )
 

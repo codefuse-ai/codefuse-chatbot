@@ -7,6 +7,7 @@ from .general_schema import *
 
 class Message(BaseModel):
     chat_index: str = None
+    user_name: str = "default"
     role_name: str
     role_type: str
     role_prompt: str = None
@@ -53,6 +54,8 @@ class Message(BaseModel):
     cb_search_type: str = None
     search_engine_name: str = None 
     top_k: int = 3
+    use_nh: bool = True
+    local_graph_path: str = ''
     score_threshold: float = 1.0
     do_doc_retrieval: bool = False
     do_code_retrieval: bool = False

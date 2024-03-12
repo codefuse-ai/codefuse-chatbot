@@ -15,11 +15,11 @@ from coagent.connector.schema import Message
 #
 tools = toLangchainTools([TOOL_DICT[i] for i in TOOL_SETS if i in TOOL_DICT])
 # log-level，print prompt和llm predict
-os.environ["log_verbose"] = "0"
+os.environ["log_verbose"] = "2"
 
 phase_name = "baseGroupPhase"
 llm_config = LLMConfig(
-    model_name=LLM_MODEL, model_device="cpu",api_key=os.environ["OPENAI_API_KEY"], 
+    model_name=LLM_MODEL, api_key=os.environ["OPENAI_API_KEY"], 
     api_base_url=os.environ["API_BASE_URL"], temperature=0.3
     )
 embed_config = EmbedConfig(

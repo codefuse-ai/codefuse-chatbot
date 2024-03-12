@@ -1,16 +1,19 @@
 import re, traceback, uuid, copy, json, os
+from typing import Union
 from loguru import logger
 
+from langchain.schema import BaseRetriever
 
-# from configs.server_config import SANDBOX_SERVER
-# from configs.model_config import JUPYTER_WORK_PATH
 from coagent.connector.schema import (
     Memory, Role, Message, ActionStatus, CodeDoc, Doc, LogVerboseEnum
 )
+from coagent.retrieval.base_retrieval import IMRertrieval
 from coagent.connector.memory_manager import BaseMemoryManager
 from coagent.tools import DDGSTool, DocRetrieval, CodeRetrieval
 from coagent.sandbox import PyCodeBox, CodeBoxResponse
 from coagent.llm_models.llm_config import LLMConfig, EmbedConfig
+from coagent.base_configs.env_config import JUPYTER_WORK_PATH
+
 from .utils import parse_dict_to_dict, parse_text_to_dict
 
 
@@ -19,10 +22,13 @@ class MessageUtils:
             self, 
             role: Role = None,
             sandbox_server: dict = {},
-            jupyter_work_path: str = "./",
+            jupyter_work_path: str = JUPYTER_WORK_PATH,
             embed_config: EmbedConfig = None,
             llm_config: LLMConfig = None,
             kb_root_path: str = "",
+            doc_retrieval: Union[BaseRetriever, IMRertrieval] = None,
+            code_retrieval: IMRertrieval = None,
+            search_retrieval: IMRertrieval = None,
             log_verbose: str = "0"
         ) -> None:
         self.role = role
@@ -31,6 +37,9 @@ class MessageUtils:
         self.embed_config = embed_config
         self.llm_config = llm_config
         self.kb_root_path = kb_root_path
+        self.doc_retrieval = doc_retrieval
+        self.code_retrieval = code_retrieval
+        self.search_retrieval = search_retrieval
         self.codebox = PyCodeBox(
                     remote_url=self.sandbox_server.get("url", "http://127.0.0.1:5050"),
                     remote_ip=self.sandbox_server.get("host", "http://127.0.0.1"),
@@ -44,6 +53,7 @@ class MessageUtils:
         self.log_verbose = os.environ.get("log_verbose", "0") or log_verbose
     
     def inherit_extrainfo(self, input_message: Message, output_message: Message):
+        output_message.user_name = input_message.user_name
         output_message.db_docs = input_message.db_docs
         output_message.search_docs = input_message.search_docs
         output_message.code_docs = input_message.code_docs
@@ -116,18 +126,45 @@ class MessageUtils:
         knowledge_basename = message.doc_engine_name
         top_k = message.top_k
         score_threshold = message.score_threshold
-        if knowledge_basename:
-            docs = DocRetrieval.run(query, knowledge_basename, top_k, score_threshold, self.embed_config, self.kb_root_path)
+        if self.doc_retrieval:
+            if isinstance(self.doc_retrieval, BaseRetriever):
+                docs = self.doc_retrieval.get_relevant_documents(query)
+            else:
+                # docs = self.doc_retrieval.run(query, search_top=message.top_k, score_threshold=message.score_threshold,)
+                docs = self.doc_retrieval.run(query)
+            docs = [
+                {"index": idx, "snippet": doc.page_content, "title": doc.metadata.get("title_prefix", ""), "link": doc.metadata.get("url", "")}
+                for idx, doc in enumerate(docs)
+            ]
             message.db_docs = [Doc(**doc) for doc in docs]
+        else:
+            if knowledge_basename:
+                docs = DocRetrieval.run(query, knowledge_basename, top_k, score_threshold, self.embed_config, self.kb_root_path)
+                message.db_docs = [Doc(**doc) for doc in docs]
         return message
     
     def get_code_retrieval(self, message: Message) -> Message:
-        query = message.input_query
+        query = message.role_content
         code_engine_name = message.code_engine_name
         history_node_list = message.history_node_list
-        code_docs = CodeRetrieval.run(code_engine_name, query, code_limit=message.top_k, history_node_list=history_node_list, search_type=message.cb_search_type,
-                                      llm_config=self.llm_config, embed_config=self.embed_config,)
-        message.code_docs = [CodeDoc(**doc) for doc in code_docs]
+
+        use_nh = message.use_nh
+        local_graph_path = message.local_graph_path
+
+        if self.code_retrieval:
+            code_docs = self.code_retrieval.run(
+                query, history_node_list=history_node_list, search_type=message.cb_search_type,
+                code_limit=1
+            )
+        else:
+            code_docs = CodeRetrieval.run(code_engine_name, query, code_limit=message.top_k, history_node_list=history_node_list, search_type=message.cb_search_type,
+                                      llm_config=self.llm_config, embed_config=self.embed_config,
+                                      use_nh=use_nh, local_graph_path=local_graph_path)
+        
+        message.code_docs = [CodeDoc(**doc) for doc in code_docs] 
+
+        # related_nodes = [doc.get_related_node() for idx, doc in enumerate(message.code_docs) if idx==0],
+        # history_node_list.extend([node[0] for node in related_nodes]) 
         return message
     
     def get_tool_retrieval(self, message: Message) -> Message:
@@ -160,6 +197,7 @@ class MessageUtils:
                     if code_answer.code_exe_type == "error" else f"The return information after executing the above code is {code_answer.code_exe_response}.\n"
         
         observation_message = Message(
+                user_name=message.user_name,
                 role_name="observation",
                 role_type="function", #self.role.role_type,
                 role_content="",
@@ -190,6 +228,7 @@ class MessageUtils:
     def tool_step(self, message: Message) -> Message:
         '''execute tool'''
         observation_message = Message(
+                user_name=message.user_name,
                 role_name="observation",
                 role_type="function", #self.role.role_type,
                 role_content="\n**Observation:** there is no tool can execute\n",
@@ -226,7 +265,7 @@ class MessageUtils:
         return message, observation_message
 
     def parser(self, message: Message) -> Message:
-        ''''''
+        '''parse llm output into dict'''
         content = message.role_content
         # parse start
         parsed_dict = parse_text_to_dict(content)

@@ -32,8 +32,8 @@ class PyCodeBox(BaseBox):
         self.do_check_net = do_check_net
         self.use_stop = use_stop
         self.jupyter_work_path = jupyter_work_path
-        asyncio.run(self.astart())
-        # self.start()
+        # asyncio.run(self.astart())
+        self.start()
 
         # logger.info(f"""remote_url: {self.remote_url},
         #             remote_ip: {self.remote_ip},
@@ -199,13 +199,13 @@ class PyCodeBox(BaseBox):
         
     async def _aget_kernelid(self, ) -> None:
         headers = {"Authorization": f'Token {self.token}', 'token': self.token}
-        response = requests.get(f"{self.kernel_url}?token={self.token}", headers=headers)
+        # response = requests.get(f"{self.kernel_url}?token={self.token}", headers=headers)
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{self.kernel_url}?token={self.token}", headers=headers) as resp:
+            async with session.get(f"{self.kernel_url}?token={self.token}", headers=headers, timeout=270) as resp:
                 if len(await resp.json()) > 0:
                     self.kernel_id = (await resp.json())[0]["id"]
                 else:
-                    async with session.post(f"{self.kernel_url}?token={self.token}", headers=headers) as response:
+                    async with session.post(f"{self.kernel_url}?token={self.token}", headers=headers, timeout=270) as response:
                         self.kernel_id = (await response.json())["id"]
 
         # if len(response.json()) > 0:
@@ -220,9 +220,11 @@ class PyCodeBox(BaseBox):
             return False
 
         try:
-             response = requests.get(f"{self.kernel_url}?token={self.token}", timeout=270)
+             response = requests.get(f"{self.kernel_url}?token={self.token}", timeout=10)
              return response.status_code == 200
         except requests.exceptions.ConnectionError:
+            return False
+        except requests.exceptions.ReadTimeout:
             return False
 
     async def _acheck_connect(self, ) -> bool:
@@ -230,31 +232,33 @@ class PyCodeBox(BaseBox):
             return False
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.kernel_url}?token={self.token}", timeout=270) as resp:
+                async with session.get(f"{self.kernel_url}?token={self.token}", timeout=10) as resp:
                     return resp.status == 200
         except aiohttp.ClientConnectorError:
-            pass
+            return False
         except aiohttp.ServerDisconnectedError:
-            pass
+            return False
 
     def  _check_port(self, ) -> bool:
         try:
-             response = requests.get(f"{self.remote_ip}:{self.remote_port}", timeout=270)
+             response = requests.get(f"{self.remote_ip}:{self.remote_port}", timeout=10)
              logger.warning(f"Port is conflict, please check your codebox's port {self.remote_port}")
              return response.status_code == 200
         except requests.exceptions.ConnectionError:
+            return False
+        except requests.exceptions.ReadTimeout:
             return False
         
     async def _acheck_port(self, ) -> bool:
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.remote_ip}:{self.remote_port}", timeout=270) as resp:
+                async with session.get(f"{self.remote_ip}:{self.remote_port}", timeout=10) as resp:
                     # logger.warning(f"Port is conflict, please check your codebox's port {self.remote_port}")
                     return resp.status == 200
         except aiohttp.ClientConnectorError:
-            pass
+            return False
         except aiohttp.ServerDisconnectedError:
-            pass
+            return False
 
     def _check_connect_success(self, retry_nums: int = 2) -> bool:
         if not self.do_check_net: return True
@@ -263,7 +267,7 @@ class PyCodeBox(BaseBox):
             try:
                 connect_status = self._check_connect()
                 if connect_status:
-                    logger.info(f"{self.remote_url} connection success")
+                    # logger.info(f"{self.remote_url} connection success")
                     return True
             except requests.exceptions.ConnectionError:
                 logger.info(f"{self.remote_url} connection fail")
@@ -301,10 +305,12 @@ class PyCodeBox(BaseBox):
         else:
             # TODO 自动检测本地接口
             port_status = self._check_port()
+            self.kernel_url = self.remote_url + "/api/kernels"
             connect_status = self._check_connect()
-            logger.info(f"port_status: {port_status}, connect_status: {connect_status}")
+            if os.environ.get("log_verbose", "0") >= "2":
+                logger.info(f"port_status: {port_status}, connect_status: {connect_status}")
             if port_status and not connect_status:
-                raise BaseException(f"Port is conflict, please check your codebox's port {self.remote_port}")
+                logger.error("Port is conflict, please check your codebox's port {self.remote_port}")
             
             if not connect_status:
                 self.jupyter = subprocess.Popen(
@@ -321,14 +327,32 @@ class PyCodeBox(BaseBox):
                     stdout=subprocess.PIPE,
                 )
 
+            record = []
+            while True and self.jupyter and len(record)<100:
+                line = self.jupyter.stderr.readline()
+                try:
+                    content = line.decode("utf-8")
+                except:
+                    content = line.decode("gbk")
+                # logger.debug(content)
+                record.append(content)
+                if "control-c" in content.lower():
+                    break
+
             self.kernel_url = self.remote_url + "/api/kernels"
             self.do_check_net = True
             self._check_connect_success()
             self._get_kernelid()
-            # logger.debug(self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}")
             self.wc_url = self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}"
             headers = {"Authorization": f'Token {self.token}', 'token': self.token}
-            self.ws = create_connection(self.wc_url, headers=headers)
+            retry_nums = 3
+            while retry_nums>=0:
+                try:
+                    self.ws = create_connection(self.wc_url, headers=headers, timeout=5)
+                    break
+                except Exception as e:
+                    logger.error(f"create ws connection timeout {e}")
+                    retry_nums -= 1
 
     async def astart(self, ):
         '''判断是从外部service执行还是内部启动notebook执行'''
@@ -369,10 +393,16 @@ class PyCodeBox(BaseBox):
                     cwd=self.jupyter_work_path
                 )
 
-            while True and self.jupyter:
+            record = []
+            while True and self.jupyter and len(record)<100:
                 line = self.jupyter.stderr.readline()
-                # logger.debug(line.decode("gbk"))
-                if "Control-C" in line.decode("gbk"):
+                try:
+                    content = line.decode("utf-8")
+                except:
+                    content = line.decode("gbk")
+                # logger.debug(content)
+                record.append(content)
+                if "control-c" in content.lower():
                     break
             self.kernel_url = self.remote_url + "/api/kernels"
             self.do_check_net = True
@@ -380,7 +410,15 @@ class PyCodeBox(BaseBox):
             await self._aget_kernelid()
             self.wc_url = self.kernel_url.replace("http", "ws") + f"/{self.kernel_id}/channels?token={self.token}"
             headers = {"Authorization": f'Token {self.token}', 'token': self.token}
-            self.ws = create_connection(self.wc_url, headers=headers)
+
+            retry_nums = 3
+            while retry_nums>=0:
+                try:
+                    self.ws = create_connection(self.wc_url, headers=headers, timeout=5)
+                    break
+                except Exception as e:
+                    logger.error(f"create ws connection timeout {e}")
+                    retry_nums -= 1
 
     def status(self,) -> CodeBoxStatus:
         if not self.kernel_id:

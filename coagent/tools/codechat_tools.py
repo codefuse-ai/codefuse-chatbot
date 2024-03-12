@@ -5,6 +5,7 @@
 @time: 2023/12/14 上午10:24
 @desc:
 '''
+import os
 from pydantic import BaseModel, Field
 from loguru import logger
 
@@ -40,10 +41,9 @@ class CodeRetrievalSingle(BaseToolModel):
         vertex: str = Field(..., description="代码对应 id")
 
     @classmethod
-    def run(cls, code_base_name, query, embed_config: EmbedConfig, llm_config: LLMConfig, **kargs):
+    def run(cls, code_base_name, query, embed_config: EmbedConfig, llm_config: LLMConfig, search_type="description", **kargs):
         """excute your tool!"""
 
-        search_type = 'description'
         code_limit = 1
 
         # default
@@ -51,10 +51,11 @@ class CodeRetrievalSingle(BaseToolModel):
                             history_node_list=[],
                             embed_engine=embed_config.embed_engine, embed_model=embed_config.embed_model, embed_model_path=embed_config.embed_model_path,
                             model_device=embed_config.model_device, model_name=llm_config.model_name, temperature=llm_config.temperature,
-                            api_base_url=llm_config.api_base_url, api_key=llm_config.api_key
+                            api_base_url=llm_config.api_base_url, api_key=llm_config.api_key, embed_config=embed_config, use_nh=kargs.get("use_nh", True),
+                            local_graph_path=kargs.get("local_graph_path", "")
                             )
-
-        logger.debug(search_result)
+        if os.environ.get("log_verbose", "0") >= "3":
+            logger.debug(search_result)
         code = search_result['context']
         vertex = search_result['related_vertices'][0]
         # logger.debug(f"code: {code}, vertex: {vertex}")
@@ -83,7 +84,7 @@ class RelatedVerticesRetrival(BaseToolModel):
     def run(cls, code_base_name: str, vertex: str, **kargs):
         """execute your tool!"""
         related_vertices = search_related_vertices(cb_name=code_base_name, vertex=vertex)
-        logger.debug(f"related_vertices: {related_vertices}")
+        # logger.debug(f"related_vertices: {related_vertices}")
 
         return related_vertices
 
@@ -110,6 +111,6 @@ class Vertex2Code(BaseToolModel):
         else:
             vertex = vertex.strip(' "')
 
-        logger.info(f'vertex={vertex}')
+        # logger.info(f'vertex={vertex}')
         res = search_code_by_vertex(cb_name=code_base_name, vertex=vertex)
         return res

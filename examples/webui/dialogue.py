@@ -474,7 +474,7 @@ def dialogue_page(api: ApiRequest):
                     prompt, search_engine, se_top_k, history, embed_model=EMBEDDING_MODEL, 
                     embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
                     model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
-                    pi_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
                     api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                     ):
                 if error_msg := check_error_msg(d): # check whether error occured

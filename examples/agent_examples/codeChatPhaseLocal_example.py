@@ -41,24 +41,16 @@ embed_config = EmbedConfig(
 
 
 # delete codebase
-codebase_name = 'client_local'
+codebase_name = 'client_nebula'
 code_path = '/Users/bingxu/Desktop/工作/大模型/chatbot/test_code_repo/client'
 code_path = "D://chromeDownloads/devopschat-bot/client_v2/client"
 use_nh = True
-# cbh = CodeBaseHandler(codebase_name, code_path, crawl_type='dir', use_nh=use_nh, local_graph_path=CB_ROOT_PATH,
-#                       llm_config=llm_config, embed_config=embed_config)
+do_interpret = False
 cbh = CodeBaseHandler(codebase_name, code_path, crawl_type='dir', use_nh=use_nh, local_graph_path=CB_ROOT_PATH,
                       llm_config=llm_config, embed_config=embed_config)
 cbh.delete_codebase(codebase_name=codebase_name)
 
-
 # initialize codebase
-codebase_name = 'client_local'
-code_path = '/Users/bingxu/Desktop/工作/大模型/chatbot/test_code_repo/client'
-code_path = "D://chromeDownloads/devopschat-bot/client_v2/client"
-code_path = "/home/user/client"
-use_nh = True
-do_interpret = True
 cbh = CodeBaseHandler(codebase_name, code_path, crawl_type='dir', use_nh=use_nh, local_graph_path=CB_ROOT_PATH,
                       llm_config=llm_config, embed_config=embed_config)
 cbh.import_code(do_interpret=do_interpret)
@@ -78,25 +70,25 @@ phase = BasePhase(
 
 ## 需要启动容器中的nebula，采用use_nh=True来构建代码库，是可以通过cypher来查询
 # round-1
-# query_content = "代码一共有多少类"
-# query = Message(
-#     role_name="human", role_type="user",
-#     role_content=query_content, input_query=query_content, origin_query=query_content,
-#     code_engine_name="client_1", score_threshold=1.0, top_k=3, cb_search_type="cypher"
-#     )
-#
-# output_message1, _ = phase.step(query)
-# print(output_message1)
+query_content = "代码一共有多少类"
+query = Message(
+    role_name="human", role_type="user",
+    role_content=query_content, input_query=query_content, origin_query=query_content,
+    code_engine_name="client_1", score_threshold=1.0, top_k=3, cb_search_type="cypher"
+    )
+
+output_message1, _ = phase.step(query)
+print(output_message1)
 
 # round-2
-# query_content = "代码库里有哪些函数，返回5个就行"
-# query = Message(
-#     role_name="human", role_type="user",
-#     role_content=query_content, input_query=query_content, origin_query=query_content,
-#     code_engine_name="client_1", score_threshold=1.0, top_k=3, cb_search_type="cypher"
-#     )
-# output_message2, _ = phase.step(query)
-# print(output_message2)
+query_content = "代码库里有哪些函数，返回5个就行"
+query = Message(
+    role_name="human", role_type="user",
+    role_content=query_content, input_query=query_content, origin_query=query_content,
+    code_engine_name="client_1", score_threshold=1.0, top_k=3, cb_search_type="cypher"
+    )
+output_message2, _ = phase.step(query)
+print(output_message2)
 
 
 # round-3

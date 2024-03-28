@@ -86,7 +86,8 @@ pycodebox = PyCodeBox(remote_url="http://localhost:5050",
 reuslt = pycodebox.chat("```import os\nos.getcwd()```", do_code_exe=True)
 print(reuslt)
 
-reuslt = pycodebox.chat("print('hello world!')", do_code_exe=False)
+# reuslt = pycodebox.chat("```print('hello world!')```", do_code_exe=True)
+reuslt = pycodebox.chat("print('hello world!')", do_code_exe=True)
 print(reuslt)
 
     

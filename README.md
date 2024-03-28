@@ -123,60 +123,23 @@ cd codefuse-chatbot
 pip install -r requirements.txt
 ```
 
-2、基础配置
-
-```bash
-# 修改服务启动的基础配置
-cd configs
-cp model_config.py.example model_config.py
-cp server_config.py.example server_config.py
-
-# model_config#11~12 若需要使用openai接口，openai接口key
-os.environ["OPENAI_API_KEY"] = "sk-xxx"
-# 可自行替换自己需要的api_base_url
-os.environ["API_BASE_URL"] = "https://api.openai.com/v1"
-
-# vi model_config#LLM_MODEL 你需要选择的语言模型
-LLM_MODEL = "gpt-3.5-turbo"
-LLM_MODELs = ["gpt-3.5-turbo"]
-
-# vi model_config#EMBEDDING_MODEL 你需要选择的私有化向量模型
-EMBEDDING_ENGINE = 'model'
-EMBEDDING_MODEL = "text2vec-base"
-
-# vi model_config#embedding_model_dict 修改成你的本地路径，如果能直接连接huggingface则无需修改
-# 若模型地址为：
-model_dir: ~/codefuse-chatbot/embedding_models/shibing624/text2vec-base-chinese
-# 配置如下
-"text2vec-base": "shibing624/text2vec-base-chinese",
-
-# vi server_config#8~14, 推荐采用容器启动服务
-DOCKER_SERVICE = True
-# 是否采用容器沙箱
-SANDBOX_DO_REMOTE = True
-# 是否采用api服务来进行
-NO_REMOTE_API = True
-```
-
-3、启动服务
-
-默认只启动webui相关服务，未启动fastchat（可选）。
-```bash
-# 若需要支撑codellama-34b-int4模型，需要给fastchat打一个补丁
-# cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
-# examples/llm_api.py#258 修改为 kwargs={"gptq_wbits": 4},
-
-# start llm-service（可选）
-python examples/llm_api.py
-```
-更多LLM接入方法见[更多细节...](sources/readme_docs/fastchat.md)
-<br>
-
+2、启动服务
 ```bash
 # 完成server_config.py配置后，可一键启动
 cd examples
-python start.py
+bash start.sh
+# 开始在页面进行配置即可
 ```
+<div align=center>
+  <img src="sources/docs_imgs/webui_config.png" alt="图片">
+</div>
+
+
+或者通过`start.py`进行启动[老版启动方式](sources/readme_docs/start.md)
+更多LLM接入方法见[更多细节...](sources/readme_docs/fastchat.md)
+<br>
+
+
 ## 贡献指南
 非常感谢您对 Codefuse 项目感兴趣，我们非常欢迎您对 Codefuse 项目的各种建议、意见（包括批评）、评论和贡献。
 

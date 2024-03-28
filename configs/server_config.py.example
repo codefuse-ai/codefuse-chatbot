@@ -1,13 +1,25 @@
 from .model_config import LLM_MODEL, LLM_DEVICE
-import os
+import os, json
+
+try:
+    with open("./local_config.json", "r") as f:
+        update_config = json.load(f)
+except:
+    update_config = {}
 
 # API 是否开启跨域，默认为False，如果需要开启，请设置为True
 # is open cross domain
 OPEN_CROSS_DOMAIN = False
 # 是否用容器来启动服务
-DOCKER_SERVICE = True
+try:
+    DOCKER_SERVICE = json.loads(os.environ["DOCKER_SERVICE"]) or update_config.get("DOCKER_SERVICE") or False
+except:
+    DOCKER_SERVICE = True
 # 是否采用容器沙箱
-SANDBOX_DO_REMOTE = True
+try:
+    SANDBOX_DO_REMOTE = json.loads(os.environ["SANDBOX_DO_REMOTE"]) or update_config.get("SANDBOX_DO_REMOTE") or False
+except:
+    SANDBOX_DO_REMOTE = True
 # 是否采用api服务来进行
 NO_REMOTE_API = True
 # 各服务器默认绑定host
@@ -61,7 +73,7 @@ NEBULA_GRAPH_SERVER = {
 # sandbox api server
 SANDBOX_CONTRAINER_NAME = "devopsgpt_sandbox"
 SANDBOX_IMAGE_NAME = "devopsgpt:py39"
-SANDBOX_HOST = os.environ.get("SANDBOX_HOST") or DEFAULT_BIND_HOST # "172.25.0.3"
+SANDBOX_HOST = os.environ.get("SANDBOX_HOST") or update_config.get("SANDBOX_HOST") or DEFAULT_BIND_HOST # "172.25.0.3"
 SANDBOX_SERVER = {
     "host": f"http://{SANDBOX_HOST}",
     "port": 5050,
@@ -73,7 +85,10 @@ SANDBOX_SERVER = {
 # fastchat model_worker server
 # 这些模型必须是在model_config.llm_model_dict中正确配置的。
 # 在启动startup.py时，可用通过`--model-worker --model-name xxxx`指定模型，不指定则为LLM_MODEL
-FSCHAT_MODEL_WORKERS = {
+# 建议使用chat模型，不要使用base，无法获取正确输出
+FSCHAT_MODEL_WORKERS = json.loads(os.environ.get("FSCHAT_MODEL_WORKERS")) if os.environ.get("FSCHAT_MODEL_WORKERS") else {}
+FSCHAT_MODEL_WORKERS = FSCHAT_MODEL_WORKERS or update_config.get("FSCHAT_MODEL_WORKERS")
+FSCHAT_MODEL_WORKERS = FSCHAT_MODEL_WORKERS or {
     "default": {
         "host": DEFAULT_BIND_HOST,
         "port": 20002,
@@ -117,7 +132,9 @@ FSCHAT_MODEL_WORKERS = {
     'chatglm3-6b-32k': {'host': DEFAULT_BIND_HOST, 'port': 20018},
     'chatglm3-6b-base': {'host': DEFAULT_BIND_HOST, 'port': 20019},
     'Qwen-72B-Chat-Int4': {'host': DEFAULT_BIND_HOST, 'port': 20020},
-    'gpt-3.5-turbo': {'host': DEFAULT_BIND_HOST, 'port': 20021}
+    'gpt-3.5-turbo': {'host': DEFAULT_BIND_HOST, 'port': 20021},
+    'example': {'host': DEFAULT_BIND_HOST, 'port': 20022},
+    'openai-api': {'host': DEFAULT_BIND_HOST, 'port': 20023}
 }
 # fastchat multi model worker server
 FSCHAT_MULTI_MODEL_WORKERS = {

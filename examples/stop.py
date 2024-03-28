@@ -17,14 +17,20 @@ try:
 except:
     client = None
 
-# 
-check_docker(client, SANDBOX_CONTRAINER_NAME, do_stop=True, )
-check_process(f"port={SANDBOX_SERVER['port']}", do_stop=True)
-check_process(f"port=5050", do_stop=True)
 
-# 
-check_docker(client, CONTRAINER_NAME, do_stop=True, )
-check_process("api.py", do_stop=True)
-check_process("sdfile_api.py", do_stop=True)
-check_process("llm_api.py", do_stop=True)
-check_process("webui.py", do_stop=True)
+def stop_main():
+    # 
+    check_docker(client, SANDBOX_CONTRAINER_NAME, do_stop=True, )
+    check_process(f"port={SANDBOX_SERVER['port']}", do_stop=True)
+    check_process(f"port=5050", do_stop=True)
+
+    # 
+    check_docker(client, CONTRAINER_NAME, do_stop=True, )
+    check_process("api.py", do_stop=True)
+    check_process("sdfile_api.py", do_stop=True)
+    check_process("llm_api.py", do_stop=True)
+    check_process("webui.py", do_stop=True)
+
+
+if __name__ == "__main__":
+    stop_main()

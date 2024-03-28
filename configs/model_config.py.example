@@ -4,6 +4,7 @@ import logging
 import torch
 import openai
 import base64
+import json
 from .utils import is_running_in_docker
 from .default_config import *
 # 日志格式
@@ -29,26 +30,35 @@ try:
     client.visit_domain = os.environ.get("visit_domain")
     client.visit_biz = os.environ.get("visit_biz")
     client.visit_biz_line = os.environ.get("visit_biz_line")
-except:
+except Exception as e:
+    OPENAI_API_BASE = "https://api.openai.com/v1"
+    logger.error(e)
     pass
 
+
+try:
+    with open("./local_config.json", "r") as f:
+        update_config = json.load(f)
+except:
+    update_config = {}
+
+
 # add your openai key
-OPENAI_API_BASE = "https://api.openai.com/v1"
-os.environ["API_BASE_URL"] = OPENAI_API_BASE
-os.environ["OPENAI_API_KEY"] = "sk-xx"
-openai.api_key = "sk-xx"
+os.environ["API_BASE_URL"] = os.environ.get("API_BASE_URL") or update_config.get("API_BASE_URL") or OPENAI_API_BASE
+os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY") or update_config.get("OPENAI_API_KEY") or "sk-xx"
+openai.api_key = os.environ["OPENAI_API_KEY"]
 # os.environ["OPENAI_PROXY"] = "socks5h://127.0.0.1:13659"
-os.environ["DUCKDUCKGO_PROXY"] = os.environ.get("DUCKDUCKGO_PROXY") or "socks5://127.0.0.1:13659"
+os.environ["DUCKDUCKGO_PROXY"] = os.environ.get("DUCKDUCKGO_PROXY") or update_config.get("DUCKDUCKGO_PROXY") or "socks5h://127.0.0.1:13659"
 # ignore if you dont's use baidu_ocr_api
 os.environ["BAIDU_OCR_API_KEY"] = "xx"
 os.environ["BAIDU_OCR_SECRET_KEY"] = "xx"
 
 os.environ["log_verbose"] = "2"
 # LLM 名称
-EMBEDDING_ENGINE = 'model'  # openai or model
-EMBEDDING_MODEL = "text2vec-base"
-LLM_MODEL = "gpt-3.5-turbo"
-LLM_MODELs = ["gpt-3.5-turbo"]
+EMBEDDING_ENGINE = os.environ.get("EMBEDDING_ENGINE") or update_config.get("EMBEDDING_ENGINE") or 'model'  # openai or model
+EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL") or update_config.get("EMBEDDING_MODEL") or "text2vec-base"
+LLM_MODEL = os.environ.get("LLM_MODEL") or "gpt-3.5-turbo"
+LLM_MODELs = [LLM_MODEL]
 USE_FASTCHAT = "gpt" not in LLM_MODEL # 判断是否进行fastchat
 
 # LLM 运行设备
@@ -57,10 +67,12 @@ LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mp
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
 # 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
-embedding_model_dict = {
+embedding_model_dict = json.loads(os.environ.get("embedding_model_dict")) if os.environ.get("embedding_model_dict") else {}
+embedding_model_dict = embedding_model_dict or update_config.get("EMBEDDING_MODEL")
+embedding_model_dict = embedding_model_dict or {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",
-    "text2vec-base": "shibing624/text2vec-base-chinese",
+    "text2vec-base": "text2vec-base-chinese",
     "text2vec": "GanymedeNil/text2vec-large-chinese",
     "text2vec-paraphrase": "shibing624/text2vec-base-chinese-paraphrase",
     "text2vec-sentence": "shibing624/text2vec-base-chinese-sentence",
@@ -74,31 +86,35 @@ embedding_model_dict = {
 }
 
 
-LOCAL_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "embedding_models")
-embedding_model_dict = {k: f"/home/user/chatbot/embedding_models/{v}" if is_running_in_docker() else f"{LOCAL_MODEL_DIR}/{v}" for k, v in embedding_model_dict.items()}
+# LOCAL_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "embedding_models")
+# embedding_model_dict = {k: f"/home/user/chatbot/embedding_models/{v}" if is_running_in_docker() else f"{LOCAL_MODEL_DIR}/{v}" for k, v in embedding_model_dict.items()}
 
 # Embedding 模型运行设备
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-ONLINE_LLM_MODEL = {
+ONLINE_LLM_MODEL = json.loads(os.environ.get("ONLINE_LLM_MODEL")) if os.environ.get("ONLINE_LLM_MODEL") else {}
+ONLINE_LLM_MODEL = ONLINE_LLM_MODEL or update_config.get("ONLINE_LLM_MODEL")
+ONLINE_LLM_MODEL = ONLINE_LLM_MODEL  or {
     # 线上模型。请在server_config中为每个在线API设置不同的端口
 
     "openai-api": {
         "model_name": "gpt-3.5-turbo",
-        "api_base_url": "https://api.openai.com/v1",
+        "api_base_url": OPENAI_API_BASE, # "https://api.openai.com/v1",
         "api_key": "",
         "openai_proxy": "",
     },
     "example": {
-        "version": "gpt-3.5",  # 采用openai接口做示例
-        "api_base_url": "https://api.openai.com/v1",
+        "version": "gpt-3.5-turbo",  # 采用openai接口做示例
+        "api_base_url": OPENAI_API_BASE, # "https://api.openai.com/v1",
         "api_key": "",
         "provider": "ExampleWorker",
     },
 }
 
 # 建议使用chat模型，不要使用base，无法获取正确输出
-llm_model_dict = {
+llm_model_dict = json.loads(os.environ.get("llm_model_dict")) if os.environ.get("llm_model_dict") else {}
+llm_model_dict = llm_model_dict or update_config.get("llm_model_dict")
+llm_model_dict = llm_model_dict or {
     "chatglm-6b": {
         "local_model_path": "THUDM/chatglm-6b",
         "api_base_url": "http://localhost:8888/v1",  # "name"修改为fastchat服务中的"api_base_url"
@@ -147,7 +163,9 @@ llm_model_dict = {
 }
 
 # 建议使用chat模型，不要使用base，无法获取正确输出
-VLLM_MODEL_DICT = {
+VLLM_MODEL_DICT = json.loads(os.environ.get("VLLM_MODEL_DICT")) if os.environ.get("VLLM_MODEL_DICT") else {}
+VLLM_MODEL_DICT = VLLM_MODEL_DICT or update_config.get("VLLM_MODEL_DICT")
+VLLM_MODEL_DICT = VLLM_MODEL_DICT or {
  'chatglm2-6b':  "THUDM/chatglm-6b",
  }
 # 以下模型经过测试可接入，配置仿照上述即可
@@ -157,21 +175,21 @@ VLLM_MODEL_DICT = {
 # 'chatglm3-6b-base', 'Qwen-72B-Chat-Int4'
 
 
-LOCAL_LLM_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "llm_models")
-# 模型路径重置
-llm_model_dict_c = {}
-for k, v in llm_model_dict.items():
-    v_c = {}
-    for kk, vv in v.items():
-        if k=="local_model_path":
-            v_c[kk] = f"/home/user/chatbot/llm_models/{vv}" if is_running_in_docker() else f"{LOCAL_LLM_MODEL_DIR}/{vv}" 
-        else:
-            v_c[kk] = vv
-    llm_model_dict_c[k] = v_c
+# LOCAL_LLM_MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "llm_models")
+# # 模型路径重置
+# llm_model_dict_c = {}
+# for k, v in llm_model_dict.items():
+#     v_c = {}
+#     for kk, vv in v.items():
+#         if k=="local_model_path":
+#             v_c[kk] = f"/home/user/chatbot/llm_models/{vv}" if is_running_in_docker() else f"{LOCAL_LLM_MODEL_DIR}/{vv}" 
+#         else:
+#             v_c[kk] = vv
+#     llm_model_dict_c[k] = v_c
 
-llm_model_dict = llm_model_dict_c
-# 
-VLLM_MODEL_DICT_c = {}
-for k, v in VLLM_MODEL_DICT.items():
-    VLLM_MODEL_DICT_c[k] = f"/home/user/chatbot/llm_models/{v}" if is_running_in_docker() else f"{LOCAL_LLM_MODEL_DIR}/{v}" 
-VLLM_MODEL_DICT = VLLM_MODEL_DICT_c
+# llm_model_dict = llm_model_dict_c
+# # 
+# VLLM_MODEL_DICT_c = {}
+# for k, v in VLLM_MODEL_DICT.items():
+#     VLLM_MODEL_DICT_c[k] = f"/home/user/chatbot/llm_models/{v}" if is_running_in_docker() else f"{LOCAL_LLM_MODEL_DIR}/{v}" 
+# VLLM_MODEL_DICT = VLLM_MODEL_DICT_c

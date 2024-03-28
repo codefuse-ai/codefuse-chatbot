@@ -70,7 +70,8 @@ def encode2md(data, md_format):
     return md_dict
 
 
-method_text_md = '''> {function_name}
+method_text_md = '''
+> {function_name}
 
 | Column Name | Content |
 |-----------------|-----------------|
@@ -79,7 +80,8 @@ method_text_md = '''> {function_name}
 | Return type   | {ReturnType} |
 '''
 
-class_text_md = '''> {code_path}
+class_text_md = '''
+> {code_path}
 
 Bases: {ClassBase}
 

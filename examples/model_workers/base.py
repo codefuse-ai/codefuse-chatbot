@@ -1,6 +1,5 @@
 from fastchat.conversation import Conversation
-from configs.model_config import LOG_PATH
-# from coagent.base_configs.env_config import LOG_PATH
+from configs.default_config import LOG_PATH
 import fastchat.constants
 fastchat.constants.LOGDIR = LOG_PATH
 from fastchat.serve.base_model_worker import BaseModelWorker

@@ -310,7 +310,8 @@ class LocalMemoryManager(BaseMemoryManager):
         # 
         save_to_json_file(memory_messages, file_path)
 
-    def load(self, load_dir: str = "./") -> Memory:
+    def load(self, load_dir: str = None) -> Memory:
+        load_dir = load_dir or self.kb_root_path
         file_path = os.path.join(load_dir, f"{self.user_name}/{self.unique_name}/{self.memory_type}/converation.jsonl")
         uuid_name = "_".join([self.user_name, self.unique_name, self.memory_type])
 
@@ -398,6 +399,7 @@ class LocalMemoryManager(BaseMemoryManager):
     def embedding_retrieval(self, text: str, top_k=1, score_threshold=1.0, user_name: str = "default", **kwargs) -> List[Message]:
         if text is None: return []
         vb_name = f"{user_name}/{self.unique_name}/{self.memory_type}"
+        # logger.debug(f"vb_name={vb_name}")
         vb = KBServiceFactory.get_service(vb_name, "faiss", self.embed_config, self.kb_root_path)
         docs = vb.search_docs(text, top_k=top_k, score_threshold=score_threshold)
         return [Message(**doc.metadata) for doc, score in docs]
@@ -405,11 +407,13 @@ class LocalMemoryManager(BaseMemoryManager):
     def text_retrieval(self, text: str, user_name: str = "default", **kwargs)  -> List[Message]:
         if text is None: return []
         uuid_name = "_".join([user_name, self.unique_name, self.memory_type])
+        # logger.debug(f"uuid_name={uuid_name}")
         return self._text_retrieval_from_cache(self.recall_memory_dict[uuid_name].messages, text, score_threshold=0.3, topK=5, **kwargs)
 
     def datetime_retrieval(self,  datetime: str, text: str = None, n: int = 5, user_name: str = "default", **kwargs) -> List[Message]:
         if datetime is None: return []
         uuid_name = "_".join([user_name, self.unique_name, self.memory_type])
+        # logger.debug(f"uuid_name={uuid_name}")
         return self._datetime_retrieval_from_cache(self.recall_memory_dict[uuid_name].messages, datetime, text, n, **kwargs)
     
     def _text_retrieval_from_cache(self, messages: List[Message], text: str = None, score_threshold=0.3, topK=5, tag_topK=5, **kwargs) -> List[Message]:

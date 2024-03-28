@@ -101,6 +101,7 @@ class CodeBaseHandler:
 
         # get KG info
         if self.nh:
+            time.sleep(10) # aviod nebula staus didn't complete
             stat = self.nh.get_stat()
             vertices_num, edges_num = stat['vertices'], stat['edges']
         else:

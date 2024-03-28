@@ -7,7 +7,7 @@ from websocket import create_connection
 from websockets.client import WebSocketClientProtocol, ClientConnection
 from websockets.exceptions import ConnectionClosedError
 
-# from configs.model_config import JUPYTER_WORK_PATH
+from coagent.base_configs.env_config import JUPYTER_WORK_PATH
 from .basebox import BaseBox, CodeBoxResponse, CodeBoxStatus
 
 
@@ -21,7 +21,7 @@ class PyCodeBox(BaseBox):
             remote_ip: str = "http://127.0.0.1",
             remote_port: str = "5050",
             token: str = "mytoken",
-            jupyter_work_path: str = "",
+            jupyter_work_path: str = JUPYTER_WORK_PATH,
             do_code_exe: bool = False,
             do_remote: bool = False,
             do_check_net: bool = True,
@@ -30,7 +30,6 @@ class PyCodeBox(BaseBox):
         super().__init__(remote_url, remote_ip, remote_port, token, do_code_exe, do_remote)
         self.enter_status = True
         self.do_check_net = do_check_net
-        self.use_stop = use_stop
         self.jupyter_work_path = jupyter_work_path
         # asyncio.run(self.astart())
         self.start()

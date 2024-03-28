@@ -16,3 +16,12 @@ from .baichuan import BaiChuanWorker
 from .azure import AzureWorker
 from .tiangong import TianGongWorker
 from .openai import ExampleWorker
+
+
+IMPORT_MODEL_WORKERS = [
+    ChatGLMWorker, MiniMaxWorker, XingHuoWorker, QianFanWorker, FangZhouWorker,
+    QwenWorker, BaiChuanWorker, AzureWorker, TianGongWorker, ExampleWorker
+]
+
+MODEL_WORKER_SETS = [tool.__name__ for tool in IMPORT_MODEL_WORKERS]
+

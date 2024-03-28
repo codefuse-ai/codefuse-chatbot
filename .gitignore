@@ -15,3 +15,5 @@ tests
 *egg-info
 build
 dist
+package.sh
+local_config.json

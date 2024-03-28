@@ -1,4 +1,4 @@
-import docker, sys, os, time, requests, psutil
+import docker, sys, os, time, requests, psutil, json
 import subprocess
 from docker.types import Mount, DeviceRequest
 from loguru import logger
@@ -25,9 +25,6 @@ def check_process(content: str, lang: str = None, do_stop=False):
     '''process-not-exist is true, process-exist is false'''
     for process in psutil.process_iter(["pid", "name", "cmdline"]):
         # check process name contains "jupyter" and port=xx
-
-        # if f"port={SANDBOX_SERVER['port']}" in str(process.info["cmdline"]).lower() and \
-        #     "jupyter" in process.info['name'].lower():
         if content in str(process.info["cmdline"]).lower():
             logger.info(f"content, {process.info}")
             # 关闭进程
@@ -106,7 +103,7 @@ def start_sandbox_service(network_name ='my_network'):
         )
     mounts = [mount]
     # 沙盒的启动与服务的启动是独立的
-    if SANDBOX_SERVER["do_remote"]:
+    if SANDBOX_DO_REMOTE:
         client = docker.from_env()
         networks = client.networks.list()
         if any([network_name==i.attrs["Name"] for i in networks]):
@@ -159,18 +156,6 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             target='/home/user/chatbot/',
             read_only=False  # 如果需要只读访问，将此选项设置为True
         )
-        # mount_database = Mount(
-        #     type='bind',
-        #     source=os.path.join(src_dir, "knowledge_base"),
-        #     target='/home/user/knowledge_base/',
-        #     read_only=False  # 如果需要只读访问，将此选项设置为True
-        # )
-        # mount_code_database = Mount(
-        #     type='bind',
-        #     source=os.path.join(src_dir, "code_base"),
-        #     target='/home/user/code_base/',
-        #     read_only=False  # 如果需要只读访问，将此选项设置为True
-        # )
         ports={
                 f"{API_SERVER['docker_port']}/tcp": f"{API_SERVER['port']}/tcp", 
                 f"{WEBUI_SERVER['docker_port']}/tcp": f"{WEBUI_SERVER['port']}/tcp",
@@ -208,6 +193,8 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
         if check_docker(client, CONTRAINER_NAME, do_stop=True):
             container = start_docker(client, script_shs, ports, IMAGE_NAME, CONTRAINER_NAME, mounts, network=network_name)
 
+        logger.info("You can open http://localhost:8501 to use chatbot!")
+
     else:
         logger.info("start local service")
         # 关闭之前启动的docker 服务
@@ -234,12 +221,17 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
         
         subprocess.Popen(webui_sh, shell=True)
 
+        logger.info("You can please open http://localhost:8501 to use chatbot!")
 
 
-if __name__ == "__main__":
+def start_main():
+    global SANDBOX_DO_REMOTE, DOCKER_SERVICE
+    SANDBOX_DO_REMOTE = SANDBOX_DO_REMOTE if os.environ.get("SANDBOX_DO_REMOTE") is None else json.loads(os.environ.get("SANDBOX_DO_REMOTE"))
+    DOCKER_SERVICE = DOCKER_SERVICE if os.environ.get("DOCKER_SERVICE") is None else json.loads(os.environ.get("DOCKER_SERVICE"))
+
     start_sandbox_service()
     sandbox_host = DEFAULT_BIND_HOST
-    if SANDBOX_SERVER["do_remote"]:
+    if SANDBOX_DO_REMOTE:
         client = docker.from_env()
         containers = client.containers.list(all=True)
 
@@ -252,3 +244,5 @@ if __name__ == "__main__":
     start_api_service(sandbox_host)
 
 
+if __name__ == "__main__":
+    start_main()

@@ -357,7 +357,7 @@ def knowledge_page(
                 empty.progress(0.0, "")
                 for d in api.recreate_vector_store(
                     kb, vs_type=default_vs_type, embed_model=embedding_model, embedding_device=EMBEDDING_DEVICE,
-                      embed_model_path=embedding_model_dict[EMBEDDING_MODEL], embed_engine=EMBEDDING_ENGINE,
+                      embed_model_path=embedding_model_dict[embedding_model], embed_engine=EMBEDDING_ENGINE,
                       api_key=llm_model_dict[LLM_MODEL]["api_key"],
                       api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                     ):

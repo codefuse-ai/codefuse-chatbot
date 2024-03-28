@@ -1,5 +1,6 @@
 import os
 import platform
+from loguru import logger
 
 system_name = platform.system()
 executable_path = os.getcwd()
@@ -7,8 +8,8 @@ executable_path = os.getcwd()
 # 日志存储路径
 LOG_PATH = os.environ.get("LOG_PATH", None) or os.path.join(executable_path, "logs")
 
-# 知识库默认存储路径
-SOURCE_PATH = os.environ.get("SOURCE_PATH", None) or os.path.join(executable_path, "sources")
+# # 知识库默认存储路径
+# SOURCE_PATH = os.environ.get("SOURCE_PATH", None) or os.path.join(executable_path, "sources")
 
 # 知识库默认存储路径
 KB_ROOT_PATH = os.environ.get("KB_ROOT_PATH", None) or os.path.join(executable_path, "knowledge_base")
@@ -16,8 +17,8 @@ KB_ROOT_PATH = os.environ.get("KB_ROOT_PATH", None) or os.path.join(executable_p
 # 代码库默认存储路径
 CB_ROOT_PATH = os.environ.get("CB_ROOT_PATH", None) or os.path.join(executable_path, "code_base")
 
-# nltk 模型存储路径
-NLTK_DATA_PATH = os.environ.get("NLTK_DATA_PATH", None) or os.path.join(executable_path, "nltk_data")
+# # nltk 模型存储路径
+# NLTK_DATA_PATH = os.environ.get("NLTK_DATA_PATH", None) or os.path.join(executable_path, "nltk_data")
 
 # 代码存储路径
 JUPYTER_WORK_PATH = os.environ.get("JUPYTER_WORK_PATH", None) or os.path.join(executable_path, "jupyter_work")
@@ -31,8 +32,8 @@ NEBULA_PATH = os.environ.get("NEBULA_PATH", None) or os.path.join(executable_pat
 # CHROMA 存储路径
 CHROMA_PERSISTENT_PATH = os.environ.get("CHROMA_PERSISTENT_PATH", None) or os.path.join(executable_path, "data/chroma_data")
 
-for _path in [LOG_PATH, SOURCE_PATH, KB_ROOT_PATH, CB_ROOT_PATH, NLTK_DATA_PATH, JUPYTER_WORK_PATH, WEB_CRAWL_PATH, NEBULA_PATH, CHROMA_PERSISTENT_PATH]:
-    if not os.path.exists(_path):
+for _path in [LOG_PATH, KB_ROOT_PATH, CB_ROOT_PATH, JUPYTER_WORK_PATH, WEB_CRAWL_PATH, NEBULA_PATH, CHROMA_PERSISTENT_PATH]:
+    if not os.path.exists(_path) and int(os.environ.get("do_create_dir", True)):
         os.makedirs(_path, exist_ok=True)
 
 # 数据库默认存储路径。

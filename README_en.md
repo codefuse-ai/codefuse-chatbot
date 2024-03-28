@@ -146,57 +146,23 @@ git lfs clone https://huggingface.co/THUDM/chatglm2-6b
 git lfs clone https://huggingface.co/shibing624/text2vec-base-chinese
 ```
 
-4. Basic Configuration
 
-```bash
-# Modify the basic configuration for service startup
-cd configs
-cp model_config.py.example model_config.py
-cp server_config.py.example server_config.py
-
-# model_config#11~12 If you need to use the openai interface, openai interface key
-os.environ["OPENAI_API_KEY"] = "sk-xxx"
-# You can replace the api_base_url yourself
-os.environ["API_BASE_URL"] = "https://api.openai.com/v1"
-
-# vi model_config#105 You need to choose the language model
-LLM_MODEL = "gpt-3.5-turbo"
-
-# vi model_config#43 You need to choose the vector model
-EMBEDDING_MODEL = "text2vec-base"
-
-# vi model_config#25 Modify to your local path, if you can directly connect to huggingface, no modification is needed
-"text2vec-base": "shibing624/text2vec-base-chinese",
-
-# vi server_config#8~14, it is recommended to start the service using containers.
-DOCKER_SERVICE = True
-# Whether to use container sandboxing is up to your specific requirements and preferences
-SANDBOX_DO_REMOTE = True
-# Whether to use api-service to use chatbot
-NO_REMOTE_API = True
-```
-
-5. Start the Service
-
-By default, only webui related services are started, and fastchat is not started (optional).
-```bash
-# if use codellama-34b-int4, you should replace fastchat's gptq.py
-# cp examples/gptq.py ~/site-packages/fastchat/modules/gptq.py
-# examples/llm_api.py#258 => kwargs={"gptq_wbits": 4},
-
-# start llm-service（可选）
-python examples/llm_api.py
-```
-More details about accessing LLM Moldes[More Details...](sources/readme_docs/fastchat.md)
-<br>
-
+4. Start the Service
 ```bash
 # After configuring server_config.py, you can start with just one click.
 cd examples
-bash start_webui.sh
+bash start.sh
+# you can config your llm model and embedding model
 ```
+<div align=center>
+  <img src="sources/docs_imgs/webui_config.png" alt="图片">
+</div>
 
-## 贡献指南
+Or `python start.py` by [old version to start](sources/readme_docs/start-en.md)
+More details about accessing LLM Moldes[More Details...](sources/readme_docs/fastchat.md)
+<br>
+
+## Contribution
 Thank you for your interest in the Codefuse project. We warmly welcome any suggestions, opinions (including criticisms), comments, and contributions to the Codefuse project.
 
 Your suggestions, opinions, and comments on Codefuse can be directly submitted through GitHub Issues.

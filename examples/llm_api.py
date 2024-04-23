@@ -29,7 +29,7 @@ from configs.server_config import (
 )
 from examples.utils import get_model_worker_config
 
-from coagent.utils.server_utils import (
+from muagent.utils.server_utils import (
     MakeFastAPIOffline, 
 )
 from fastapi import FastAPI

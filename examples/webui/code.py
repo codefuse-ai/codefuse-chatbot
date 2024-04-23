@@ -17,9 +17,9 @@ import pandas as pd
 
 # from configs.model_config import embedding_model_dict, kbs_config, EMBEDDING_MODEL, DEFAULT_VS_TYPE, WEB_CRAWL_PATH
 from .utils import *
-from coagent.utils.path_utils import *
-from coagent.service.service_factory import get_cb_details, get_cb_details_by_cb_name
-from coagent.orm import table_init
+from muagent.utils.path_utils import *
+from muagent.service.service_factory import get_cb_details, get_cb_details_by_cb_name
+from muagent.orm import table_init
 
 
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,llm_model_dict

@@ -9,9 +9,9 @@ from st_aggrid.grid_options_builder import GridOptionsBuilder
 import pandas as pd
 
 from .utils import *
-from coagent.utils.path_utils import *
-from coagent.service.service_factory import get_kb_details, get_kb_doc_details
-from coagent.orm import table_init
+from muagent.utils.path_utils import *
+from muagent.service.service_factory import get_kb_details, get_kb_doc_details
+from muagent.orm import table_init
 
 
 

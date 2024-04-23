@@ -37,7 +37,8 @@ except Exception as e:
 
 
 try:
-    with open("./local_config.json", "r") as f:
+    cur_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(cur_dir, "local_config.json"), "r") as f:
         update_config = json.load(f)
 except:
     update_config = {}
@@ -68,7 +69,7 @@ LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mp
 # 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
 embedding_model_dict = json.loads(os.environ.get("embedding_model_dict")) if os.environ.get("embedding_model_dict") else {}
-embedding_model_dict = embedding_model_dict or update_config.get("EMBEDDING_MODEL")
+embedding_model_dict = embedding_model_dict or update_config.get("embedding_model_dict")
 embedding_model_dict = embedding_model_dict or {
     "ernie-tiny": "nghuyong/ernie-3.0-nano-zh",
     "ernie-base": "nghuyong/ernie-3.0-base-zh",

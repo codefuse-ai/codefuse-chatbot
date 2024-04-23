@@ -2,7 +2,8 @@ from .model_config import LLM_MODEL, LLM_DEVICE
 import os, json
 
 try:
-    with open("./local_config.json", "r") as f:
+    cur_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.path.join(cur_dir, "local_config.json"), "r") as f:
         update_config = json.load(f)
 except:
     update_config = {}

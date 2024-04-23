@@ -5,7 +5,7 @@ import sys
 import json
 from model_workers import SparkApi
 import websockets
-from coagent.utils.server_utils import run_async, iter_over_async
+from muagent.utils.server_utils import run_async, iter_over_async
 from typing import List, Dict
 import asyncio
 

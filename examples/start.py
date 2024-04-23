@@ -1,5 +1,6 @@
 import docker, sys, os, time, requests, psutil, json
 import subprocess
+import webbrowser
 from docker.types import Mount, DeviceRequest
 from loguru import logger
 
@@ -182,6 +183,7 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
 
             "pip install jieba",
             "pip install duckduckgo-search",
+            "pip install codefuse-muagent",
 
             "nohup python chatbot/examples/sdfile_api.py > /home/user/chatbot/logs/sdfile_api.log 2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
@@ -194,6 +196,7 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             container = start_docker(client, script_shs, ports, IMAGE_NAME, CONTRAINER_NAME, mounts, network=network_name)
 
         logger.info("You can open http://localhost:8501 to use chatbot!")
+        webbrowser.open("http://localhost:8501")
 
     else:
         logger.info("start local service")

@@ -28,14 +28,14 @@ from configs.server_config import SANDBOX_SERVER
 
 # from configs.server_config import SANDBOX_SERVER
 
-from coagent.utils.server_utils import run_async, iter_over_async
-from coagent.service.kb_api import *
-from coagent.service.cb_api import *
-from coagent.chat import LLMChat, SearchChat, KnowledgeChat, CodeChat, AgentChat
-from coagent.sandbox import PyCodeBox, CodeBoxResponse
-from coagent.utils.common_utils import file_normalize, get_uploadfile
+from muagent.utils.server_utils import run_async, iter_over_async
+from muagent.service.kb_api import *
+from muagent.service.cb_api import *
+from muagent.chat import LLMChat, SearchChat, KnowledgeChat, CodeChat, AgentChat
+from muagent.sandbox import PyCodeBox, CodeBoxResponse
+from muagent.utils.common_utils import file_normalize, get_uploadfile
 
-from coagent.codechat.code_crawler.zip_crawler import ZipCrawler
+from muagent.codechat.code_crawler.zip_crawler import ZipCrawler
 
 from web_crawler.utils.WebCrawler import WebCrawler
 

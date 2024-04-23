@@ -190,13 +190,13 @@ with st.container():
             "EMBEDDING_ENGINE": em_engine,
             "EMBEDDING_MODEL": em_model_name,
             "LLM_MODEL": llm_model_name,
-            "embedding_model_dict": json.dumps(embedding_model_dict),
-            "llm_model_dict": json.dumps(llm_model_dict),
-            "ONLINE_LLM_MODEL": json.dumps(ONLINE_LLM_MODEL),
-            "VLLM_MODEL_DICT": json.dumps(VLLM_MODEL_DICT),
-            "DOCKER_SERVICE": json.dumps(DOCKER_SERVICE),
-            "SANDBOX_DO_REMOTE": json.dumps(SANDBOX_DO_REMOTE),
-            "FSCHAT_MODEL_WORKERS": json.dumps(FSCHAT_MODEL_WORKERS)
+            "embedding_model_dict": embedding_model_dict,
+            "llm_model_dict": llm_model_dict,
+            "ONLINE_LLM_MODEL": ONLINE_LLM_MODEL,
+            "VLLM_MODEL_DICT": VLLM_MODEL_DICT,
+            "DOCKER_SERVICE": DOCKER_SERVICE,
+            "SANDBOX_DO_REMOTE": SANDBOX_DO_REMOTE,
+            "FSCHAT_MODEL_WORKERS": FSCHAT_MODEL_WORKERS
         }
 
         with open(os.path.join(src_dir, "configs/local_config.json"), "w") as f:

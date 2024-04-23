@@ -1,6 +1,7 @@
 **/__pycache__
 knowledge_base
 logs
+llm_models
 embedding_models
 jupyter_work
 model_config.py

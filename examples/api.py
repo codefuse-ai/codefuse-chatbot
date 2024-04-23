@@ -17,14 +17,14 @@ from configs.model_config import VERSION
 # from configs.model_config import NLTK_DATA_PATH
 # from configs.server_config import OPEN_CROSS_DOMAIN
 
-from coagent.chat import LLMChat, SearchChat, KnowledgeChat
-from coagent.service.kb_api import *
-from coagent.service.cb_api import *
-from coagent.utils.server_utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
+from muagent.chat import LLMChat, SearchChat, KnowledgeChat
+from muagent.service.kb_api import *
+from muagent.service.cb_api import *
+from muagent.utils.server_utils import BaseResponse, ListResponse, FastAPI, MakeFastAPIOffline
 
 # nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
-from coagent.chat import LLMChat, SearchChat, KnowledgeChat, CodeChat
+from muagent.chat import LLMChat, SearchChat, KnowledgeChat, CodeChat
 from configs.model_config import KB_ROOT_PATH
 
 

@@ -3,7 +3,7 @@
 # 2. 运行本机fastchat服务：python server\llm_api.py 或者 运行对应的sh文件
 # 3. 运行API服务器：python server/api.py。如果使用api = ApiRequest(no_remote_api=True)，该步可以跳过。
 # 4. 运行WEB UI：streamlit run webui.py --server.port 7860
-
+from loguru import logger
 import os
 import sys
 import streamlit as st

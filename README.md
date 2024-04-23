@@ -14,11 +14,11 @@
     <br><br>
 </p>
 
-DevOps-ChatBot是由蚂蚁CodeFuse团队开发的开源AI智能助手，致力于简化和优化软件开发生命周期中的各个环节。该项目结合了Multi-Agent的协同调度机制，并集成了丰富的工具库、代码库、知识库和沙盒环境，使得LLM模型能够在DevOps领域内有效执行和处理复杂任务。
+CodeFuse-ChatBot是由蚂蚁CodeFuse团队开发的开源AI智能助手，致力于简化和优化软件开发生命周期中的各个环节。该项目结合了Multi-Agent的协同调度机制，并集成了丰富的工具库、代码库、知识库和沙盒环境，使得LLM模型能够在DevOps领域内有效执行和处理复杂任务。
 
 
 ## 🔔 更新
-- [2024.01.29] 开放可配置化的multi-agent框架：coagent，详情见[使用说明](sources/readme_docs/coagent/coagent.md)
+- [2024.01.29] 开放可配置化的multi-agent框架：codefuse-muAgent，详情见[使用说明](sources/readme_docs/coagent/coagent.md)
 - [2023.12.26] 基于FastChat接入开源私有化大模型和大模型接口的能力开放
 - [2023.12.14] 量子位公众号专题报道：[文章链接](https://mp.weixin.qq.com/s/MuPfayYTk9ZW6lcqgMpqKA)
 - [2023.12.01] Multi-Agent和代码库检索功能开放
@@ -96,10 +96,10 @@ DevOps-ChatBot是由蚂蚁CodeFuse团队开发的开源AI智能助手，致力�
 
 
 ## 🚀 快速使用
-### coagent-py
-完整文档见：[coagent](sources/readme_docs/coagent/coagent.md)
+### muagent-py
+完整文档见：[CodeFuse-muAgent](sources/readme_docs/coagent/coagent.md)
 ```
-pip install coagent
+pip install codefuse-muagent
 ```
 
 ### 使用ChatBot
@@ -128,7 +128,7 @@ pip install -r requirements.txt
 # 完成server_config.py配置后，可一键启动
 cd examples
 bash start.sh
-# 开始在页面进行配置即可
+# 开始在页面进行相关配置，然后打开`启动对话服务`即可
 ```
 <div align=center>
   <img src="sources/docs_imgs/webui_config.png" alt="图片">

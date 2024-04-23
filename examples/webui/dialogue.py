@@ -4,12 +4,13 @@ from typing import List, Dict
 from datetime import datetime
 from random import randint
 from .utils import *
+from loguru import logger
 
-from coagent.utils import *
-from coagent.tools import TOOL_SETS
-from coagent.chat.search_chat import SEARCH_ENGINES
-from coagent.connector import PHASE_LIST, PHASE_CONFIGS
-from coagent.service.service_factory import get_cb_details_by_cb_name
+from muagent.utils import *
+from muagent.tools import TOOL_SETS
+from muagent.chat.search_chat import SEARCH_ENGINES
+from muagent.connector import PHASE_LIST, PHASE_CONFIGS
+from muagent.service.service_factory import get_cb_details_by_cb_name
 
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, embedding_model_dict, EMBEDDING_ENGINE, KB_ROOT_PATH, llm_model_dict
 chat_box = ChatBox(

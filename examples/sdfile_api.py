@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import File, UploadFile
 
-from coagent.utils.server_utils import BaseResponse, ListResponse, DataResponse
+from muagent.utils.server_utils import BaseResponse, ListResponse, DataResponse
 from configs.server_config import OPEN_CROSS_DOMAIN, SDFILE_API_SERVER
 from configs.model_config import JUPYTER_WORK_PATH
 

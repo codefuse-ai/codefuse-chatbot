@@ -17,7 +17,7 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 
 ## 🔔 Updates
-- [2024.01.29] A configurational multi-agent framework, CoAgent, has been open-sourced. For more details, please refer to [coagent](sources/readme_docs/coagent/coagent-en.md)
+- [2024.01.29] A configurational multi-agent framework, codefuse-muagent, has been open-sourced. For more details, please refer to [codefuse-muagent](sources/readme_docs/coagent/coagent-en.md)
 - [2023.12.26] Opening the capability to integrate with open-source private large models and large model interfaces based on FastChat
 - [2023.12.01] Release of Multi-Agent and codebase retrieval functionalities.
 - [2023.11.15] Addition of Q&A enhancement mode based on the local codebase.
@@ -34,7 +34,7 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 💡 The aim of this project is to construct an AI intelligent assistant for the entire lifecycle of software development, covering design, coding, testing, deployment, and operations, through Retrieval Augmented Generation (RAG), Tool Learning, and sandbox environments. It transitions gradually from the traditional development and operations mode of querying information from various sources and operating on standalone, disparate platforms to an intelligent development and operations mode based on large-model Q&A, changing people's development and operations habits.
 
-- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process. [coagent](sources/readme_docs/coagent/coagent-en.md)
+- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process. [codefuse-muagent](sources/readme_docs/coagent/coagent-en.md)
 - **💻 Comprehensive Code Repository Analysis:** Achieved in-depth understanding at the repository level and coding and generation at the project file level, enhancing development efficiency.
 - **📄 Enhanced Document Analysis:** Integrated document knowledge bases with knowledge graphs, providing deeper support for document analysis through enhanced retrieval and reasoning.
 - **🔧 Industry-Specific Knowledge:** Tailored a specialized knowledge base for the DevOps domain, supporting the self-service one-click construction of industry-specific knowledge bases for convenience and practicality.
@@ -83,10 +83,10 @@ If you need to integrate a specific model, please inform us of your requirements
 
 
 ## 🚀 Quick Start
-### coagent-py
-More Detail see：[coagent](sources/readme_docs/coagent/coagent-en.md)
+### muagent-py
+More Detail see：[codefuse-muagent](sources/readme_docs/coagent/coagent-en.md)
 ```
-pip install coagent
+pip install codefuse-muagent
 ```
 
 ### ChatBot-UI
@@ -108,51 +108,12 @@ cd Codefuse-ChatBot
 pip install -r requirements.txt
 ```
 
-2. Preparation of Sandbox Environment
-- Windows Docker installation:
-[Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) supports 64-bit versions of Windows 10 Pro, with Hyper-V enabled (not required for versions v1903 and above), or 64-bit versions of Windows 10 Home v1903 and above.
-  
-  - [Comprehensive Detailed Windows 10 Docker Installation Tutorial](https://zhuanlan.zhihu.com/p/441965046)
-  - [Docker: From Beginner to Practitioner](https://yeasy.gitbook.io/docker_practice/install/windows)
-  - [Handling Docker Desktop requires the Server service to be enabled](https://blog.csdn.net/sunhy_csdn/article/details/106526991)
-  - [Install wsl or wait for error prompt](https://learn.microsoft.com/en-us/windows/wsl/install)
-
-- Linux Docker Installation:
-Linux installation is relatively simple, please search Baidu/Google for installation instructions.
-
-- Mac Docker Installation
-  - [Docker: From Beginner to Practitioner](https://yeasy.gitbook.io/docker_practice/install/mac)
-
-```bash
-# Build images for the sandbox environment, see above for notebook version issues
-bash docker_build.sh
-```
-
-3. Model Download (Optional)
-
-If you need to use open-source LLM and Embed
-
-ding models, you can download them from HuggingFace.
-Here, we use THUDM/chatglm2-6b and text2vec-base-chinese as examples:
-
-```
-# install git-lfs
-git lfs install
-
-# install LLM-model
-git lfs clone https://huggingface.co/THUDM/chatglm2-6b
-
-# install Embedding-model
-git lfs clone https://huggingface.co/shibing624/text2vec-base-chinese
-```
-
-
-4. Start the Service
+2. Start the Service
 ```bash
 # After configuring server_config.py, you can start with just one click.
 cd examples
 bash start.sh
-# you can config your llm model and embedding model
+# you can config your llm model and embedding model, then choose the "启动对话服务"
 ```
 <div align=center>
   <img src="sources/docs_imgs/webui_config.png" alt="图片">

@@ -46,6 +46,7 @@ javalang==0.13.0
 chromadb==0.4.17
 nebula3-python==3.1.0
 jieba
+codefuse-muagent
 
 # qwen model
 # protobuf==3.20.*

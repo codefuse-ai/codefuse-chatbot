@@ -13,6 +13,7 @@ from muagent.connector import PHASE_LIST, PHASE_CONFIGS
 from muagent.service.service_factory import get_cb_details_by_cb_name
 
 from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, embedding_model_dict, EMBEDDING_ENGINE, KB_ROOT_PATH, llm_model_dict
+from configs.model_config import CB_ROOT_PATH
 chat_box = ChatBox(
     assistant_avatar="../sources/imgs/devops-chatbot2.png"
 )
@@ -367,6 +368,7 @@ def dialogue_page(api: ApiRequest):
                 "model_name": LLM_MODEL,
                 "api_key": llm_model_dict[LLM_MODEL]["api_key"],
                 "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],
+                "local_graph_path": CB_ROOT_PATH,
             }
             text = ""
             d = {"docs": []}
@@ -445,6 +447,7 @@ def dialogue_page(api: ApiRequest):
                                                              embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
                                                              api_key=llm_model_dict[LLM_MODEL]["api_key"],
                                                              api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                                                             local_graph_path=CB_ROOT_PATH,
                                                              )):
                 if error_msg := check_error_msg(d):
                     st.error(error_msg)

@@ -442,6 +442,7 @@ class ApiRequest:
         llm_model: str ="", temperature: float= 0.2,
         api_key: str=os.environ["OPENAI_API_KEY"],
         api_base_url: str = os.environ["API_BASE_URL"],
+        local_graph_path: str = CB_ROOT_PATH,
     ):
         '''
         对应api.py/chat/knowledge_base_chat接口
@@ -475,6 +476,7 @@ class ApiRequest:
             "model_name": llm_model,
             "temperature": temperature,
             "model_device": model_device,
+            "local_graph_path": local_graph_path
         }
         logger.info('data={}'.format(data))
 
@@ -601,6 +603,7 @@ class ApiRequest:
         temperature: float=0.2, model_name: str="",
         api_key: str=os.environ["OPENAI_API_KEY"],
         api_base_url: str = os.environ["API_BASE_URL"],
+        local_graph_path: str = CB_ROOT_PATH,
     ):
         '''
         对应api.py/chat/chat接口
@@ -643,6 +646,7 @@ class ApiRequest:
             "temperature": temperature,
             "jupyter_work_path": JUPYTER_WORK_PATH,
             "sandbox_server": SANDBOX_SERVER,
+            "local_graph_path": local_graph_path
         }
 
         if no_remote_api:
@@ -1067,6 +1071,7 @@ class ApiRequest:
                          llm_model: str ="", temperature: float= 0.2,
                          api_key: str=os.environ["OPENAI_API_KEY"],
                          api_base_url: str = os.environ["API_BASE_URL"],
+                         local_graph_path: str=CB_ROOT_PATH
                          ):
         '''
         创建 code_base
@@ -1100,6 +1105,7 @@ class ApiRequest:
             "model_name": llm_model,
             "temperature": temperature,
             "model_device": embedding_device,
+            "local_graph_path": local_graph_path,
         }
         logger.info('create cb data={}'.format(data))
 

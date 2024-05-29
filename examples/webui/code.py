@@ -22,7 +22,7 @@ from muagent.service.service_factory import get_cb_details, get_cb_details_by_cb
 from muagent.orm import table_init
 
 
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,llm_model_dict
+from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,llm_model_dict, CB_ROOT_PATH
 # SENTENCE_SIZE = 100
 
 cell_renderer = JsCode("""function(params) {if(params.value==true){return '✓'}else{return '×'}}""")
@@ -46,7 +46,7 @@ def code_page(api: ApiRequest):
     table_init()
 
     try:
-        logger.info(get_cb_details())
+        # logger.info(get_cb_details())
         cb_list = {x["code_name"]: x for x in get_cb_details()}
     except Exception as e:
         logger.exception(e)
@@ -89,7 +89,7 @@ def code_page(api: ApiRequest):
             do_interpret = st.checkbox('**代码解读**', value=False, help='代码解读会针对每个代码文件通过 LLM 获取解释并且向量化存储。当代码文件较多时，\
             导入速度会变慢，且如果使用收费 API 的话可能会造成较大花费。如果要使用基于描述的代码问答模式，此项必须勾选', key='do_interpret')
 
-            logger.info(f'do_interpret={do_interpret}')
+            # logger.info(f'do_interpret={do_interpret}')
             submit_create_kb = st.form_submit_button(
                 "新建",
                 use_container_width=True,
@@ -119,6 +119,7 @@ def code_page(api: ApiRequest):
                     llm_model=LLM_MODEL,
                     api_key=llm_model_dict[LLM_MODEL]["api_key"],
                     api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                    local_graph_path=CB_ROOT_PATH,
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_cb_name"] = cb_name

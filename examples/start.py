@@ -179,11 +179,7 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19669/flags"''',
             '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19779/flags"''',
 
-            "pip install zdatafront-sdk-python==0.1.2 -i https://artifacts.antgroup-inc.cn/simple",
-
-            "pip install jieba",
-            "pip install duckduckgo-search",
-            "pip install codefuse-muagent",
+            "pip install zdatafront-sdk-python -i https://artifacts.antgroup-inc.cn/simple",
 
             "nohup python chatbot/examples/sdfile_api.py > /home/user/chatbot/logs/sdfile_api.log 2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\

@@ -12,8 +12,10 @@ from muagent.chat.search_chat import SEARCH_ENGINES
 from muagent.connector import PHASE_LIST, PHASE_CONFIGS
 from muagent.service.service_factory import get_cb_details_by_cb_name
 
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_MODEL, embedding_model_dict, EMBEDDING_ENGINE, KB_ROOT_PATH, llm_model_dict
-from configs.model_config import CB_ROOT_PATH
+from configs.model_config import (
+    EMBEDDING_DEVICE, EMBEDDING_MODEL, embedding_model_dict, model_engine, em_apikey, em_apiurl,
+    EMBEDDING_ENGINE, KB_ROOT_PATH, llm_model_dict, CB_ROOT_PATH
+)
 chat_box = ChatBox(
     assistant_avatar="../sources/imgs/devops-chatbot2.png"
 )
@@ -281,6 +283,18 @@ def dialogue_page(api: ApiRequest):
 
     # Display chat messages from history on app rerun
 
+    llm_config = LLMConfig(
+        model_name=LLM_MODEL, 
+        model_engine=model_engine,
+        api_key=llm_model_dict[LLM_MODEL]["api_key"],
+        api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+    )
+    embed_config = EmbedConfig(
+        embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+        model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,
+        api_key=em_apikey, api_base_url=em_apiurl
+    )
+
     chat_box.output_messages()
 
     chat_input_placeholder = webui_configs["chat"]["chat_placeholder"]
@@ -297,11 +311,14 @@ def dialogue_page(api: ApiRequest):
             chat_box.ai_say(webui_configs["chat"]["chatbox_saying"])
             text = ""
             r = api.chat_chat(
-                prompt, history, no_remote_api=True, 
-                embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
-                llm_model=LLM_MODEL)
+                prompt, history, no_remote_api=True, llm_config=llm_config, embed_config=embed_config
+            )
+            # r = api.chat_chat(
+            #     prompt, history, no_remote_api=True, 
+            #     embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+            #     model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,api_key=llm_model_dict[LLM_MODEL]["api_key"],
+            #     api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+            #     llm_model=LLM_MODEL)
             for t in r:
                 if error_msg := check_error_msg(t):  # check whether error occured
                     st.error(error_msg)
@@ -360,14 +377,16 @@ def dialogue_page(api: ApiRequest):
                 "history_node_list": history_node_list,
                 "isDetailed": is_detailed,
                 "upload_file": interpreter_file,
-                "embed_model": EMBEDDING_MODEL, 
-                "model_device": EMBEDDING_DEVICE,
-                "embed_model_path": embedding_model_dict[EMBEDDING_MODEL],
-                "embed_engine": EMBEDDING_ENGINE,
-                "kb_root_path": KB_ROOT_PATH,
-                "model_name": LLM_MODEL,
-                "api_key": llm_model_dict[LLM_MODEL]["api_key"],
-                "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],
+                # "embed_model": EMBEDDING_MODEL, 
+                # "model_device": EMBEDDING_DEVICE,
+                # "embed_model_path": embedding_model_dict[EMBEDDING_MODEL],
+                # "embed_engine": EMBEDDING_ENGINE,
+                # "kb_root_path": KB_ROOT_PATH,
+                # "model_name": LLM_MODEL,
+                # "api_key": llm_model_dict[LLM_MODEL]["api_key"],
+                # "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],
+                "llm_config": llm_config,
+                "embed_config": embed_config,
                 "local_graph_path": CB_ROOT_PATH,
             }
             text = ""
@@ -375,7 +394,7 @@ def dialogue_page(api: ApiRequest):
             for idx_count, d in enumerate(api.agent_achat(**input_kargs)):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
-                logger.debug(f"d: {d['answer']}")
+                # logger.debug(f"d: {d['answer']}")
                 text = d["answer"]
                 for text_length in range(0, len(text)+1, 10):
                     chat_box.update_msg(text[:text_length+10], element_index=0, streaming=True)
@@ -411,12 +430,16 @@ def dialogue_page(api: ApiRequest):
             for idx_count, d in enumerate(
                 api.knowledge_base_chat(
                     prompt, selected_kb, kb_top_k, score_threshold, history,
-                    embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                    model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
-                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
-                    )
-                    ):
+                    llm_config=llm_config, embed_config=embed_config
+                )
+                # api.knowledge_base_chat(
+                #     prompt, selected_kb, kb_top_k, score_threshold, history,
+                #     embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                #     model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
+                #     api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                #     api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                #     )
+            ):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]
@@ -442,11 +465,13 @@ def dialogue_page(api: ApiRequest):
             for idx_count, d in enumerate(api.code_base_chat(query=prompt, code_base_name=selected_cb,
                                                              code_limit=cb_code_limit, history=history,
                                                              cb_search_type=cb_search_type,
-                                                             no_remote_api=True, embed_model=EMBEDDING_MODEL, 
-                                                             embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                                             embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
-                                                             api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                                                             api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                                                             no_remote_api=True, 
+                                                            #  embed_model=EMBEDDING_MODEL, 
+                                                            #  embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                                                            #  embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
+                                                            #  api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                                            #  api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                                                            llm_config=llm_config, embed_config=embed_config,
                                                              local_graph_path=CB_ROOT_PATH,
                                                              )):
                 if error_msg := check_error_msg(d):
@@ -475,12 +500,15 @@ def dialogue_page(api: ApiRequest):
             d = {"docs": []}
             for idx_count, d in enumerate(
                 api.search_engine_chat(
-                    prompt, search_engine, se_top_k, history, embed_model=EMBEDDING_MODEL, 
-                    embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                    model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
-                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
-                    ):
+                    prompt, search_engine, se_top_k, history, 
+                    llm_config=llm_config, embed_config=embed_config,
+                    # embed_model=EMBEDDING_MODEL, 
+                    # embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                    # model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE, llm_model=LLM_MODEL,
+                    # api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    # api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                )
+            ):
                 if error_msg := check_error_msg(d): # check whether error occured
                     st.error(error_msg)
                 text += d["answer"]

@@ -19,17 +19,15 @@ import platform
 system_name = platform.system()
 
 try:
-    # ignore these content
-    from zdatafront import client, monkey, OPENAI_API_BASE
-    # patch openai sdk
-    monkey.patch_openai()
-    secret_key = base64.b64decode('xx').decode('utf-8')
+    from zdatafront import client
+    from zdatafront.client import ZDF_COMMON_QUERY_URL
     # zdatafront 提供的统一加密密钥
-    client.aes_secret_key = secret_key
+    client.aes_secret_key = os.environ.get("aes_secret_key")
     # zdatafront 分配的业务标记
     client.visit_domain = os.environ.get("visit_domain")
     client.visit_biz = os.environ.get("visit_biz")
     client.visit_biz_line = os.environ.get("visit_biz_line")
+    OPENAI_API_BASE = ZDF_COMMON_QUERY_URL
 except Exception as e:
     OPENAI_API_BASE = "https://api.openai.com/v1"
     logger.error(e)
@@ -47,6 +45,7 @@ except:
 # add your openai key
 os.environ["API_BASE_URL"] = os.environ.get("API_BASE_URL") or update_config.get("API_BASE_URL") or OPENAI_API_BASE
 os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY") or update_config.get("OPENAI_API_KEY") or "sk-xx"
+os.environ["model_engine"] = os.environ.get("model_engine") or update_config.get("model_engine") or "openai"
 openai.api_key = os.environ["OPENAI_API_KEY"]
 # os.environ["OPENAI_PROXY"] = "socks5h://127.0.0.1:13659"
 os.environ["DUCKDUCKGO_PROXY"] = os.environ.get("DUCKDUCKGO_PROXY") or update_config.get("DUCKDUCKGO_PROXY") or "socks5h://127.0.0.1:13659"
@@ -58,6 +57,9 @@ os.environ["log_verbose"] = "2"
 # LLM 名称
 EMBEDDING_ENGINE = os.environ.get("EMBEDDING_ENGINE") or update_config.get("EMBEDDING_ENGINE") or 'model'  # openai or model
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL") or update_config.get("EMBEDDING_MODEL") or "text2vec-base"
+model_engine = os.environ.get("model_engine") or update_config.get("model_engine") or "openai"
+em_apikey = os.environ.get("em_apikey") or update_config.get("em_apikey") or ""
+em_apiurl = os.environ.get("em_apiurl") or update_config.get("em_apiurl") or "http://localhost:8888/v1"
 LLM_MODEL = os.environ.get("LLM_MODEL") or "gpt-3.5-turbo"
 LLM_MODELs = [LLM_MODEL]
 USE_FASTCHAT = "gpt" not in LLM_MODEL # 判断是否进行fastchat

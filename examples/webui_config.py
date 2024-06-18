@@ -200,7 +200,12 @@ with st.container():
             "VLLM_MODEL_DICT": VLLM_MODEL_DICT,
             "DOCKER_SERVICE": DOCKER_SERVICE,
             "SANDBOX_DO_REMOTE": SANDBOX_DO_REMOTE,
-            "FSCHAT_MODEL_WORKERS": FSCHAT_MODEL_WORKERS
+            "FSCHAT_MODEL_WORKERS": FSCHAT_MODEL_WORKERS,
+            # 非zdata则不需要关注
+            "aes_secret_key": os.environ.get("aes_secret_key"),
+            "visit_biz": os.environ.get("visit_biz"),
+            "visit_biz_line": os.environ.get("visit_biz_line"),
+            "visit_domain": os.environ.get("visit_domain"),
         }
 
         with open(os.path.join(src_dir, "configs/local_config.json"), "w") as f:

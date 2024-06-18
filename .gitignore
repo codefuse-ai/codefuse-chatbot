@@ -18,4 +18,4 @@ build
 dist
 package.sh
 local_config.json
-muagent
+muagent*

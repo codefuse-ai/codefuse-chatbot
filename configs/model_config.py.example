@@ -38,7 +38,9 @@ try:
     cur_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(cur_dir, "local_config.json"), "r") as f:
         update_config = json.load(f)
-except:
+        for k, v in update_config.items():
+            os.environ[k] = v if isinstance(v, str) else json.dumps(v)
+except Exception as e:
     update_config = {}
 
 

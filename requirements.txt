@@ -24,6 +24,7 @@ streamlit-chatbox
 streamlit-aggrid
 # streamlit-antd-components>=0.1.11
 httpx
+tenacity<8.4.0
 
 codefuse-muagent
 # qwen model

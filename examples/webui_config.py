@@ -76,14 +76,6 @@ with st.container():
                 },
             }
         
-        if llm_engine == "fastchat":
-            llm_model_dict = {
-                llm_model_name: {
-                    "local_model_path": llm_model_name,
-                    "api_base_url": llm_apiurl,  # "name"修改为fastchat服务中的"api_base_url"
-                    "api_key": llm_apikey
-                    }}
-
 
         if llm_engine == "fastchat-vllm":
             VLLM_MODEL_DICT = {
@@ -93,12 +85,12 @@ with st.container():
                     "api_key": llm_apikey
                     }
             }
-            llm_model_dict = {
-                llm_model_name: {
-                    "local_model_path": llm_model_name,
-                    "api_base_url": llm_apiurl,  # "name"修改为fastchat服务中的"api_base_url"
-                    "api_key": llm_apikey
-                    }}
+        llm_model_dict = {
+            llm_model_name: {
+                "local_model_path": llm_model_name,
+                "api_base_url": llm_apiurl,  # "name"修改为fastchat服务中的"api_base_url"
+                "api_key": llm_apikey
+                }}
             
 
     with col2.container():
@@ -165,7 +157,7 @@ with st.container():
         for k, v in llm_model_dict.items():
             v_c = {}
             for kk, vv in v.items():
-                if k=="local_model_path":
+                if kk=="local_model_path":
                     v_c[kk] = f"/home/user/chatbot/llm_models/{vv}" if DOCKER_SERVICE else f"{LOCAL_LLM_MODEL_DIR}/{vv}" 
                 else:
                     v_c[kk] = vv

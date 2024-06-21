@@ -46,11 +46,13 @@ except Exception as e:
 
 # add your openai key
 os.environ["API_BASE_URL"] = os.environ.get("API_BASE_URL") or update_config.get("API_BASE_URL") or OPENAI_API_BASE
+os.environ["OPENAI_API_BASE"] = os.environ.get("API_BASE_URL") or update_config.get("API_BASE_URL") or OPENAI_API_BASE
 os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY") or update_config.get("OPENAI_API_KEY") or "sk-xx"
 os.environ["model_engine"] = os.environ.get("model_engine") or update_config.get("model_engine") or "openai"
 openai.api_key = os.environ["OPENAI_API_KEY"]
 # os.environ["OPENAI_PROXY"] = "socks5h://127.0.0.1:13659"
-os.environ["DUCKDUCKGO_PROXY"] = os.environ.get("DUCKDUCKGO_PROXY") or update_config.get("DUCKDUCKGO_PROXY") or "socks5h://127.0.0.1:13659"
+# os.environ["DUCKDUCKGO_PROXY"] = os.environ.get("DUCKDUCKGO_PROXY") or update_config.get("DUCKDUCKGO_PROXY") or "socks5h://127.0.0.1:13659"
+os.environ["TEST_PROXY"] = "socks5h://127.0.0.1:13659"
 # ignore if you dont's use baidu_ocr_api
 os.environ["BAIDU_OCR_API_KEY"] = "xx"
 os.environ["BAIDU_OCR_SECRET_KEY"] = "xx"

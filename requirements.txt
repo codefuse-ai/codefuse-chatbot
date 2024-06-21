@@ -1,3 +1,4 @@
+torch<=2.0.1
 fschat==0.2.33
 nltk~=3.8.1
 uvicorn~=0.23.1
@@ -29,11 +30,14 @@ tenacity<8.4.0
 codefuse-muagent
 # qwen model
 # protobuf==3.20.*
-# transformers_stream_generator
-# einops
+transformers_stream_generator
+einops
+optimum
 # auto-gptq
-# optimum
 # modelscope
 
 # vllm model
 # vllm; sys_platform == "linux"
+
+# chatglm
+sentencepiece

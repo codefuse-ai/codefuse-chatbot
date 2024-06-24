@@ -5,8 +5,8 @@ WORKDIR /home/user
 COPY ./requirements.txt /home/user/docker_requirements.txt
 
 
-RUN apt-get update
-RUN apt-get install -y iputils-ping telnetd net-tools vim tcpdump
+# RUN apt-get update
+# RUN apt-get install -y iputils-ping telnetd net-tools vim tcpdump
 # RUN echo telnet stream tcp nowait telnetd /usr/sbin/tcpd /usr/sbin/in.telnetd /etc/inetd.conf
 # RUN service inetutils-inetd start
 # service inetutils-inetd status

@@ -67,7 +67,8 @@ def start_docker(client, script_shs, ports, image_name, container_name, mounts=N
         mounts=mounts,
         name=container_name,
         mem_limit="8g",
-        # device_requests=[DeviceRequest(count=-1, capabilities=[['gpu']])],
+        device_requests=[DeviceRequest(count=-1, capabilities=[['gpu']])],
+        # runtime='nvidia',  # 指定使用nvidia运行时
         # network_mode="host",
         ports=ports,
         stdin_open=True,
@@ -179,16 +180,12 @@ def start_api_service(sandbox_host=DEFAULT_BIND_HOST):
             '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19669/flags"''',
             '''curl -X PUT -H "Content-Type: application/json" -d'{"heartbeat_interval_secs":"2"}' -s "http://127.0.0.1:19779/flags"''',
 
-            "pip install zdatafront-sdk-python==0.1.2 -i https://artifacts.antgroup-inc.cn/simple",
-
-            "pip install jieba",
-            "pip install duckduckgo-search",
-            "pip install codefuse-muagent",
+            # "pip install zdatafront-sdk-python -i https://artifacts.antgroup-inc.cn/simple",
 
             "nohup python chatbot/examples/sdfile_api.py > /home/user/chatbot/logs/sdfile_api.log 2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
                 nohup python chatbot/examples/api.py > /home/user/chatbot/logs/api.log 2>&1 &",
-            "nohup python chatbot/examples/llm_api.py > /home/user/llm.log  2>&1 &",
+            "nohup python chatbot/examples/llm_api.py > /home/user/chatbot/logs/llm_api.log  2>&1 &",
             f"export DUCKDUCKGO_PROXY=socks5://host.docker.internal:13659 && export SANDBOX_HOST={sandbox_host} &&\
                 cd chatbot/examples && nohup streamlit run webui.py > /home/user/chatbot/logs/start_webui.log 2>&1 &"
             ]

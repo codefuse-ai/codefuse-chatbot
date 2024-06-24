@@ -1,17 +1,14 @@
+torch<=2.0.1
 fschat==0.2.33
-transformers>=4.31.0
-torch~=2.0.0
 nltk~=3.8.1
 uvicorn~=0.23.1
 starlette~=0.27.0
-pydantic<=1.10.14
+# pydantic<=1.10.14
 unstructured[all-docs]
-nltk
 pypdf
 duckduckgo-search
 pysocks
 accelerate
-docker 
 websockets
 fake_useragent
 selenium
@@ -22,25 +19,25 @@ jsonref
 # psycopg2
 # pgvector
 
-numpy~=1.24.4
-pandas~=2.0.3
-streamlit>=1.25.0
-streamlit-option-menu>=0.3.6
-streamlit-antd-components>=0.1.11
-streamlit-chatbox>=1.1.6
-streamlit-aggrid<=0.3.4.post3
+streamlit
+streamlit_option_menu
+streamlit-chatbox
+streamlit-aggrid
+# streamlit-antd-components>=0.1.11
 httpx
-
-# jsonref==1.1.0
+tenacity<8.4.0
 
 codefuse-muagent
 # qwen model
 # protobuf==3.20.*
-# transformers_stream_generator
-# einops
+transformers_stream_generator
+einops
+optimum
 # auto-gptq
-# optimum
 # modelscope
 
 # vllm model
 # vllm; sys_platform == "linux"
+
+# chatglm
+sentencepiece

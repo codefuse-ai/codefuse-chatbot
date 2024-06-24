@@ -15,7 +15,7 @@ from muagent.orm import table_init
 from configs.model_config import (
     KB_ROOT_PATH, kbs_config, DEFAULT_VS_TYPE, WEB_CRAWL_PATH,
     EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,
-    llm_model_dict
+    llm_model_dict, model_engine, em_apikey, em_apiurl
 )
 
 # SENTENCE_SIZE = 100
@@ -46,8 +46,9 @@ def file_exists(kb: str, selected_rows: List) -> Tuple[str, str]:
     check whether a doc file exists in local knowledge base folder.
     return the file's name and path if it exists.
     '''
-    if selected_rows:
-        file_name = selected_rows[0]["file_name"]
+    values = selected_rows.to_dict('records') if isinstance(selected_rows, pd.DataFrame) else selected_rows
+    if values:
+        file_name = values[0]["file_name"]
         file_path = get_file_path(kb, file_name, KB_ROOT_PATH)
         if os.path.isfile(file_path):
             return file_name, file_path
@@ -90,6 +91,18 @@ def knowledge_page(
         index=selected_kb_index
     )
 
+    llm_config = LLMConfig(
+        model_name=LLM_MODEL, 
+        model_engine=model_engine,
+        api_key=llm_model_dict[LLM_MODEL]["api_key"],
+        api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+    )
+    embed_config = EmbedConfig(
+        embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+        model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,
+        api_key=em_apikey, api_base_url=em_apiurl
+    )
+    
     if selected_kb == "新建知识库":
         with st.form("新建知识库"):
 
@@ -133,12 +146,13 @@ def knowledge_page(
                 ret = api.create_knowledge_base(
                     knowledge_base_name=kb_name,
                     vector_store_type=vs_type,
-                    embed_model=embed_model,
-                    embed_engine=EMBEDDING_ENGINE,
-                    embedding_device= EMBEDDING_DEVICE,
-                    embed_model_path=embedding_model_dict[embed_model],
-                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                    llm_config=llm_config, embed_config=embed_config
+                    # embed_model=embed_model,
+                    # embed_engine=EMBEDDING_ENGINE,
+                    # embedding_device= EMBEDDING_DEVICE,
+                    # embed_model_path=embedding_model_dict[embed_model],
+                    # api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    # api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_kb_name"] = kb_name
@@ -160,14 +174,13 @@ def knowledge_page(
                 # use_container_width=True,
                 disabled=len(files) == 0,
         ):
-            data = [{"file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True, "embed_model": EMBEDDING_MODEL,
-            "embed_model_path": embedding_model_dict[EMBEDDING_MODEL],
-            "model_device": EMBEDDING_DEVICE,
-            "embed_engine": EMBEDDING_ENGINE,
-            "api_key": llm_model_dict[LLM_MODEL]["api_key"],
-            "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],
-            }
-                    for f in files]
+            data = [
+                {
+                    "file": f, "knowledge_base_name": kb, "not_refresh_vs_cache": True, 
+                    "llm_config": llm_config, "embed_config": embed_config
+                }
+                for f in files
+            ]
             data[-1]["not_refresh_vs_cache"]=False
             for k in data:
                 pass
@@ -212,13 +225,12 @@ def knowledge_page(
             
             if res["status"] == 200:
                 st.toast(res["response"], icon="✔")
-                data = [{"file": text_path, "filename": text_name, "knowledge_base_name": kb, "not_refresh_vs_cache": False,
-                         "embed_model": EMBEDDING_MODEL,
-                        "embed_model_path": embedding_model_dict[EMBEDDING_MODEL],
-                        "model_device": EMBEDDING_DEVICE,
-                        "embed_engine": EMBEDDING_ENGINE,
-                        "api_key": llm_model_dict[LLM_MODEL]["api_key"],
-                        "api_base_url": llm_model_dict[LLM_MODEL]["api_base_url"],}]
+                data = [
+                    {
+                        "file": text_path, "filename": text_name, "knowledge_base_name": kb, 
+                        "not_refresh_vs_cache": False, "llm_config": llm_config, "embed_config": embed_config
+                    }
+                ]
                 for k in data:
                     ret = api.upload_kb_doc(**k)
                     logger.info(ret)
@@ -296,34 +308,36 @@ def knowledge_page(
 
             st.write()
             # 将文件分词并加载到向量库中
+            row_values = selected_rows.to_dict('records') if isinstance(selected_rows, pd.DataFrame) else selected_rows
             if cols[1].button(
-                    "重新添加至向量库" if selected_rows and (pd.DataFrame(selected_rows)["in_db"]).any() else "添加至向量库",
-                    disabled=not file_exists(kb, selected_rows)[0],
+                    "重新添加至向量库" if row_values and (pd.DataFrame(row_values)["in_db"]).any() else "添加至向量库",
+                    disabled=not file_exists(kb, row_values)[0],
                     use_container_width=True,
             ):
-                for row in selected_rows:
-                    api.update_kb_doc(kb, row["file_name"], 
-                                      embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
-                                      embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                      model_device=EMBEDDING_DEVICE,
-                                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                for row in row_values:
+                    api.update_kb_doc(kb, row["file_name"], llm_config=llm_config, embed_config=embed_config,
+                                    #   embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
+                                    #   embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                                    #   model_device=EMBEDDING_DEVICE,
+                                    #   api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                    #   api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                                       )
                 st.experimental_rerun()
 
             # 将文件从向量库中删除，但不删除文件本身。
             if cols[2].button(
                     "从向量库删除",
-                    disabled=not (selected_rows and selected_rows[0]["in_db"]),
+                    disabled=not (row_values and row_values[0]["in_db"]),
                     use_container_width=True,
             ):
-                for row in selected_rows:
+                for row in row_values:
                     api.delete_kb_doc(kb, row["file_name"],
-                                      embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
-                                      embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                      model_device=EMBEDDING_DEVICE,
-                                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
+                                      llm_config=llm_config, embed_config=embed_config,)
+                                    #   embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
+                                    #   embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                                    #   model_device=EMBEDDING_DEVICE,
+                                    #   api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                    #   api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                 st.experimental_rerun()
 
             if cols[3].button(
@@ -331,13 +345,14 @@ def knowledge_page(
                     type="primary",
                     use_container_width=True,
             ):
-                for row in selected_rows:
+                for row in row_values:
                     ret = api.delete_kb_doc(kb, row["file_name"], True,
-                                      embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
-                                      embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                                      model_device=EMBEDDING_DEVICE,
-                                      api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                                      api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
+                                            llm_config=llm_config, embed_config=embed_config,)
+                                    #   embed_engine=EMBEDDING_ENGINE,embed_model=EMBEDDING_MODEL,
+                                    #   embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                                    #   model_device=EMBEDDING_DEVICE,
+                                    #   api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                                    #   api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                     st.toast(ret.get("msg", " "))
                 st.experimental_rerun()
 

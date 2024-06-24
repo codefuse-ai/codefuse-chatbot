@@ -22,7 +22,10 @@ from muagent.service.service_factory import get_cb_details, get_cb_details_by_cb
 from muagent.orm import table_init
 
 
-from configs.model_config import EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, embedding_model_dict,llm_model_dict, CB_ROOT_PATH
+from configs.model_config import (
+    EMBEDDING_DEVICE, EMBEDDING_ENGINE, EMBEDDING_MODEL, model_engine, em_apikey, em_apiurl,
+    embedding_model_dict,llm_model_dict, CB_ROOT_PATH
+)
 # SENTENCE_SIZE = 100
 
 cell_renderer = JsCode("""function(params) {if(params.value==true){return '✓'}else{return '×'}}""")
@@ -72,6 +75,18 @@ def code_page(api: ApiRequest):
         index=selected_cb_index
     )
 
+    llm_config = LLMConfig(
+        model_name=LLM_MODEL, 
+        model_engine=model_engine, 
+        api_key=llm_model_dict[LLM_MODEL]["api_key"],
+        api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+    )
+    embed_config = EmbedConfig(
+        embed_model=EMBEDDING_MODEL, embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+        model_device=EMBEDDING_DEVICE, embed_engine=EMBEDDING_ENGINE,
+        api_key=em_apikey, api_base_url=em_apiurl,
+    )
+
     if selected_cb == "新建代码知识库":
         with st.form("新建代码知识库"):
 
@@ -112,13 +127,15 @@ def code_page(api: ApiRequest):
                     file,
                     do_interpret,
                     no_remote_api=True,
-                    embed_engine=EMBEDDING_ENGINE,
-                    embed_model=EMBEDDING_MODEL,
-                    embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                    embedding_device=EMBEDDING_DEVICE,
-                    llm_model=LLM_MODEL,
-                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                    llm_config=llm_config,
+                    embed_config=embed_config,
+                    # embed_engine=EMBEDDING_ENGINE,
+                    # embed_model=EMBEDDING_MODEL,
+                    # embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                    # embedding_device=EMBEDDING_DEVICE,
+                    # llm_model=LLM_MODEL,
+                    # api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    # api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                     local_graph_path=CB_ROOT_PATH,
                 )
                 st.toast(ret.get("msg", " "))
@@ -151,13 +168,14 @@ def code_page(api: ApiRequest):
         ):
             ret = api.delete_code_base(cb,
                     no_remote_api=True,
-                    embed_engine=EMBEDDING_ENGINE,
-                    embed_model=EMBEDDING_MODEL,
-                    embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
-                    embedding_device=EMBEDDING_DEVICE,
-                    llm_model=LLM_MODEL,
-                    api_key=llm_model_dict[LLM_MODEL]["api_key"],
-                    api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
+                    embed_config=embed_config, llm_confg=llm_config,
+                    # embed_engine=EMBEDDING_ENGINE,
+                    # embed_model=EMBEDDING_MODEL,
+                    # embed_model_path=embedding_model_dict[EMBEDDING_MODEL],
+                    # embedding_device=EMBEDDING_DEVICE,
+                    # llm_model=LLM_MODEL,
+                    # api_key=llm_model_dict[LLM_MODEL]["api_key"],
+                    # api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                     )
             st.toast(ret.get("msg", "删除成功"))
             time.sleep(0.05)

@@ -20,7 +20,7 @@ MODEL_WORKER_SETS = [
     "QwenWorker", "BaiChuanWorker", "AzureWorker", "TianGongWorker", "ExampleWorker"
 ]
 
-openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", "gpt-4"]
+openai_models = ["gpt-3.5-turbo", "gpt-3.5-turbo-1106", "gpt-3.5-turbo-16k", "gpt-4", 'yi-34b-chat-0205']
 embedding_models = ["openai"]
 
 
@@ -36,16 +36,17 @@ with st.container():
     with col1.container():
         llm_model_name = st.selectbox('LLM Model Name', openai_models + [i for i in os.listdir(LOCAL_LLM_MODEL_DIR) if os.path.isdir(os.path.join(LOCAL_LLM_MODEL_DIR, i))])
 
-        llm_apikey = st.text_input('填写 LLM API KEY', 'EMPTY')
-        llm_apiurl = st.text_input('填写 LLM API URL', 'http://localhost:8888/v1')
+        llm_apikey = st.text_input('Give Your LLM API Key', 'EMPTY')
+        llm_apiurl = st.text_input('Give Your LLM API Url', 'http://localhost:8888/v1')
 
         llm_engine = st.selectbox('选择哪个llm引擎', ["online", "fastchat", "fastchat-vllm"])
         llm_model_port = st.text_input('LLM Model Port，非fastchat模式可无视', '20006')
-        llm_provider_option = st.selectbox('选择哪个online模型加载器，非online可无视', ["openai"] + MODEL_WORKER_SETS)
+        llm_provider_option = st.selectbox('选择哪个online模型加载器，非online可无视', ["openai", "lingyiwanwu"] + MODEL_WORKER_SETS)
 
         if llm_engine == "online" and llm_provider_option == "openai":
             try:
-                from zdatafront import OPENAI_API_BASE
+                from zdatafront.client import ZDF_COMMON_QUERY_URL
+                OPENAI_API_BASE = ZDF_COMMON_QUERY_URL
             except:
                 OPENAI_API_BASE = "https://api.openai.com/v1"
             llm_apiurl = OPENAI_API_BASE
@@ -71,18 +72,10 @@ with st.container():
                     "api_base_url": llm_apiurl, # "https://api.openai.com/v1",
                     "api_key": llm_apikey,
                     "openai_proxy": "",
-                    "provider": llm_provider_option
+                    "provider": llm_provider_option,
                 },
             }
         
-        if llm_engine == "fastchat":
-            llm_model_dict = {
-                llm_model_name: {
-                    "local_model_path": llm_model_name,
-                    "api_base_url": llm_apiurl,  # "name"修改为fastchat服务中的"api_base_url"
-                    "api_key": llm_apikey
-                    }}
-
 
         if llm_engine == "fastchat-vllm":
             VLLM_MODEL_DICT = {
@@ -92,12 +85,12 @@ with st.container():
                     "api_key": llm_apikey
                     }
             }
-            llm_model_dict = {
-                llm_model_name: {
-                    "local_model_path": llm_model_name,
-                    "api_base_url": llm_apiurl,  # "name"修改为fastchat服务中的"api_base_url"
-                    "api_key": llm_apikey
-                    }}
+        llm_model_dict = {
+            llm_model_name: {
+                "local_model_path": llm_model_name,
+                "api_base_url": llm_apiurl,  # "name"修改为fastchat服务中的"api_base_url"
+                "api_key": llm_apikey
+                }}
             
 
     with col2.container():
@@ -105,8 +98,8 @@ with st.container():
         em_engine = st.selectbox('选择哪个embedding引擎', ["model", "openai"])
         device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         embedding_model_dict = {em_model_name: em_model_name}
-        # em_apikey = st.text_input('Embedding API KEY', '')
-        # em_apiurl = st.text_input('Embedding API URL', '')
+        em_apikey = st.text_input("Embedding API KEY (it can't work now)", 'EMPTY')
+        em_apiurl = st.text_input("Embedding API URL (it can't work now)", 'http://localhost:8888/v1')
 
 # 
 try:
@@ -164,7 +157,7 @@ with st.container():
         for k, v in llm_model_dict.items():
             v_c = {}
             for kk, vv in v.items():
-                if k=="local_model_path":
+                if kk=="local_model_path":
                     v_c[kk] = f"/home/user/chatbot/llm_models/{vv}" if DOCKER_SERVICE else f"{LOCAL_LLM_MODEL_DIR}/{vv}" 
                 else:
                     v_c[kk] = vv
@@ -187,8 +180,11 @@ with st.container():
         update_json = {
             "API_BASE_URL": llm_apiurl,
             "OPENAI_API_KEY": llm_apikey,
+            "model_engine": llm_provider_option,
             "EMBEDDING_ENGINE": em_engine,
             "EMBEDDING_MODEL": em_model_name,
+            "em_apikey": em_apikey,
+            "em_apiurl": em_apiurl,
             "LLM_MODEL": llm_model_name,
             "embedding_model_dict": embedding_model_dict,
             "llm_model_dict": llm_model_dict,
@@ -196,7 +192,12 @@ with st.container():
             "VLLM_MODEL_DICT": VLLM_MODEL_DICT,
             "DOCKER_SERVICE": DOCKER_SERVICE,
             "SANDBOX_DO_REMOTE": SANDBOX_DO_REMOTE,
-            "FSCHAT_MODEL_WORKERS": FSCHAT_MODEL_WORKERS
+            "FSCHAT_MODEL_WORKERS": FSCHAT_MODEL_WORKERS,
+            # 非zdata则不需要关注
+            "aes_secret_key": os.environ.get("aes_secret_key"),
+            "visit_biz": os.environ.get("visit_biz"),
+            "visit_biz_line": os.environ.get("visit_biz_line"),
+            "visit_domain": os.environ.get("visit_domain"),
         }
 
         with open(os.path.join(src_dir, "configs/local_config.json"), "w") as f:

@@ -582,7 +582,7 @@ def run_model_worker(
             else:
                 q.put([model_name, "stop", None])
         return {"code": 200, "msg": "done"}
-
+    port = int(port)
     uvicorn.run(app, host=host, port=port, log_level=log_level.lower())
 
 

@@ -17,7 +17,7 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 
 ## 🔔 Updates
-- [2024.01.29] A configurational multi-agent framework, codefuse-muagent, has been open-sourced. For more details, please refer to [codefuse-muagent](sources/readme_docs/coagent/coagent-en.md)
+- [2024.01.29] A configurational multi-agent framework, codefuse-muagent, has been open-sourced. For more details, please refer to [codefuse-muagent](https://codefuse-ai.github.io/docs/api-docs/MuAgent/overview/multi-agent)
 - [2023.12.26] Opening the capability to integrate with open-source private large models and large model interfaces based on FastChat
 - [2023.12.01] Release of Multi-Agent and codebase retrieval functionalities.
 - [2023.11.15] Addition of Q&A enhancement mode based on the local codebase.
@@ -34,13 +34,13 @@ This project is an open-source AI intelligent assistant, specifically designed f
 
 💡 The aim of this project is to construct an AI intelligent assistant for the entire lifecycle of software development, covering design, coding, testing, deployment, and operations, through Retrieval Augmented Generation (RAG), Tool Learning, and sandbox environments. It transitions gradually from the traditional development and operations mode of querying information from various sources and operating on standalone, disparate platforms to an intelligent development and operations mode based on large-model Q&A, changing people's development and operations habits.
 
-- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process. [codefuse-muagent](sources/readme_docs/coagent/coagent-en.md)
+- **🧠 Intelligent Scheduling Core:** Constructed a well-integrated scheduling core system that supports multi-mode one-click configuration, simplifying the operational process. [codefuse-muagent](https://codefuse-ai.github.io/docs/api-docs/MuAgent/overview/multi-agent)
 - **💻 Comprehensive Code Repository Analysis:** Achieved in-depth understanding at the repository level and coding and generation at the project file level, enhancing development efficiency.
 - **📄 Enhanced Document Analysis:** Integrated document knowledge bases with knowledge graphs, providing deeper support for document analysis through enhanced retrieval and reasoning.
 - **🔧 Industry-Specific Knowledge:** Tailored a specialized knowledge base for the DevOps domain, supporting the self-service one-click construction of industry-specific knowledge bases for convenience and practicality.
 - **🤖 Compatible Models for Specific Verticals:** Designed small models specifically for the DevOps field, ensuring compatibility with related DevOps platforms and promoting the integration of the technological ecosystem.
 
-🌍 Relying on open-source LLM and Embedding models, this project can achieve offline private deployments based on open-source models. Additionally, this project also supports the use of the OpenAI API.[Access Demo](sources/readme_docs/fastchat-en.md)
+🌍 Relying on open-source LLM and Embedding models, this project can achieve offline private deployments based on open-source models. Additionally, this project also supports the use of the OpenAI API.[Access Demo](https://codefuse-ai.github.io/docs/developer-docs/CodeFuse-ChatBot/master/fastchat)
 
 👥 The core development team has been long-term focused on research in the AIOps + NLP domain. We initiated the CodefuseGPT project, hoping that everyone could contribute high-quality development and operations documents widely, jointly perfecting this solution to achieve the goal of "Making Development Seamless for Everyone."
 
@@ -68,8 +68,8 @@ This project is an open-source AI intelligent assistant, specifically designed f
 - 💬 **LLM:**：Supports various open-source models and LLM interfaces.
 - 🛠️ **API Management:：** Enables rapid integration of open-source components and operational platforms.
 
-For implementation details, see: [Technical Route Details](sources/readme_docs/roadmap-en.md)
-
+For implementation details, see: [Technical Route Details](https://codefuse-ai.github.io/docs/developer-docs/CodeFuse-ChatBot/master/roadmap)
+Follow Projects：[Projects](https://github.com/orgs/codefuse-ai/projects/1)
 
 ## 🌐 Model Integration
 
@@ -84,7 +84,7 @@ If you need to integrate a specific model, please inform us of your requirements
 
 ## 🚀 Quick Start
 ### muagent-py
-More Detail see：[codefuse-muagent](sources/readme_docs/coagent/coagent-en.md)
+More Detail see：[codefuse-muagent](https://codefuse-ai.github.io/docs/api-docs/MuAgent/overview/multi-agent)
 ```
 pip install codefuse-muagent
 ```
@@ -119,8 +119,8 @@ bash start.sh
   <img src="sources/docs_imgs/webui_config.png" alt="图片">
 </div>
 
-Or `python start.py` by [old version to start](sources/readme_docs/start-en.md)
-More details about accessing LLM Moldes[More Details...](sources/readme_docs/fastchat.md)
+Or `python start.py` by [old version to start](https://codefuse-ai.github.io/docs/developer-docs/CodeFuse-ChatBot/master/start-detail)
+More details about accessing LLM Moldes[More Details...](https://codefuse-ai.github.io/docs/developer-docs/CodeFuse-ChatBot/master/fastchat)
 <br>
 
 ## Contribution
@@ -128,7 +128,7 @@ Thank you for your interest in the Codefuse project. We warmly welcome any sugge
 
 Your suggestions, opinions, and comments on Codefuse can be directly submitted through GitHub Issues.
 
-There are many ways to participate in the Codefuse project and contribute to it: code implementation, test writing, process tool improvement, documentation enhancement, and more. We welcome any contributions and will add you to our list of contributors. See [contribution guide](sources/readme_docs/contribution/contribute_guide_en.md)
+There are many ways to participate in the Codefuse project and contribute to it: code implementation, test writing, process tool improvement, documentation enhancement, and more. We welcome any contributions and will add you to our list of contributors. See [contribution guide](https://codefuse-ai.github.io/contribution/contribution)
 
 ## 🤗 Acknowledgements
 

@@ -107,6 +107,8 @@ pip install codefuse-muagent
 
 Docker安装、私有化LLM接入及相关启动问题见：[快速使用明细](https://codefuse-ai.github.io/zh-CN/docs/developer-docs/CodeFuse-ChatBot/master/quickstart)
 
+**对于 Apple Silicon（苹果M系列芯片），您可能需要首先通过brew install qpdf。**
+
 1、python 环境准备
 
 - 推荐采用 conda 对 python 环境进行管理（可选）

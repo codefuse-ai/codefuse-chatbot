@@ -58,10 +58,10 @@ if __name__ == "__main__":
             "icon": "hdd-stack",
             "func": code_page,
         },
-        # "Prompt管理": {
-        #     "icon": "hdd-stack",
-        #     "func": prompt_page,
-        # },
+        "Prompt管理": {
+            "icon": "hdd-stack",
+            "func": prompt_page,
+        }
     }
 
     with st.sidebar:

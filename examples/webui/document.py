@@ -156,7 +156,11 @@ def knowledge_page(
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_kb_name"] = kb_name
-                st.experimental_rerun()
+                # Use st.rerun() for newer Streamlit versions
+                if hasattr(st, 'rerun'):
+                    st.rerun()
+                else:
+                    st.experimental_rerun()
 
     elif selected_kb:
         kb = selected_kb
@@ -322,7 +326,11 @@ def knowledge_page(
                                     #   api_key=llm_model_dict[LLM_MODEL]["api_key"],
                                     #   api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],
                                       )
-                st.experimental_rerun()
+                # Use st.rerun() for newer Streamlit versions
+                if hasattr(st, 'rerun'):
+                    st.rerun()
+                else:
+                    st.experimental_rerun()
 
             # 将文件从向量库中删除，但不删除文件本身。
             if cols[2].button(
@@ -338,7 +346,11 @@ def knowledge_page(
                                     #   model_device=EMBEDDING_DEVICE,
                                     #   api_key=llm_model_dict[LLM_MODEL]["api_key"],
                                     #   api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
-                st.experimental_rerun()
+                # Use st.rerun() for newer Streamlit versions
+                if hasattr(st, 'rerun'):
+                    st.rerun()
+                else:
+                    st.experimental_rerun()
 
             if cols[3].button(
                     "从知识库中删除",
@@ -354,7 +366,11 @@ def knowledge_page(
                                     #   api_key=llm_model_dict[LLM_MODEL]["api_key"],
                                     #   api_base_url=llm_model_dict[LLM_MODEL]["api_base_url"],)
                     st.toast(ret.get("msg", " "))
-                st.experimental_rerun()
+                # Use st.rerun() for newer Streamlit versions
+                if hasattr(st, 'rerun'):
+                    st.rerun()
+                else:
+                    st.experimental_rerun()
 
         st.divider()
 
@@ -380,7 +396,11 @@ def knowledge_page(
                         st.toast(msg)
                     else:
                         empty.progress(d["finished"] / d["total"], f"正在处理： {d['doc']}")
-                st.experimental_rerun()
+                # Use st.rerun() for newer Streamlit versions
+                if hasattr(st, 'rerun'):
+                    st.rerun()
+                else:
+                    st.experimental_rerun()
 
         if cols[2].button(
                 "删除知识库",

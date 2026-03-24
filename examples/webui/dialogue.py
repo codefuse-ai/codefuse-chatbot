@@ -270,7 +270,11 @@ def dialogue_page(api: ApiRequest):
                 upload2sandbox(interpreter_file, api)
                 st.session_state["interpreter_file_key"] += 1
                 interpreter_file = ""
-                st.experimental_rerun()
+                # Use st.rerun() for newer Streamlit versions
+        if hasattr(st, 'rerun'):
+            st.rerun()
+        else:
+            st.experimental_rerun()
                 
             cols[1].download_button(webui_configs["sandbox"]["button_download_name"], 
                                     file_url, file_name)
@@ -520,7 +524,11 @@ def dialogue_page(api: ApiRequest):
 
         # 将上传文件清空
         st.session_state["interpreter_file_key"] += 1
-        st.experimental_rerun()
+        # Use st.rerun() for newer Streamlit versions
+        if hasattr(st, 'rerun'):
+            st.rerun()
+        else:
+            st.experimental_rerun()
 
     now = datetime.now()
     with st.sidebar:
@@ -535,6 +543,10 @@ def dialogue_page(api: ApiRequest):
             GLOBAL_EXE_CODE_TEXT = ""
             if 'history_node_list' in st.session_state:
                 st.session_state['history_node_list'] = []
+            # Use st.rerun() for newer Streamlit versions
+        if hasattr(st, 'rerun'):
+            st.rerun()
+        else:
             st.experimental_rerun()
 
     export_btn.download_button(

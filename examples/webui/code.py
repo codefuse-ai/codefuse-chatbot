@@ -140,7 +140,11 @@ def code_page(api: ApiRequest):
                 )
                 st.toast(ret.get("msg", " "))
                 st.session_state["selected_cb_name"] = cb_name
-                st.experimental_rerun()
+        # Use st.rerun() for newer Streamlit versions
+        if hasattr(st, 'rerun'):
+            st.rerun()
+        else:
+            st.experimental_rerun()
     elif selected_cb:
         cb = selected_cb
 

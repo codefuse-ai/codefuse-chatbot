@@ -28,7 +28,11 @@ def prompt_page(api: ApiRequest):
                 "清空prompt",
                 use_container_width=True,
         ):
-            st.experimental_rerun()
+            # Use st.rerun() for newer Streamlit versions
+            if hasattr(st, 'rerun'):
+                st.rerun()
+            else:
+                st.experimental_rerun()
 
     export_btn.download_button(
         "导出记录",

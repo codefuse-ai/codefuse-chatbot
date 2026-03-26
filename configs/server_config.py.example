@@ -135,7 +135,8 @@ FSCHAT_MODEL_WORKERS = FSCHAT_MODEL_WORKERS or {
     'Qwen-72B-Chat-Int4': {'host': DEFAULT_BIND_HOST, 'port': 20020},
     'gpt-3.5-turbo': {'host': DEFAULT_BIND_HOST, 'port': 20021},
     'example': {'host': DEFAULT_BIND_HOST, 'port': 20022},
-    'openai-api': {'host': DEFAULT_BIND_HOST, 'port': 20023}
+    'openai-api': {'host': DEFAULT_BIND_HOST, 'port': 20023},
+    'minimax-api': {'host': DEFAULT_BIND_HOST, 'port': 20024},
 }
 # fastchat multi model worker server
 FSCHAT_MULTI_MODEL_WORKERS = {

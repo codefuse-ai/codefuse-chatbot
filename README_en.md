@@ -78,6 +78,7 @@ If you need to integrate a specific model, please inform us of your requirements
 |      model_name    | model_size | gpu_memory | quantize | HFhub | ModelScope |
 | ------------------ | ---------- | ---------- | -------- | ----- | ---------- |
 |        chatgpt     |    -       |    -       |     -    | -     | -          |
+|    [MiniMax-M2.7](https://platform.minimax.io)    |    -       |    -       |     -    | -     | -          |
 | codellama-34b-int4 |     34b    |    20g     |    int4  | coming soon| [link](https://modelscope.cn/models/codefuse-ai/CodeFuse-CodeLlama-34B-4bits/summary) |
 
 

@@ -116,6 +116,15 @@ ONLINE_LLM_MODEL = ONLINE_LLM_MODEL  or {
         "api_key": "",
         "provider": "ExampleWorker",
     },
+
+    # MiniMax OpenAI-compatible API
+    # Docs: https://platform.minimax.io/docs/api-reference/text-openai-api
+    "minimax-api": {
+        "version": "MiniMax-M2.7",  # or "MiniMax-M2.7-highspeed"
+        "api_base_url": "https://api.minimax.io/v1",
+        "api_key": os.environ.get("MINIMAX_API_KEY", ""),
+        "provider": "MiniMaxWorker",
+    },
 }
 
 # 建议使用chat模型，不要使用base，无法获取正确输出
